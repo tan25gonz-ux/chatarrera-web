@@ -53,8 +53,10 @@ window.registrarMaterial = async function (tipo) {
 
   await guardarPesaje(tipo, material, neto);
 
-  document.getElementById("resultado").innerHTML =
-    `✅ Registrado: ${neto} kg de ${material}<br><br><button onclick="finalizar()">Finalizar</button>`;
+  document.getElementById("resultado").innerHTML = `
+    ✅ Registrado: ${neto} kg de ${material}<br><br>
+    <button onclick="finalizar()">Finalizar</button>
+  `;
 };
 
 // Guardar en Firestore
@@ -96,8 +98,8 @@ window.finalizar = function () {
   `;
 };
 
+// Volver a empezar
 window.nuevoPesaje = function () {
-  // Limpia formulario y vuelve al inicio
   document.getElementById("resultado").innerText = "";
   document.getElementById("delanteraLlena")?.value = "";
   document.getElementById("traseraLlena")?.value = "";
@@ -113,7 +115,6 @@ window.nuevoPesaje = function () {
   document.getElementById("materialMano")?.selectedIndex = 0;
   document.getElementById("materialExtra")?.selectedIndex = 0;
 };
-
 
 // Cerrar sesión
 window.cerrarSesion = function () {
