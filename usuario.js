@@ -57,7 +57,7 @@ window.mostrarCampos = function () {
   }
 };
 
-// Registrar pesaje
+// Registrar pesaje en Firebase
 window.registrarPesaje = async function () {
   const tipo = document.getElementById("tipo").value;
   const identificador = document.getElementById("identificador").value.trim();
@@ -67,7 +67,7 @@ window.registrarPesaje = async function () {
   }
 
   let neto = 0;
-  let material = "hierro"; // por defecto
+  let material = "hierro"; // por defecto en camiones
 
   if (tipo === "camionGrande") {
     const delanteraLlena = parseFloat(document.getElementById("delanteraLlena").value) || 0;
@@ -98,7 +98,7 @@ window.registrarPesaje = async function () {
   try {
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
-      identificador,
+      identificador, // 👈 Aquí se guarda la placa/cédula
       tipo,
       material,
       pesoNeto: neto,
