@@ -48,6 +48,7 @@ button {
   cursor: pointer;
   font-weight: bold;
   transition: background 0.3s;
+  margin-right: 10px;
 }
 
 button:hover {
@@ -55,8 +56,8 @@ button:hover {
 }
 
 .resultado {
-  font-size: 1.2em;
+  font-size: 1.1em;
   text-align: center;
-  margin-top: 20px;
+  margin-top: 10px;
   font-weight: bold;
 }
