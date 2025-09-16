@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Pesaje - Chatarrera</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="usuario.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Registro de Pesaje</h1>
+
+    <div class="card">
+      <label for="tipo">Tipo de Transporte:</label>
+      <select id="tipo">
+        <option value="">-- Seleccione --</option>
+        <option value="camionGrande">Camión Grande</option>
+        <option value="camionPequeno">Camión Pequeño</option>
+        <option value="carreta">Carreta</option>
+        <option value="mano">A Mano</option>
+      </select>
+      <div id="formularioPesaje"></div>
+      <div id="resultado" class="resultado"></div>
+    </div>
+
+    <button onclick="cerrarSesion()">Cerrar Sesión</button>
+  </div>
+</body>
+</html>
