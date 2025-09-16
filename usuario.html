@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Registro de Pesaje - Chatarrera</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Quitamos type="module" -->
+  <!-- Sin type="module" -->
   <script src="usuario.js"></script>
 </head>
 <body>
@@ -12,6 +12,9 @@
     <h1>Registro de Pesaje</h1>
 
     <div class="card">
+      <label>Identificador (Placa o Cédula):</label>
+      <input type="text" id="identificador" placeholder="Ej: ABC123 o 1-2345-6789">
+
       <label>Tipo de transporte:</label>
       <select id="tipo" onchange="mostrarCampos()">
         <option value="">-- Seleccione --</option>
@@ -21,14 +24,14 @@
         <option value="mano">A Mano</option>
       </select>
 
-      <!-- Aquí se van a insertar dinámicamente los campos -->
+      <!-- Aquí se insertan dinámicamente los campos -->
       <div id="campos"></div>
 
       <!-- Botón único para registrar -->
       <button onclick="registrarPesaje()">Registrar</button>
     </div>
 
-    <!-- Resultado del registro -->
+    <!-- Resultado -->
     <div id="resultado" class="resultado"></div>
 
     <!-- Botón cerrar sesión -->
