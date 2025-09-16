@@ -1,3 +1,6 @@
+import { auth, db } from "./firebase.js";
+import { collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
 // Mostrar campos según tipo
 window.mostrarCampos = function () {
   const tipo = document.getElementById("tipo").value;
@@ -57,13 +60,14 @@ window.mostrarCampos = function () {
 // Registrar pesaje
 window.registrarPesaje = async function () {
   const tipo = document.getElementById("tipo").value;
-  if (!tipo) {
-    alert("Seleccione un tipo primero");
+  const identificador = document.getElementById("identificador").value.trim();
+  if (!tipo || !identificador) {
+    alert("Debe ingresar un identificador y seleccionar un tipo.");
     return;
   }
 
   let neto = 0;
-  let material = "hierro";
+  let material = "hierro"; // por defecto
 
   if (tipo === "camionGrande") {
     const delanteraLlena = parseFloat(document.getElementById("delanteraLlena").value) || 0;
@@ -92,18 +96,16 @@ window.registrarPesaje = async function () {
   }
 
   try {
-    // 🔹 Si no tienes firebase conectado aún, comenta estas líneas
-    /*
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
+      identificador,
       tipo,
       material,
       pesoNeto: neto,
       fecha: Timestamp.now()
     });
-    */
     document.getElementById("resultado").innerHTML =
-      `✅ Registrado: ${neto} kg de ${material}<br><br>
+      `✅ Registrado: ${neto} kg de ${material} para ${identificador}<br><br>
        <button onclick="nuevoPesaje()">Nuevo Pesaje</button>`;
   } catch (e) {
     document.getElementById("resultado").innerText =
@@ -114,6 +116,7 @@ window.registrarPesaje = async function () {
 // Nuevo pesaje
 window.nuevoPesaje = function () {
   document.getElementById("resultado").innerText = "";
+  document.getElementById("identificador").value = "";
   document.getElementById("tipo").value = "";
   document.getElementById("campos").innerHTML = "";
 };
