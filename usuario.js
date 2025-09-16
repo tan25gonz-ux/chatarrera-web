@@ -60,14 +60,13 @@ window.mostrarCampos = function () {
 // Registrar pesaje en Firebase
 window.registrarPesaje = async function () {
   const tipo = document.getElementById("tipo").value;
-  const identificador = document.getElementById("identificador").value.trim();
-  if (!tipo || !identificador) {
-    alert("Debe ingresar un identificador y seleccionar un tipo.");
+  if (!tipo) {
+    alert("Debe seleccionar un tipo.");
     return;
   }
 
   let neto = 0;
-  let material = "hierro"; // por defecto en camiones
+  let material = "hierro"; // por defecto
 
   if (tipo === "camionGrande") {
     const delanteraLlena = parseFloat(document.getElementById("delanteraLlena").value) || 0;
@@ -98,14 +97,13 @@ window.registrarPesaje = async function () {
   try {
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
-      identificador, // 👈 Aquí se guarda la placa/cédula
       tipo,
       material,
       pesoNeto: neto,
       fecha: Timestamp.now()
     });
     document.getElementById("resultado").innerHTML =
-      `✅ Registrado: ${neto} kg de ${material} para ${identificador}<br><br>
+      `✅ Registrado: ${neto} kg de ${material}<br><br>
        <button onclick="nuevoPesaje()">Nuevo Pesaje</button>`;
   } catch (e) {
     document.getElementById("resultado").innerText =
@@ -116,7 +114,6 @@ window.registrarPesaje = async function () {
 // Nuevo pesaje
 window.nuevoPesaje = function () {
   document.getElementById("resultado").innerText = "";
-  document.getElementById("identificador").value = "";
   document.getElementById("tipo").value = "";
   document.getElementById("campos").innerHTML = "";
 };
