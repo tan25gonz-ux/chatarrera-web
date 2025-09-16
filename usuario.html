@@ -4,35 +4,38 @@
   <meta charset="UTF-8">
   <title>Registro de Pesaje - Chatarrera</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Nota: sin type="module" -->
   <script src="usuario.js"></script>
 </head>
 <body>
   <div class="container">
     <h1>Registro de Pesaje</h1>
 
-    <div class="card">
-      <label>Identificador (Placa o Cédula):</label>
-      <input type="text" id="identificador" placeholder="Ej: ABC123 o 1-2345-6789">
+    <!-- Contenedor que puede tener varios formularios -->
+    <div id="formularios">
+      <div class="card formulario">
+        <label>Identificador (Placa o Cédula):</label>
+        <input type="text" class="identificador" placeholder="Ej: ABC123 o 1-2345-6789">
 
-      <label>Tipo de transporte:</label>
-      <select id="tipo" onchange="mostrarCampos()">
-        <option value="">-- Seleccione --</option>
-        <option value="camionGrande">Camión Grande</option>
-        <option value="camionPequeno">Camión Pequeño</option>
-        <option value="carreta">Carreta</option>
-        <option value="mano">A Mano</option>
-      </select>
+        <label>Tipo de transporte:</label>
+        <select class="tipo" onchange="mostrarCampos(this)">
+          <option value="">-- Seleccione --</option>
+          <option value="camionGrande">Camión Grande</option>
+          <option value="camionPequeno">Camión Pequeño</option>
+          <option value="carreta">Carreta</option>
+          <option value="mano">A Mano</option>
+        </select>
 
-      <!-- Aquí se insertan dinámicamente los campos -->
-      <div id="campos"></div>
+        <!-- Campos dinámicos -->
+        <div class="campos"></div>
 
-      <!-- Botón único para registrar -->
-      <button onclick="registrarPesaje()">Registrar</button>
+        <!-- Botón único -->
+        <button onclick="registrarPesaje(this)">Registrar</button>
+        <div class="resultado"></div>
+      </div>
     </div>
 
-    <!-- Resultado -->
-    <div id="resultado" class="resultado"></div>
+    <!-- Botón para agregar otro formulario -->
+    <button id="btnMas" onclick="agregarFormulario()">➕ Más</button>
 
     <!-- Botón cerrar sesión -->
     <button onclick="cerrarSesion()">Cerrar Sesión</button>
