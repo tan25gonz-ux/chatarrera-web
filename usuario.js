@@ -53,10 +53,8 @@ window.registrarMaterial = async function (tipo) {
 
   await guardarPesaje(tipo, material, neto);
 
-  document.getElementById("resultado").innerHTML = `
-    ✅ Registrado: ${neto} kg de ${material}<br><br>
-    <button onclick="finalizar()">Finalizar</button>
-  `;
+  document.getElementById("resultado").innerHTML =
+    `✅ Registrado: ${neto} kg de ${material}<br><br><button onclick="finalizar()">Finalizar</button>`;
 };
 
 // Guardar en Firestore
@@ -101,19 +99,8 @@ window.finalizar = function () {
 // Volver a empezar
 window.nuevoPesaje = function () {
   document.getElementById("resultado").innerText = "";
-  document.getElementById("delanteraLlena")?.value = "";
-  document.getElementById("traseraLlena")?.value = "";
-  document.getElementById("delanteraVacia")?.value = "";
-  document.getElementById("traseraVacia")?.value = "";
-  document.getElementById("llenoCamion")?.value = "";
-  document.getElementById("vacioCamion")?.value = "";
-  document.getElementById("llenoCarreta")?.value = "";
-  document.getElementById("vacioCarreta")?.value = "";
-  document.getElementById("pesoMano")?.value = "";
-  document.getElementById("pesoExtra")?.value = "";
-  document.getElementById("materialCarreta")?.selectedIndex = 0;
-  document.getElementById("materialMano")?.selectedIndex = 0;
-  document.getElementById("materialExtra")?.selectedIndex = 0;
+  document.querySelectorAll("input").forEach(el => el.value = "");
+  document.querySelectorAll("select").forEach(el => el.selectedIndex = 0);
 };
 
 // Cerrar sesión
