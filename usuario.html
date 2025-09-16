@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Registro de Pesaje - Chatarrera</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+  <!-- Quitamos type="module" -->
+  <script src="usuario.js"></script>
 </head>
 <body>
   <div class="container">
     <h1>Registro de Pesaje</h1>
 
     <div class="card">
-      <label>Identificador (Placa o Cédula):</label>
-      <input type="text" id="identificador" placeholder="Ej: ABC123 o 1-2345-6789" />
-
       <label>Tipo de transporte:</label>
-      <select id="tipo">
+      <select id="tipo" onchange="mostrarCampos()">
         <option value="">-- Seleccione --</option>
         <option value="camionGrande">Camión Grande</option>
         <option value="camionPequeno">Camión Pequeño</option>
@@ -22,19 +21,18 @@
         <option value="mano">A Mano</option>
       </select>
 
-      <!-- Campos dinámicos -->
+      <!-- Aquí se van a insertar dinámicamente los campos -->
       <div id="campos"></div>
 
-      <!-- Botón único -->
-      <button id="btnRegistrar">Registrar</button>
+      <!-- Botón único para registrar -->
+      <button onclick="registrarPesaje()">Registrar</button>
     </div>
 
+    <!-- Resultado del registro -->
     <div id="resultado" class="resultado"></div>
 
-    <button id="btnSalir">Cerrar Sesión</button>
+    <!-- Botón cerrar sesión -->
+    <button onclick="cerrarSesion()">Cerrar Sesión</button>
   </div>
-
-  <!-- Importa el JS al final para que el DOM ya exista -->
-  <script type="module" src="usuario.js"></script>
 </body>
 </html>
