@@ -1,48 +1,78 @@
 import { auth, db } from "./firebase.js";
 import { collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-document.getElementById("tipo").addEventListener("change", mostrarFormulario);
-
-function mostrarFormulario() {
+// Paso 1 → Paso 2
+window.siguientePaso = function () {
   const tipo = document.getElementById("tipo").value;
+  if (!tipo) {
+    alert("Seleccione un tipo de transporte");
+    return;
+  }
+  document.getElementById("paso1").classList.remove("activo");
+  document.getElementById("paso2").classList.add("activo");
+  mostrarFormulario(tipo);
+};
+
+function mostrarFormulario(tipo) {
   const contenedor = document.getElementById("formularioPesaje");
   contenedor.innerHTML = "";
 
-  let html = "";
-
   if (tipo === "camionGrande") {
-    html += `
+    contenedor.innerHTML = `
       <h3>Camión Grande (Hierro)</h3>
       <label>Delantera llena (kg): <input type="number" id="delanteraLlena"></label>
       <label>Trasera llena (kg): <input type="number" id="traseraLlena"></label>
       <label>Delantera vacía (kg): <input type="number" id="delanteraVacia"></label>
       <label>Trasera vacía (kg): <input type="number" id="traseraVacia"></label>
-      <button id="btnRegistrar">Registrar Pesaje</button>
+      <button onclick="registrarCamion('${tipo}')">Registrar</button>
     `;
   }
 
   if (tipo === "camionPequeno") {
-    html += `
+    contenedor.innerHTML = `
       <h3>Camión Pequeño (Hierro)</h3>
       <label>Peso lleno (kg): <input type="number" id="lleno"></label>
       <label>Peso vacío (kg): <input type="number" id="vacio"></label>
-      <button id="btnRegistrar">Registrar Pesaje</button>
+      <button onclick="registrarCamion('${tipo}')">Registrar</button>
     `;
   }
 
-  if (tipo === "carreta" || tipo === "mano") {
-    mostrarFormularioMaterial(tipo); // directo porque no es hierro
-    return;
+  if (tipo === "carreta") {
+    contenedor.innerHTML = `
+      <h3>Carreta</h3>
+      <label>Material:</label>
+      <select id="material">
+        <option value="cobre">Cobre</option>
+        <option value="bronce">Bronce</option>
+        <option value="aluminio">Aluminio</option>
+        <option value="hierro">Hierro</option>
+        <option value="otros">Otros</option>
+      </select>
+      <label>Peso lleno (kg): <input type="number" id="lleno"></label>
+      <label>Peso vacío (kg): <input type="number" id="vacio"></label>
+      <button onclick="registrarMaterial('carreta')">Registrar</button>
+    `;
   }
 
-  contenedor.innerHTML = html;
-
-  if (document.getElementById("btnRegistrar")) {
-    document.getElementById("btnRegistrar").addEventListener("click", () => calcularCamion(tipo));
+  if (tipo === "mano") {
+    contenedor.innerHTML = `
+      <h3>A Mano</h3>
+      <label>Material:</label>
+      <select id="material">
+        <option value="cobre">Cobre</option>
+        <option value="bronce">Bronce</option>
+        <option value="aluminio">Aluminio</option>
+        <option value="hierro">Hierro</option>
+        <option value="otros">Otros</option>
+      </select>
+      <label>Peso directo (kg): <input type="number" id="peso"></label>
+      <button onclick="registrarMaterial('mano')">Registrar</button>
+    `;
   }
 }
 
-async function calcularCamion(tipo) {
+// Registrar camión (siempre hierro)
+window.registrarCamion = async function (tipo) {
   let neto = 0;
 
   if (tipo === "camionGrande") {
@@ -59,70 +89,21 @@ async function calcularCamion(tipo) {
     neto = lleno - vacio;
   }
 
-  try {
-    await addDoc(collection(db, "pesajes"), {
-      usuario: auth.currentUser.email,
-      tipo: tipo,
-      material: "hierro",
-      pesoNeto: neto,
-      fecha: Timestamp.now()
-    });
-    document.getElementById("resultado").innerText =
-      `✅ Registrado: ${neto} kg de hierro`;
+  await guardarPesaje(tipo, "hierro", neto);
 
-    // Preguntar si trae otros materiales
-    document.getElementById("resultado").innerHTML += `
-      <div style="margin-top:20px;">
-        <p>¿Trae algún otro material?</p>
-        <button id="siMaterial">Sí</button>
-        <button id="noMaterial">No</button>
-      </div>
-    `;
-
-    document.getElementById("siMaterial").addEventListener("click", () => {
-      mostrarFormularioMaterial("extra");
-    });
-    document.getElementById("noMaterial").addEventListener("click", () => {
-      document.getElementById("resultado").innerText = "🚚 Pesaje completado.";
-    });
-
-  } catch (e) {
-    document.getElementById("resultado").innerText =
-      "❌ Error al guardar: " + e.message;
-  }
-}
-
-function mostrarFormularioMaterial(tipo) {
-  const contenedor = document.getElementById("formularioPesaje");
-  contenedor.innerHTML = `
-    <h3>Otro Material</h3>
-    <label>Material:</label>
-    <select id="material">
-      <option value="cobre">Cobre</option>
-      <option value="bronce">Bronce</option>
-      <option value="aluminio">Aluminio</option>
-      <option value="otros">Otros</option>
-    </select>
+  // Mostrar paso 3 + pregunta de más materiales
+  document.getElementById("paso2").classList.remove("activo");
+  document.getElementById("paso3").classList.add("activo");
+  document.getElementById("resultado").innerHTML = `
+    ✅ Registrado: ${neto} kg de hierro<br><br>
+    ¿Trae otro material?<br>
+    <button onclick="mostrarFormulario('extra')">Sí</button>
+    <button onclick="finalizar()">No</button>
   `;
+};
 
-  if (tipo === "carreta") {
-    contenedor.innerHTML += `
-      <label>Peso lleno (kg): <input type="number" id="lleno"></label>
-      <label>Peso vacío (kg): <input type="number" id="vacio"></label>
-    `;
-  }
-
-  if (tipo === "mano" || tipo === "extra") {
-    contenedor.innerHTML += `
-      <label>Peso directo (kg): <input type="number" id="peso"></label>
-    `;
-  }
-
-  contenedor.innerHTML += `<button id="btnRegistrar">Registrar Material</button>`;
-  document.getElementById("btnRegistrar").addEventListener("click", () => calcularMaterial(tipo));
-}
-
-async function calcularMaterial(tipo) {
+// Registrar carreta, mano o extra
+window.registrarMaterial = async function (tipo) {
   let neto = 0;
   let material = document.getElementById("material").value;
 
@@ -136,6 +117,15 @@ async function calcularMaterial(tipo) {
     neto = parseFloat(document.getElementById("peso").value) || 0;
   }
 
+  await guardarPesaje(tipo, material, neto);
+
+  document.getElementById("paso2").classList.remove("activo");
+  document.getElementById("paso3").classList.add("activo");
+  document.getElementById("resultado").innerHTML =
+    `✅ Registrado: ${neto} kg de ${material}<br><br><button onclick="finalizar()">Finalizar</button>`;
+};
+
+async function guardarPesaje(tipo, material, neto) {
   try {
     await addDoc(collection(db, "pesajes"), {
       usuario: auth.currentUser.email,
@@ -144,13 +134,14 @@ async function calcularMaterial(tipo) {
       pesoNeto: neto,
       fecha: Timestamp.now()
     });
-    document.getElementById("resultado").innerText =
-      `✅ Registrado: ${neto} kg de ${material}`;
   } catch (e) {
-    document.getElementById("resultado").innerText =
-      "❌ Error al guardar: " + e.message;
+    alert("❌ Error al guardar: " + e.message);
   }
 }
+
+window.finalizar = function () {
+  document.getElementById("resultado").innerText = "🚚 Pesaje completado.";
+};
 
 // Cerrar sesión
 window.cerrarSesion = function () {
