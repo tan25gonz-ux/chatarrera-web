@@ -1,7 +1,36 @@
 import { auth, db } from "./firebase.js";
 import { collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-// Mostrar campos en el formulario que corresponde
+// Función para crear un formulario nuevo
+window.agregarFormulario = function () {
+  const cont = document.getElementById("formularios");
+
+  const form = document.createElement("div");
+  form.classList.add("card", "formulario");
+
+  form.innerHTML = `
+    <label>Identificador (Placa o Cédula):</label>
+    <input type="text" class="identificador" placeholder="Ej: ABC123 o 1-2345-6789">
+
+    <label>Tipo de transporte:</label>
+    <select class="tipo" onchange="mostrarCampos(this)">
+      <option value="">-- Seleccione --</option>
+      <option value="camionGrande">Camión Grande</option>
+      <option value="camionPequeno">Camión Pequeño</option>
+      <option value="carreta">Carreta</option>
+      <option value="mano">A Mano</option>
+    </select>
+
+    <div class="campos"></div>
+
+    <button onclick="registrarPesaje(this)">Registrar</button>
+    <div class="resultado"></div>
+  `;
+
+  cont.appendChild(form);
+};
+
+// Mostrar campos dinámicos dentro del formulario correspondiente
 window.mostrarCampos = function (select) {
   const tipo = select.value;
   const campos = select.closest(".formulario").querySelector(".campos");
@@ -110,23 +139,8 @@ window.registrarPesaje = async function (btn) {
     resultadoDiv.innerHTML =
       `✅ Registrado: ${neto} kg de ${material} para ${identificador}`;
   } catch (e) {
-    resultadoDiv.innerText =
-      "❌ Error al guardar: " + e.message;
+    resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
-};
-
-// Agregar nuevo formulario
-window.agregarFormulario = function () {
-  const formularios = document.getElementById("formularios");
-  const nuevo = document.querySelector(".formulario").cloneNode(true);
-
-  // limpiar valores
-  nuevo.querySelector(".identificador").value = "";
-  nuevo.querySelector(".tipo").value = "";
-  nuevo.querySelector(".campos").innerHTML = "";
-  nuevo.querySelector(".resultado").innerHTML = "";
-
-  formularios.appendChild(nuevo);
 };
 
 // Cerrar sesión
@@ -134,3 +148,8 @@ window.cerrarSesion = function () {
   sessionStorage.clear();
   window.location.href = "index.html";
 };
+
+// Al cargar la página, añadimos el primer formulario
+window.addEventListener("DOMContentLoaded", () => {
+  agregarFormulario();
+});
