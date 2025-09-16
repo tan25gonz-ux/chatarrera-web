@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Registro de Pesaje - Chatarrera</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
@@ -19,21 +19,17 @@
         <option value="mano">A Mano</option>
       </select>
 
-      <!-- Aquí se insertan dinámicamente los campos -->
       <div id="campos"></div>
 
-      <!-- Botón único para registrar -->
       <button onclick="registrarPesaje()">Registrar</button>
     </div>
 
-    <!-- Resultado -->
     <div id="resultado" class="resultado"></div>
 
-    <!-- Botón cerrar sesión -->
     <button onclick="cerrarSesion()">Cerrar Sesión</button>
   </div>
 
-  <!-- IMPORTANTE: usuario.js como módulo -->
+  <!-- Importamos el script como módulo -->
   <script type="module" src="usuario.js"></script>
 </body>
 </html>
