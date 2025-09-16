@@ -1,62 +1,38 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #f3f4f6;
-  margin: 0;
-  padding: 0;
-}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Pesaje - Chatarrera</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Quitamos type="module" -->
+  <script src="usuario.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Registro de Pesaje</h1>
 
-.container {
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 20px;
-}
+    <div class="card">
+      <label>Tipo de transporte:</label>
+      <select id="tipo" onchange="mostrarCampos()">
+        <option value="">-- Seleccione --</option>
+        <option value="camionGrande">Camión Grande</option>
+        <option value="camionPequeno">Camión Pequeño</option>
+        <option value="carreta">Carreta</option>
+        <option value="mano">A Mano</option>
+      </select>
 
-h1 {
-  text-align: center;
-  color: #111827;
-  margin-bottom: 30px;
-}
+      <!-- Aquí se van a insertar dinámicamente los campos -->
+      <div id="campos"></div>
 
-.card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  margin: 20px 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
+      <!-- Botón único para registrar -->
+      <button onclick="registrarPesaje()">Registrar</button>
+    </div>
 
-label {
-  display: block;
-  margin: 10px 0 5px;
-  font-weight: bold;
-}
+    <!-- Resultado del registro -->
+    <div id="resultado" class="resultado"></div>
 
-input, select {
-  width: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  margin-bottom: 12px;
-}
-
-button {
-  background: #2563eb;
-  color: #fff;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.3s;
-}
-
-button:hover {
-  background: #1e40af;
-}
-
-.resultado {
-  font-size: 1.2em;
-  text-align: center;
-  margin-top: 20px;
-  font-weight: bold;
-}
+    <!-- Botón cerrar sesión -->
+    <button onclick="cerrarSesion()">Cerrar Sesión</button>
+  </div>
+</body>
+</html>
