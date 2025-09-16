@@ -11,7 +11,7 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
     const user = userCredential.user;
     sessionStorage.setItem("usuario", user.email);
 
-    if (user.email === "admin@chatarrera.com") {
+    if (user.email === "tan25gonz@gmail.com") {
       window.location.href = "admin.html";
     } else {
       window.location.href = "usuario.html";
