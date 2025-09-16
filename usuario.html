@@ -10,33 +10,56 @@
   <div class="container">
     <h1>Registro de Pesaje</h1>
 
-    <div class="wizard">
-      <!-- Paso 1 -->
-      <div id="paso1" class="paso activo">
-        <h2>Paso 1: Seleccione tipo de transporte</h2>
-        <select id="tipo">
-          <option value="">-- Seleccione --</option>
-          <option value="camionGrande">Camión Grande</option>
-          <option value="camionPequeno">Camión Pequeño</option>
-          <option value="carreta">Carreta</option>
-          <option value="mano">A Mano</option>
-        </select>
-        <button onclick="siguientePaso()">Continuar</button>
-      </div>
-
-      <!-- Paso 2 -->
-      <div id="paso2" class="paso">
-        <h2>Paso 2: Ingrese el pesaje</h2>
-        <div id="formularioPesaje"></div>
-      </div>
-
-      <!-- Paso 3 -->
-      <div id="paso3" class="paso">
-        <h2>Paso 3: Confirmación</h2>
-        <div id="resultado"></div>
-      </div>
+    <!-- Camión Grande -->
+    <div class="card">
+      <h2>Camión Grande (Hierro)</h2>
+      <label>Delantera llena (kg): <input type="number" id="delanteraLlena"></label>
+      <label>Trasera llena (kg): <input type="number" id="traseraLlena"></label>
+      <label>Delantera vacía (kg): <input type="number" id="delanteraVacia"></label>
+      <label>Trasera vacía (kg): <input type="number" id="traseraVacia"></label>
+      <button onclick="registrarCamion('camionGrande')">Registrar</button>
     </div>
 
+    <!-- Camión Pequeño -->
+    <div class="card">
+      <h2>Camión Pequeño (Hierro)</h2>
+      <label>Peso lleno (kg): <input type="number" id="llenoCamion"></label>
+      <label>Peso vacío (kg): <input type="number" id="vacioCamion"></label>
+      <button onclick="registrarCamion('camionPequeno')">Registrar</button>
+    </div>
+
+    <!-- Carreta -->
+    <div class="card">
+      <h2>Carreta</h2>
+      <label>Material:</label>
+      <select id="materialCarreta">
+        <option value="cobre">Cobre</option>
+        <option value="bronce">Bronce</option>
+        <option value="aluminio">Aluminio</option>
+        <option value="hierro">Hierro</option>
+        <option value="otros">Otros</option>
+      </select>
+      <label>Peso lleno (kg): <input type="number" id="llenoCarreta"></label>
+      <label>Peso vacío (kg): <input type="number" id="vacioCarreta"></label>
+      <button onclick="registrarMaterial('carreta')">Registrar</button>
+    </div>
+
+    <!-- A Mano -->
+    <div class="card">
+      <h2>A Mano</h2>
+      <label>Material:</label>
+      <select id="materialMano">
+        <option value="cobre">Cobre</option>
+        <option value="bronce">Bronce</option>
+        <option value="aluminio">Aluminio</option>
+        <option value="hierro">Hierro</option>
+        <option value="otros">Otros</option>
+      </select>
+      <label>Peso directo (kg): <input type="number" id="pesoMano"></label>
+      <button onclick="registrarMaterial('mano')">Registrar</button>
+    </div>
+
+    <div id="resultado" class="resultado"></div>
     <button onclick="cerrarSesion()">Cerrar Sesión</button>
   </div>
 </body>
