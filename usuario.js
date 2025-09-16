@@ -90,8 +90,30 @@ window.mostrarExtra = function () {
 
 // Finalizar flujo
 window.finalizar = function () {
-  document.getElementById("resultado").innerText = "🚚 Pesaje completado.";
+  document.getElementById("resultado").innerHTML = `
+    🚚 Pesaje completado.<br><br>
+    <button onclick="nuevoPesaje()">Nuevo Pesaje</button>
+  `;
 };
+
+window.nuevoPesaje = function () {
+  // Limpia formulario y vuelve al inicio
+  document.getElementById("resultado").innerText = "";
+  document.getElementById("delanteraLlena")?.value = "";
+  document.getElementById("traseraLlena")?.value = "";
+  document.getElementById("delanteraVacia")?.value = "";
+  document.getElementById("traseraVacia")?.value = "";
+  document.getElementById("llenoCamion")?.value = "";
+  document.getElementById("vacioCamion")?.value = "";
+  document.getElementById("llenoCarreta")?.value = "";
+  document.getElementById("vacioCarreta")?.value = "";
+  document.getElementById("pesoMano")?.value = "";
+  document.getElementById("pesoExtra")?.value = "";
+  document.getElementById("materialCarreta")?.selectedIndex = 0;
+  document.getElementById("materialMano")?.selectedIndex = 0;
+  document.getElementById("materialExtra")?.selectedIndex = 0;
+};
+
 
 // Cerrar sesión
 window.cerrarSesion = function () {
