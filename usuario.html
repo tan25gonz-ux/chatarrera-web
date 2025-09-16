@@ -10,32 +10,11 @@
   <div class="container">
     <h1>Registro de Pesaje</h1>
 
-    <!-- Contenedor que puede tener varios formularios -->
-    <div id="formularios">
-      <div class="card formulario">
-        <label>Identificador (Placa o Cédula):</label>
-        <input type="text" class="identificador" placeholder="Ej: ABC123 o 1-2345-6789">
+    <!-- Contenedor donde se añaden los formularios -->
+    <div id="formularios"></div>
 
-        <label>Tipo de transporte:</label>
-        <select class="tipo" onchange="mostrarCampos(this)">
-          <option value="">-- Seleccione --</option>
-          <option value="camionGrande">Camión Grande</option>
-          <option value="camionPequeno">Camión Pequeño</option>
-          <option value="carreta">Carreta</option>
-          <option value="mano">A Mano</option>
-        </select>
-
-        <!-- Campos dinámicos -->
-        <div class="campos"></div>
-
-        <!-- Botón único -->
-        <button onclick="registrarPesaje(this)">Registrar</button>
-        <div class="resultado"></div>
-      </div>
-    </div>
-
-    <!-- Botón para agregar otro formulario -->
-    <button id="btnMas" onclick="agregarFormulario()">➕ Más</button>
+    <!-- Botón para añadir más formularios -->
+    <button onclick="agregarFormulario()">➕ Más</button>
 
     <!-- Botón cerrar sesión -->
     <button onclick="cerrarSesion()">Cerrar Sesión</button>
