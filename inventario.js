@@ -11,19 +11,25 @@ const tabla = document.querySelector("#tablaInventario tbody");
 
 async function cargarInventario() {
   const uid = auth?.currentUser?.uid || "desconocido";
-  const docRef = doc(db, "inventarios", uid); // 👈 lee de 'inventarios'
+  const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
 
+  // Inicializar todos en 0
   const datos = {};
   materiales.forEach(m => datos[m] = 0);
 
   if (snap.exists()) {
-    const data = snap.data().materiales || {};
+    const data = snap.data();
+    const inventario = data.materiales || {}; // 👈 ahora accedemos al campo "materiales"
+
     materiales.forEach(m => {
-      if (data[m] !== undefined) datos[m] = data[m];
+      if (inventario[m] !== undefined) {
+        datos[m] = inventario[m];
+      }
     });
   }
 
+  // Pintar tabla
   tabla.innerHTML = "";
   materiales.forEach(mat => {
     const fila = `<tr><td>${mat}</td><td>${datos[mat]}</td></tr>`;
