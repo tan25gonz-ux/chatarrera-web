@@ -1,5 +1,19 @@
-// Mostrar campos según tipo
-window.mostrarCampos = function () {
+import { auth, db } from "./firebase.js";
+import { collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+document.addEventListener("DOMContentLoaded", () => {
+  const tipoSelect = document.getElementById("tipo");
+  const btnRegistrar = document.getElementById("btnRegistrar");
+  const btnNuevo = document.getElementById("btnNuevo");
+  const btnCerrar = document.getElementById("btnCerrar");
+
+  tipoSelect.addEventListener("change", mostrarCampos);
+  btnRegistrar.addEventListener("click", registrarPesaje);
+  btnNuevo.addEventListener("click", nuevoPesaje);
+  btnCerrar.addEventListener("click", cerrarSesion);
+});
+
+function mostrarCampos() {
   const tipo = document.getElementById("tipo").value;
   const campos = document.getElementById("campos");
   campos.innerHTML = "";
@@ -52,11 +66,12 @@ window.mostrarCampos = function () {
       <label>Peso directo (kg): <input type="number" id="peso"></label>
     `;
   }
-};
+}
 
-// Registrar pesaje
-window.registrarPesaje = async function () {
+async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
+  const resultadoDiv = document.getElementById("resultado");
+
   if (!tipo) {
     alert("Seleccione un tipo primero");
     return;
@@ -92,8 +107,6 @@ window.registrarPesaje = async function () {
   }
 
   try {
-    // 🔹 Si no tienes firebase conectado aún, comenta estas líneas
-    /*
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo,
@@ -101,25 +114,19 @@ window.registrarPesaje = async function () {
       pesoNeto: neto,
       fecha: Timestamp.now()
     });
-    */
-    document.getElementById("resultado").innerHTML =
-      `✅ Registrado: ${neto} kg de ${material}<br><br>
-       <button onclick="nuevoPesaje()">Nuevo Pesaje</button>`;
+    resultadoDiv.innerHTML = `✅ Registrado: ${neto} kg de ${material}`;
   } catch (e) {
-    document.getElementById("resultado").innerText =
-      "❌ Error al guardar: " + e.message;
+    resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
-};
+}
 
-// Nuevo pesaje
-window.nuevoPesaje = function () {
+function nuevoPesaje() {
   document.getElementById("resultado").innerText = "";
   document.getElementById("tipo").value = "";
   document.getElementById("campos").innerHTML = "";
-};
+}
 
-// Cerrar sesión
-window.cerrarSesion = function () {
+function cerrarSesion() {
   sessionStorage.clear();
   window.location.href = "index.html";
-};
+}
