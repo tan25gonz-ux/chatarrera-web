@@ -16,6 +16,7 @@ async function registrarVenta() {
     return;
   }
 
+  // Normalizar nombre (ej. "cobre" -> "Cobre")
   const normalizado = material.charAt(0).toUpperCase() + material.slice(1).toLowerCase();
 
   try {
@@ -27,7 +28,7 @@ async function registrarVenta() {
       fecha: Timestamp.now()
     });
 
-    // Descontar del inventario
+    // Leer inventario actual
     const docRef = doc(db, "inventario", "materiales");
     const snap = await getDoc(docRef);
     let datos = {};
@@ -36,18 +37,28 @@ async function registrarVenta() {
       datos = snap.data();
     }
 
-    if (!datos[normalizado]) datos[normalizado] = 0;
+    console.log("📦 Inventario actual desde Firestore:", datos);
+
+    if (datos[normalizado] === undefined) {
+      resultado.innerText = `⚠️ El material ${normalizado} aún no existe en el inventario.`;
+      return;
+    }
+
     if (datos[normalizado] < peso) {
       resultado.innerText = `❌ No hay suficiente ${normalizado} en inventario. Disponible: ${datos[normalizado]} kg`;
       return;
     }
 
+    // Descontar del inventario
     datos[normalizado] -= peso;
 
     await setDoc(docRef, { ...datos, actualizado: Timestamp.now() });
 
     resultado.innerText = `✅ Venta registrada: ${peso} kg de ${normalizado}`;
+    console.log(`✅ Se descontaron ${peso} kg de ${normalizado}, inventario actualizado:`, datos);
+
   } catch (e) {
+    console.error("Error en venta:", e);
     resultado.innerText = "❌ Error al guardar: " + e.message;
   }
 }
