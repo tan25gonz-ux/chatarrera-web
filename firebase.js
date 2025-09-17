@@ -6,7 +6,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAqDBY8ZlNsgM0xhFe5qgHCoYI1Rv2uczU",
   authDomain: "chatarrera-system.firebaseapp.com",
   projectId: "chatarrera-system",
-  storageBucket: "chatarrera-system.firebasestorage.app",
+  storageBucket: "chatarrera-system.appspot.com", // 👈 corregido
   messagingSenderId: "740453262138",
   appId: "1:740453262138:web:13f194d36f30d195b5e603",
   measurementId: "G-B971ZFMVEY"
