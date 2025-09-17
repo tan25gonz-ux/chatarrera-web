@@ -1,5 +1,6 @@
-import { db } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 const materiales = [
   "Hierro", "Aluminio", "Cobre", "Bronce",
@@ -8,22 +9,11 @@ const materiales = [
 ];
 
 const tabla = document.querySelector("#tablaInventario tbody");
-const btnBuscar = document.getElementById("btnBuscar");
-
-btnBuscar.addEventListener("click", async () => {
-  const uid = document.getElementById("uidInput").value.trim();
-  if (!uid) {
-    alert("Ingrese un UID válido");
-    return;
-  }
-  await cargarInventario(uid);
-});
 
 async function cargarInventario(uid) {
   const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
 
-  // Inicializar todos en 0
   const datos = {};
   materiales.forEach(m => datos[m] = 0);
 
@@ -37,7 +27,7 @@ async function cargarInventario(uid) {
       }
     });
   } else {
-    alert("⚠️ No existe inventario para este UID");
+    console.warn("⚠️ No existe inventario para este usuario");
   }
 
   // Pintar tabla
@@ -47,3 +37,12 @@ async function cargarInventario(uid) {
     tabla.innerHTML += fila;
   });
 }
+
+// --- Esperar a que el usuario esté logueado ---
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    cargarInventario(user.uid);
+  } else {
+    console.warn("⚠️ No hay usuario logueado");
+  }
+});
