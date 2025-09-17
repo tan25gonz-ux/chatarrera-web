@@ -11,7 +11,7 @@ const tabla = document.querySelector("#tablaInventario tbody");
 
 async function cargarInventario() {
   const uid = auth?.currentUser?.uid || "desconocido";
-  const docRef = doc(db, "inventarios", uid);
+  const docRef = doc(db, "inventarios", uid); // 👈 lee de 'inventarios'
   const snap = await getDoc(docRef);
 
   const datos = {};
