@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase.js";
-import { collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { collection, addDoc, Timestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const tipoSelect = document.getElementById("tipo");
@@ -67,8 +67,13 @@ function agregarExtra() {
       <option value="cobre">Cobre</option>
       <option value="bronce">Bronce</option>
       <option value="aluminio">Aluminio</option>
-      <option value="hierro">Hierro</option>
-      <option value="otros">Otros</option>
+      <option value="batería">Batería</option>
+      <option value="acero">Acero</option>
+      <option value="cable">Cable</option>
+      <option value="catalizador">Catalizador</option>
+      <option value="plástico de lavadora">Plástico de lavadora</option>
+      <option value="plástico de caja">Plástico de caja</option>
+      <option value="carrocería">Carrocería</option>
     </select>
     <label>Peso (kg): <input type="number" class="extraPeso"></label>
     <button class="btnQuitar">❌ Quitar</button>
@@ -116,10 +121,10 @@ async function registrarPesaje() {
     neto = parseFloat(document.getElementById("peso").value) || 0;
   }
 
-  // Siempre hierro
-  const materiales = [{ material: "hierro", peso: neto }];
+  // Hierro siempre
+  const materiales = [{ material: "Hierro", peso: neto }];
 
-  // Extra materiales
+  // Agregar extras
   document.querySelectorAll("#listaExtras .extra").forEach(extra => {
     const mat = extra.querySelector(".extraMaterial").value;
     const peso = parseFloat(extra.querySelector(".extraPeso").value) || 0;
@@ -136,11 +141,38 @@ async function registrarPesaje() {
       fecha: Timestamp.now()
     });
 
+    await actualizarInventario(materiales);
+
     resultadoDiv.innerHTML = `✅ Registrado:<br>
       ${materiales.map(m => `${m.peso} kg de ${m.material}`).join("<br>")}`;
   } catch (e) {
     resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
+}
+
+async function actualizarInventario(materiales) {
+  const uid = auth?.currentUser?.uid || "desconocido";
+
+  // calcular semana actual
+  const ahora = new Date();
+  const año = ahora.getFullYear();
+  const semana = Math.ceil((((ahora - new Date(año, 0, 1)) / 86400000) + new Date(año, 0, 1).getDay() + 1) / 7);
+  const docId = `${uid}_${año}-W${semana}`;
+
+  const docRef = doc(db, "inventarios", docId);
+  const snap = await getDoc(docRef);
+  let datos = {};
+
+  if (snap.exists()) {
+    datos = snap.data().materiales;
+  }
+
+  materiales.forEach(m => {
+    if (!datos[m.material]) datos[m.material] = 0;
+    datos[m.material] += m.peso;
+  });
+
+  await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 }
 
 function nuevoPesaje() {
