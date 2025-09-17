@@ -6,16 +6,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRegistrar = document.getElementById("btnRegistrar");
   const btnNuevo = document.getElementById("btnNuevo");
   const btnCerrar = document.getElementById("btnCerrar");
+  const btnAgregarExtra = document.getElementById("btnAgregarExtra");
 
   tipoSelect.addEventListener("change", mostrarCampos);
   btnRegistrar.addEventListener("click", registrarPesaje);
   btnNuevo.addEventListener("click", nuevoPesaje);
   btnCerrar.addEventListener("click", cerrarSesion);
+  btnAgregarExtra.addEventListener("click", agregarExtra);
 });
 
 function mostrarCampos() {
   const tipo = document.getElementById("tipo").value;
   const campos = document.getElementById("campos");
+
   campos.innerHTML = "";
 
   if (tipo === "camionGrande") {
@@ -38,15 +41,7 @@ function mostrarCampos() {
 
   if (tipo === "carreta") {
     campos.innerHTML = `
-      <h3>Carreta</h3>
-      <label>Material:</label>
-      <select id="material">
-        <option value="cobre">Cobre</option>
-        <option value="bronce">Bronce</option>
-        <option value="aluminio">Aluminio</option>
-        <option value="hierro">Hierro</option>
-        <option value="otros">Otros</option>
-      </select>
+      <h3>Carreta (Hierro por defecto)</h3>
       <label>Peso lleno (kg): <input type="number" id="lleno"></label>
       <label>Peso vacío (kg): <input type="number" id="vacio"></label>
     `;
@@ -54,18 +49,36 @@ function mostrarCampos() {
 
   if (tipo === "mano") {
     campos.innerHTML = `
-      <h3>A Mano</h3>
-      <label>Material:</label>
-      <select id="material">
-        <option value="cobre">Cobre</option>
-        <option value="bronce">Bronce</option>
-        <option value="aluminio">Aluminio</option>
-        <option value="hierro">Hierro</option>
-        <option value="otros">Otros</option>
-      </select>
+      <h3>A Mano (Hierro por defecto)</h3>
       <label>Peso directo (kg): <input type="number" id="peso"></label>
     `;
   }
+}
+
+function agregarExtra() {
+  const lista = document.getElementById("listaExtras");
+
+  const div = document.createElement("div");
+  div.classList.add("extra");
+
+  div.innerHTML = `
+    <label>Material:</label>
+    <select class="extraMaterial">
+      <option value="cobre">Cobre</option>
+      <option value="bronce">Bronce</option>
+      <option value="aluminio">Aluminio</option>
+      <option value="hierro">Hierro</option>
+      <option value="otros">Otros</option>
+    </select>
+    <label>Peso (kg): <input type="number" class="extraPeso"></label>
+    <button class="btnQuitar">❌ Quitar</button>
+  `;
+
+  div.querySelector(".btnQuitar").addEventListener("click", () => {
+    div.remove();
+  });
+
+  lista.appendChild(div);
 }
 
 async function registrarPesaje() {
@@ -78,7 +91,6 @@ async function registrarPesaje() {
   }
 
   let neto = 0;
-  let material = "hierro";
 
   if (tipo === "camionGrande") {
     const delanteraLlena = parseFloat(document.getElementById("delanteraLlena").value) || 0;
@@ -98,23 +110,34 @@ async function registrarPesaje() {
     const lleno = parseFloat(document.getElementById("lleno").value) || 0;
     const vacio = parseFloat(document.getElementById("vacio").value) || 0;
     neto = lleno - vacio;
-    material = document.getElementById("material").value;
   }
 
   if (tipo === "mano") {
     neto = parseFloat(document.getElementById("peso").value) || 0;
-    material = document.getElementById("material").value;
   }
+
+  // Siempre hierro
+  const materiales = [{ material: "hierro", peso: neto }];
+
+  // Extra materiales
+  document.querySelectorAll("#listaExtras .extra").forEach(extra => {
+    const mat = extra.querySelector(".extraMaterial").value;
+    const peso = parseFloat(extra.querySelector(".extraPeso").value) || 0;
+    if (peso > 0) {
+      materiales.push({ material: mat, peso });
+    }
+  });
 
   try {
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo,
-      material,
-      pesoNeto: neto,
+      materiales,
       fecha: Timestamp.now()
     });
-    resultadoDiv.innerHTML = `✅ Registrado: ${neto} kg de ${material}`;
+
+    resultadoDiv.innerHTML = `✅ Registrado:<br>
+      ${materiales.map(m => `${m.peso} kg de ${m.material}`).join("<br>")}`;
   } catch (e) {
     resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
@@ -124,6 +147,7 @@ function nuevoPesaje() {
   document.getElementById("resultado").innerText = "";
   document.getElementById("tipo").value = "";
   document.getElementById("campos").innerHTML = "";
+  document.getElementById("listaExtras").innerHTML = "";
 }
 
 function cerrarSesion() {
