@@ -56,6 +56,7 @@ function mostrarCampos() {
 }
 
 function agregarExtra() {
+  console.log("Agregando material extra..."); // 👈 esto te dirá si la función se dispara
   const lista = document.getElementById("listaExtras");
 
   const div = document.createElement("div");
@@ -76,7 +77,7 @@ function agregarExtra() {
       <option value="carrocería">Carrocería</option>
     </select>
     <label>Peso (kg): <input type="number" class="extraPeso"></label>
-    <button class="btnQuitar">❌ Quitar</button>
+    <button class="btnQuitar" type="button">❌ Quitar</button>
   `;
 
   div.querySelector(".btnQuitar").addEventListener("click", () => {
@@ -85,6 +86,7 @@ function agregarExtra() {
 
   lista.appendChild(div);
 }
+
 
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
