@@ -10,7 +10,7 @@ const materiales = [
 const tabla = document.querySelector("#tablaInventario tbody");
 
 async function cargarInventario() {
-  const uid = auth?.currentUser?.uid; // el mismo UID que ves en Firebase
+  const uid = auth?.currentUser?.uid;  
   if (!uid) {
     alert("Debes iniciar sesión para ver el inventario");
     return;
@@ -19,18 +19,19 @@ async function cargarInventario() {
   const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
 
-  // Inicializar todo en 0
   const datos = {};
   materiales.forEach(m => datos[m] = 0);
 
   if (snap.exists()) {
-    const data = snap.data().materiales || {};
+    const data = snap.data();
+    const materialesData = data.materiales || {};
     materiales.forEach(m => {
-      if (data[m] !== undefined) datos[m] = data[m];
+      if (materialesData[m] !== undefined) {
+        datos[m] = materialesData[m];
+      }
     });
   }
 
-  // Renderizar tabla
   tabla.innerHTML = "";
   materiales.forEach(mat => {
     const fila = `<tr><td>${mat}</td><td>${datos[mat]}</td></tr>`;
