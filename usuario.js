@@ -6,15 +6,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRegistrar = document.getElementById("btnRegistrar");
   const btnNuevo = document.getElementById("btnNuevo");
   const btnCerrar = document.getElementById("btnCerrar");
-  const btnAgregarExtra = document.getElementById("btnAgregarExtra");
 
   tipoSelect.addEventListener("change", mostrarCampos);
   btnRegistrar.addEventListener("click", registrarPesaje);
   btnNuevo.addEventListener("click", nuevoPesaje);
   btnCerrar.addEventListener("click", cerrarSesion);
-  btnAgregarExtra.addEventListener("click", agregarExtra);
 });
 
+// --- Mostrar campos según tipo ---
 function mostrarCampos() {
   const tipo = document.getElementById("tipo").value;
   const campos = document.getElementById("campos");
@@ -55,39 +54,29 @@ function mostrarCampos() {
   }
 }
 
-function agregarExtra() {
-  console.log("Agregando material extra..."); // 👈 esto te dirá si la función se dispara
+// --- Agregar material dinámico ---
+window.agregarMaterial = function() {
+  const mat = document.getElementById("materialSelect").value;
+  const peso = parseFloat(document.getElementById("pesoMaterial").value) || 0;
+
+  if (!mat || peso <= 0) {
+    alert("Seleccione un material y un peso válido");
+    return;
+  }
+
   const lista = document.getElementById("listaExtras");
+  const item = document.createElement("p");
+  item.textContent = `${peso} kg de ${mat}`;
+  item.dataset.material = mat;
+  item.dataset.peso = peso;
+  lista.appendChild(item);
 
-  const div = document.createElement("div");
-  div.classList.add("extra");
+  // limpiar campos
+  document.getElementById("materialSelect").value = "";
+  document.getElementById("pesoMaterial").value = "";
+};
 
-  div.innerHTML = `
-    <label>Material:</label>
-    <select class="extraMaterial">
-      <option value="cobre">Cobre</option>
-      <option value="bronce">Bronce</option>
-      <option value="aluminio">Aluminio</option>
-      <option value="batería">Batería</option>
-      <option value="acero">Acero</option>
-      <option value="cable">Cable</option>
-      <option value="catalizador">Catalizador</option>
-      <option value="plástico de lavadora">Plástico de lavadora</option>
-      <option value="plástico de caja">Plástico de caja</option>
-      <option value="carrocería">Carrocería</option>
-    </select>
-    <label>Peso (kg): <input type="number" class="extraPeso"></label>
-    <button class="btnQuitar" type="button">❌ Quitar</button>
-  `;
-
-  div.querySelector(".btnQuitar").addEventListener("click", () => {
-    div.remove();
-  });
-
-  lista.appendChild(div);
-}
-
-
+// --- Registrar pesaje ---
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
   const resultadoDiv = document.getElementById("resultado");
@@ -126,13 +115,12 @@ async function registrarPesaje() {
   // Hierro siempre
   const materiales = [{ material: "Hierro", peso: neto }];
 
-  // Agregar extras
-  document.querySelectorAll("#listaExtras .extra").forEach(extra => {
-    const mat = extra.querySelector(".extraMaterial").value;
-    const peso = parseFloat(extra.querySelector(".extraPeso").value) || 0;
-    if (peso > 0) {
-      materiales.push({ material: mat, peso });
-    }
+  // Agregar extras de la lista
+  document.querySelectorAll("#listaExtras p").forEach(p => {
+    materiales.push({
+      material: p.dataset.material,
+      peso: parseFloat(p.dataset.peso)
+    });
   });
 
   try {
@@ -152,16 +140,10 @@ async function registrarPesaje() {
   }
 }
 
+// --- Actualizar inventario acumulado ---
 async function actualizarInventario(materiales) {
   const uid = auth?.currentUser?.uid || "desconocido";
-
-  // calcular semana actual
-  const ahora = new Date();
-  const año = ahora.getFullYear();
-  const semana = Math.ceil((((ahora - new Date(año, 0, 1)) / 86400000) + new Date(año, 0, 1).getDay() + 1) / 7);
-  const docId = `${uid}_${año}-W${semana}`;
-
-  const docRef = doc(db, "inventarios", docId);
+  const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
   let datos = {};
 
@@ -177,6 +159,7 @@ async function actualizarInventario(materiales) {
   await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 }
 
+// --- Nuevo pesaje ---
 function nuevoPesaje() {
   document.getElementById("resultado").innerText = "";
   document.getElementById("tipo").value = "";
@@ -184,6 +167,7 @@ function nuevoPesaje() {
   document.getElementById("listaExtras").innerHTML = "";
 }
 
+// --- Cerrar sesión ---
 function cerrarSesion() {
   sessionStorage.clear();
   window.location.href = "index.html";
