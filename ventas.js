@@ -17,7 +17,7 @@ async function registrarVenta() {
   }
 
   const uid = auth?.currentUser?.uid || "desconocido";
-  const docRef = doc(db, "inventarios", uid);
+  const docRef = doc(db, "inventarios", uid); // 👈 misma ruta
   const snap = await getDoc(docRef);
   let datos = {};
 
@@ -38,7 +38,6 @@ async function registrarVenta() {
   datos[material] -= peso;
 
   try {
-    // Guardar historial
     await addDoc(collection(db, "ventas"), {
       usuario: auth?.currentUser?.email || "desconocido",
       material,
@@ -46,7 +45,6 @@ async function registrarVenta() {
       fecha: Timestamp.now()
     });
 
-    // Actualizar inventario
     await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 
     resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material}`;
