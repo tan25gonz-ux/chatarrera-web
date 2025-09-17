@@ -21,19 +21,33 @@
 
       <div id="campos"></div>
 
-      <!-- Contenedor para materiales extra -->
-      <h3>Materiales extra</h3>
-      <div id="listaExtras"></div>
-      <button id="btnAgregarExtra">➕ Agregar material extra</button>
+      <h3>Agregar materiales</h3>
+      <select id="materialSelect">
+        <option value="">-- Seleccione --</option>
+        <option value="Cobre">Cobre</option>
+        <option value="Bronce">Bronce</option>
+        <option value="Aluminio">Aluminio</option>
+        <option value="Batería">Batería</option>
+        <option value="Acero">Acero</option>
+        <option value="Cable">Cable</option>
+        <option value="Catalizador">Catalizador</option>
+        <option value="Plástico de lavadora">Plástico de lavadora</option>
+        <option value="Plástico de caja">Plástico de caja</option>
+        <option value="Carrocería">Carrocería</option>
+      </select>
+      <input type="number" id="pesoMaterial" placeholder="Peso (kg)">
+      <button type="button" onclick="agregarMaterial()">➕ Agregar</button>
 
-      <button id="btnRegistrar">Registrar</button>
-      <button id="btnNuevo">Nuevo Pesaje</button>
+      <div id="listaExtras"></div>
+
+      <button id="btnRegistrar" type="button">Registrar</button>
+      <button id="btnNuevo" type="button">Nuevo Pesaje</button>
     </div>
 
     <div id="resultado" class="resultado"></div>
 
     <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
-    <button id="btnCerrar">Cerrar Sesión</button>
+    <button id="btnCerrar" type="button">Cerrar Sesión</button>
   </div>
 
   <script type="module" src="usuario.js"></script>
