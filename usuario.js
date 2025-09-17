@@ -120,16 +120,26 @@ async function registrarPesaje() {
     neto = parseFloat(document.getElementById("peso").value) || 0;
   }
 
-  // Hierro siempre
-  const materiales = [{ material: "Hierro", peso: neto }];
+  const materiales = [];
 
-  // Agregar extras de la lista
+  // Solo agregar hierro si hay neto válido
+  if (neto > 0) {
+    materiales.push({ material: "Hierro", peso: neto });
+  }
+
+  // Agregar extras
   document.querySelectorAll("#listaExtras p").forEach(p => {
-    materiales.push({
-      material: p.dataset.material,
-      peso: parseFloat(p.dataset.peso)
-    });
+    const mat = p.dataset.material;
+    const peso = parseFloat(p.dataset.peso);
+    if (mat && peso > 0) {
+      materiales.push({ material: mat, peso });
+    }
   });
+
+  if (materiales.length === 0) {
+    alert("Debe registrar al menos un material con peso válido.");
+    return;
+  }
 
   try {
     await addDoc(collection(db, "pesajes"), {
@@ -148,7 +158,7 @@ async function registrarPesaje() {
   }
 }
 
-// --- Actualizar inventario (por usuario) ---
+// --- Actualizar inventario ---
 async function actualizarInventario(materiales) {
   const uid = auth?.currentUser?.uid || "anonimo";
   const docRef = doc(db, "inventarios", uid);
