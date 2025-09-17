@@ -70,7 +70,7 @@ window.agregarMaterial = function() {
   item.dataset.material = mat;
   item.dataset.peso = peso;
 
-  // botón para quitar
+  // Botón para quitar
   const btnQuitar = document.createElement("button");
   btnQuitar.textContent = "❌";
   btnQuitar.type = "button";
@@ -148,15 +148,15 @@ async function registrarPesaje() {
   }
 }
 
-// --- Actualizar inventario acumulado ---
+// --- Actualizar inventario (por usuario) ---
 async function actualizarInventario(materiales) {
-  const uid = auth?.currentUser?.uid || "desconocido";
+  const uid = auth?.currentUser?.uid || "anonimo";
   const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
   let datos = {};
 
   if (snap.exists()) {
-    datos = snap.data().materiales;
+    datos = snap.data().materiales || {};
   }
 
   materiales.forEach(m => {
