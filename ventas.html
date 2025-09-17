@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registrar Venta - Chatarrera</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🛒 Registrar Venta</h1>
+
+    <div class="card">
+      <label>Material:</label>
+      <select id="materialVenta">
+        <option value="Hierro">Hierro</option>
+        <option value="Aluminio">Aluminio</option>
+        <option value="Cobre">Cobre</option>
+        <option value="Bronce">Bronce</option>
+        <option value="Batería">Batería</option>
+        <option value="Acero">Acero</option>
+        <option value="Cable">Cable</option>
+        <option value="Catalizador">Catalizador</option>
+        <option value="Plástico de lavadora">Plástico de lavadora</option>
+        <option value="Plástico de caja">Plástico de caja</option>
+        <option value="Carrocería">Carrocería</option>
+      </select>
+
+      <label>Peso vendido (kg):</label>
+      <input type="number" id="pesoVenta">
+
+      <button id="btnVender" type="button">Registrar Venta</button>
+    </div>
+
+    <div id="resultado"></div>
+
+    <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
+    <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
+  </div>
+
+  <script type="module" src="ventas.js"></script>
+</body>
+</html>
