@@ -69,6 +69,14 @@ window.agregarMaterial = function() {
   item.textContent = `${peso} kg de ${mat}`;
   item.dataset.material = mat;
   item.dataset.peso = peso;
+
+  // botón para quitar
+  const btnQuitar = document.createElement("button");
+  btnQuitar.textContent = "❌";
+  btnQuitar.type = "button";
+  btnQuitar.onclick = () => item.remove();
+
+  item.appendChild(btnQuitar);
   lista.appendChild(item);
 
   // limpiar campos
