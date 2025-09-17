@@ -154,6 +154,9 @@ async function registrarPesaje() {
       fecha: Timestamp.now()
     });
 
+    // 👇 actualizar inventario también
+    await actualizarInventario(materiales);
+
     resultadoDiv.innerHTML =
       `✅ Registrado:<br>${materialesConTotal.map(m =>
         `${m.peso} kg de ${m.material} × ₡${m.precioUnit} = ₡${m.total}`
@@ -162,6 +165,25 @@ async function registrarPesaje() {
   } catch (e) {
     resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
+}
+
+// --- Actualizar inventario ---
+async function actualizarInventario(materiales) {
+  const uid = auth?.currentUser?.uid || "desconocido";
+  const docRef = doc(db, "inventarios", uid);
+  const snap = await getDoc(docRef);
+
+  let datos = {};
+  if (snap.exists()) {
+    datos = snap.data().materiales || {};
+  }
+
+  materiales.forEach(m => {
+    if (!datos[m.material]) datos[m.material] = 0;
+    datos[m.material] += m.peso;
+  });
+
+  await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 }
 
 // --- Nuevo pesaje ---
