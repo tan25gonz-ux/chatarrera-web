@@ -10,7 +10,7 @@
     <h1>Registro de Pesaje</h1>
 
     <div class="card">
-      <label for="tipo">Tipo de Camion:</label>
+      <label for="tipo">Tipo de transporte:</label>
       <select id="tipo">
         <option value="">-- Seleccione --</option>
         <option value="camionGrande">Camión Grande</option>
@@ -21,7 +21,7 @@
 
       <div id="campos"></div>
 
-      <h3>Agregar materiales extra</h3>
+      <h3>Agregar materiales</h3>
       <select id="materialSelect">
         <option value="">-- Seleccione --</option>
         <option value="Cobre">Cobre</option>
@@ -46,7 +46,9 @@
 
     <div id="resultado" class="resultado"></div>
 
+    <!-- Navegación -->
     <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
+    <button onclick="window.location.href='ventas.html'">🛒 Registrar Venta</button>
     <button id="btnCerrar" type="button">Cerrar Sesión</button>
   </div>
 
