@@ -1,4 +1,4 @@
-import { db } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 const materiales = [
@@ -10,17 +10,17 @@ const materiales = [
 const tabla = document.querySelector("#tablaInventario tbody");
 
 async function cargarInventario() {
-  const docRef = doc(db, "inventario", "materiales");
+  const uid = auth?.currentUser?.uid || "desconocido";
+  const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
 
   const datos = {};
   materiales.forEach(m => datos[m] = 0);
 
   if (snap.exists()) {
-    const data = snap.data();
+    const data = snap.data().materiales || {};
     materiales.forEach(m => {
-      const normalizado = m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
-      if (data[normalizado] !== undefined) datos[m] = data[normalizado];
+      if (data[m] !== undefined) datos[m] = data[m];
     });
   }
 
