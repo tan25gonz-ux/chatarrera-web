@@ -16,11 +16,13 @@ async function registrarVenta() {
     return;
   }
 
+  const normalizado = material.charAt(0).toUpperCase() + material.slice(1).toLowerCase();
+
   try {
-    // Guardar venta en historial
+    // Guardar historial de ventas
     await addDoc(collection(db, "ventas"), {
       usuario: auth?.currentUser?.email || "desconocido",
-      material,
+      material: normalizado,
       peso,
       fecha: Timestamp.now()
     });
@@ -34,17 +36,17 @@ async function registrarVenta() {
       datos = snap.data();
     }
 
-    if (!datos[material]) datos[material] = 0;
-    if (datos[material] < peso) {
-      resultado.innerText = `❌ No hay suficiente ${material} en inventario. Disponible: ${datos[material]} kg`;
+    if (!datos[normalizado]) datos[normalizado] = 0;
+    if (datos[normalizado] < peso) {
+      resultado.innerText = `❌ No hay suficiente ${normalizado} en inventario. Disponible: ${datos[normalizado]} kg`;
       return;
     }
 
-    datos[material] -= peso;
+    datos[normalizado] -= peso;
 
     await setDoc(docRef, { ...datos, actualizado: Timestamp.now() });
 
-    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material}`;
+    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${normalizado}`;
   } catch (e) {
     resultado.innerText = "❌ Error al guardar: " + e.message;
   }
