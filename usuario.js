@@ -81,6 +81,16 @@ window.agregarMaterial = function() {
   document.getElementById("pesoMaterial").value = "";
 };
 
+// --- Obtener precios desde inputs ---
+function obtenerPrecios() {
+  const precios = {};
+  document.querySelectorAll("#precios input").forEach(input => {
+    const mat = input.id.replace("precio-", "");
+    precios[mat] = parseFloat(input.value) || 0;
+  });
+  return precios;
+}
+
 // --- Registrar pesaje ---
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
@@ -125,40 +135,33 @@ async function registrarPesaje() {
     materiales.push({ material: mat, peso });
   });
 
+  const precios = obtenerPrecios();
+
+  const materialesConTotal = materiales.map(m => {
+    const precioUnit = precios[m.material] || 0;
+    const total = m.peso * precioUnit;
+    return { ...m, precioUnit, total };
+  });
+
+  const totalGeneral = materialesConTotal.reduce((acc, m) => acc + m.total, 0);
+
   try {
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo,
-      materiales,
+      materiales: materialesConTotal,
+      totalGeneral,
       fecha: Timestamp.now()
     });
 
-    await actualizarInventario(materiales);
-
-    resultadoDiv.innerHTML = `✅ Registrado:<br>
-      ${materiales.map(m => `${m.peso} kg de ${m.material}`).join("<br>")}`;
+    resultadoDiv.innerHTML =
+      `✅ Registrado:<br>${materialesConTotal.map(m =>
+        `${m.peso} kg de ${m.material} × ₡${m.precioUnit} = ₡${m.total}`
+      ).join("<br>")}<br><br>
+      <strong>Total general: ₡${totalGeneral}</strong>`;
   } catch (e) {
     resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
-}
-
-// --- Actualizar inventario por usuario ---
-async function actualizarInventario(materiales) {
-  const uid = auth?.currentUser?.uid || "desconocido";
-  const docRef = doc(db, "inventarios", uid); // 👈 siempre en 'inventarios'
-  const snap = await getDoc(docRef);
-  let datos = {};
-
-  if (snap.exists()) {
-    datos = snap.data().materiales || {};
-  }
-
-  materiales.forEach(m => {
-    if (!datos[m.material]) datos[m.material] = 0;
-    datos[m.material] += m.peso;
-  });
-
-  await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 }
 
 // --- Nuevo pesaje ---
