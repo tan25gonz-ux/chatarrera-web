@@ -53,7 +53,7 @@ function mostrarCampos() {
   }
 }
 
-// --- Agregar material dinámico ---
+// --- Agregar material extra ---
 window.agregarMaterial = function() {
   const mat = document.getElementById("materialSelect").value;
   const peso = parseFloat(document.getElementById("pesoMaterial").value) || 0;
@@ -117,15 +117,12 @@ async function registrarPesaje() {
     neto = parseFloat(document.getElementById("peso").value) || 0;
   }
 
-  // Hierro siempre
   const materiales = [{ material: "Hierro", peso: neto }];
 
-  // Agregar extras normalizados
   document.querySelectorAll("#listaExtras p").forEach(p => {
     const mat = p.dataset.material;
     const peso = parseFloat(p.dataset.peso);
-    const normalizado = mat.charAt(0).toUpperCase() + mat.slice(1).toLowerCase();
-    materiales.push({ material: normalizado, peso });
+    materiales.push({ material: mat, peso });
   });
 
   try {
@@ -145,23 +142,23 @@ async function registrarPesaje() {
   }
 }
 
-// --- Actualizar inventario ---
+// --- Actualizar inventario por usuario ---
 async function actualizarInventario(materiales) {
-  const docRef = doc(db, "inventario", "materiales");
+  const uid = auth?.currentUser?.uid || "desconocido";
+  const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
   let datos = {};
 
   if (snap.exists()) {
-    datos = snap.data();
+    datos = snap.data().materiales || {};
   }
 
   materiales.forEach(m => {
-    const normalizado = m.material.charAt(0).toUpperCase() + m.material.slice(1).toLowerCase();
-    if (!datos[normalizado]) datos[normalizado] = 0;
-    datos[normalizado] += m.peso;
+    if (!datos[m.material]) datos[m.material] = 0;
+    datos[m.material] += m.peso;
   });
 
-  await setDoc(docRef, { ...datos, actualizado: Timestamp.now() });
+  await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 }
 
 // --- Nuevo pesaje ---
