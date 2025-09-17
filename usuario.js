@@ -1,6 +1,18 @@
 import { auth, db } from "./firebase.js";
 import { collection, addDoc, Timestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
+document.addEventListener("DOMContentLoaded", () => {
+  const tipoSelect = document.getElementById("tipo");
+  const btnRegistrar = document.getElementById("btnRegistrar");
+  const btnNuevo = document.getElementById("btnNuevo");
+  const btnCerrar = document.getElementById("btnCerrar");
+
+  tipoSelect.addEventListener("change", mostrarCampos);
+  btnRegistrar.addEventListener("click", registrarPesaje);
+  btnNuevo.addEventListener("click", nuevoPesaje);
+  btnCerrar.addEventListener("click", cerrarSesion);
+});
+
 // --- Mostrar campos según tipo ---
 function mostrarCampos() {
   const tipo = document.getElementById("tipo").value;
@@ -16,6 +28,7 @@ function mostrarCampos() {
       <label>Trasera vacía (kg): <input type="number" id="traseraVacia"></label>
     `;
   }
+
   if (tipo === "camionPequeno") {
     campos.innerHTML = `
       <h3>Camión Pequeño (Hierro)</h3>
@@ -23,6 +36,7 @@ function mostrarCampos() {
       <label>Peso vacío (kg): <input type="number" id="vacio"></label>
     `;
   }
+
   if (tipo === "carreta") {
     campos.innerHTML = `
       <h3>Carreta (Hierro por defecto)</h3>
@@ -30,6 +44,7 @@ function mostrarCampos() {
       <label>Peso vacío (kg): <input type="number" id="vacio"></label>
     `;
   }
+
   if (tipo === "mano") {
     campos.innerHTML = `
       <h3>A Mano (Hierro por defecto)</h3>
@@ -37,13 +52,16 @@ function mostrarCampos() {
     `;
   }
 }
-document.getElementById("tipo").addEventListener("change", mostrarCampos);
 
-// --- Agregar material extra ---
+// --- Agregar material dinámico ---
 window.agregarMaterial = function() {
   const mat = document.getElementById("materialSelect").value;
   const peso = parseFloat(document.getElementById("pesoMaterial").value) || 0;
-  if (!mat || peso <= 0) return;
+
+  if (!mat || peso <= 0) {
+    alert("Seleccione un material y un peso válido");
+    return;
+  }
 
   const lista = document.getElementById("listaExtras");
   const item = document.createElement("p");
@@ -67,44 +85,48 @@ window.agregarMaterial = function() {
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
   const resultadoDiv = document.getElementById("resultado");
+
   if (!tipo) {
     alert("Seleccione un tipo primero");
     return;
   }
 
   let neto = 0;
+
   if (tipo === "camionGrande") {
-    neto = (parseFloat(document.getElementById("delanteraLlena").value) || 0) +
-           (parseFloat(document.getElementById("traseraLlena").value) || 0) -
-           (parseFloat(document.getElementById("delanteraVacia").value) || 0) -
-           (parseFloat(document.getElementById("traseraVacia").value) || 0);
+    const delanteraLlena = parseFloat(document.getElementById("delanteraLlena").value) || 0;
+    const traseraLlena = parseFloat(document.getElementById("traseraLlena").value) || 0;
+    const delanteraVacia = parseFloat(document.getElementById("delanteraVacia").value) || 0;
+    const traseraVacia = parseFloat(document.getElementById("traseraVacia").value) || 0;
+    neto = (delanteraLlena + traseraLlena) - (delanteraVacia + traseraVacia);
   }
+
   if (tipo === "camionPequeno") {
-    neto = (parseFloat(document.getElementById("lleno").value) || 0) -
-           (parseFloat(document.getElementById("vacio").value) || 0);
+    const lleno = parseFloat(document.getElementById("lleno").value) || 0;
+    const vacio = parseFloat(document.getElementById("vacio").value) || 0;
+    neto = lleno - vacio;
   }
+
   if (tipo === "carreta") {
-    neto = (parseFloat(document.getElementById("lleno").value) || 0) -
-           (parseFloat(document.getElementById("vacio").value) || 0);
+    const lleno = parseFloat(document.getElementById("lleno").value) || 0;
+    const vacio = parseFloat(document.getElementById("vacio").value) || 0;
+    neto = lleno - vacio;
   }
+
   if (tipo === "mano") {
     neto = parseFloat(document.getElementById("peso").value) || 0;
   }
 
-  const materiales = [];
-  if (neto > 0) {
-    materiales.push({ material: "Hierro", peso: neto });
-  }
+  // Hierro siempre
+  const materiales = [{ material: "Hierro", peso: neto }];
+
+  // Agregar extras normalizados
   document.querySelectorAll("#listaExtras p").forEach(p => {
     const mat = p.dataset.material;
     const peso = parseFloat(p.dataset.peso);
-    if (mat && peso > 0) materiales.push({ material: mat, peso });
+    const normalizado = mat.charAt(0).toUpperCase() + mat.slice(1).toLowerCase();
+    materiales.push({ material: normalizado, peso });
   });
-
-  if (materiales.length === 0) {
-    alert("Debe registrar al menos un material con peso válido.");
-    return;
-  }
 
   try {
     await addDoc(collection(db, "pesajes"), {
@@ -116,40 +138,42 @@ async function registrarPesaje() {
 
     await actualizarInventario(materiales);
 
-    resultadoDiv.innerHTML = `✅ Registrado:<br>${materiales.map(m => `${m.peso} kg de ${m.material}`).join("<br>")}`;
+    resultadoDiv.innerHTML = `✅ Registrado:<br>
+      ${materiales.map(m => `${m.peso} kg de ${m.material}`).join("<br>")}`;
   } catch (e) {
     resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
 }
-document.getElementById("btnRegistrar").addEventListener("click", registrarPesaje);
 
-// --- Actualizar inventario por usuario ---
+// --- Actualizar inventario ---
 async function actualizarInventario(materiales) {
-  const uid = auth?.currentUser?.uid || "anonimo";
-  const docRef = doc(db, "inventarios", uid);
+  const docRef = doc(db, "inventario", "materiales");
   const snap = await getDoc(docRef);
   let datos = {};
 
-  if (snap.exists()) datos = snap.data().materiales || {};
+  if (snap.exists()) {
+    datos = snap.data();
+  }
 
   materiales.forEach(m => {
-    if (!datos[m.material]) datos[m.material] = 0;
-    datos[m.material] += m.peso;
+    const normalizado = m.material.charAt(0).toUpperCase() + m.material.slice(1).toLowerCase();
+    if (!datos[normalizado]) datos[normalizado] = 0;
+    datos[normalizado] += m.peso;
   });
 
-  await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
+  await setDoc(docRef, { ...datos, actualizado: Timestamp.now() });
 }
 
 // --- Nuevo pesaje ---
-document.getElementById("btnNuevo").addEventListener("click", () => {
+function nuevoPesaje() {
   document.getElementById("resultado").innerText = "";
   document.getElementById("tipo").value = "";
   document.getElementById("campos").innerHTML = "";
   document.getElementById("listaExtras").innerHTML = "";
-});
+}
 
 // --- Cerrar sesión ---
-document.getElementById("btnCerrar").addEventListener("click", () => {
+function cerrarSesion() {
   sessionStorage.clear();
   window.location.href = "index.html";
-});
+}
