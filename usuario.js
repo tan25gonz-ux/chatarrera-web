@@ -147,9 +147,15 @@ async function registrarPesaje() {
 
     await actualizarInventario(materiales);
 
+    const fechaHora = new Date().toLocaleString("es-CR", {
+      dateStyle: "short",
+      timeStyle: "short"
+    });
+
     resultadoDiv.innerHTML = `
       <div class="factura">
         <h2>🧾 Factura de Compra</h2>
+        <p><strong>Fecha:</strong> ${fechaHora}</p>
         <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
         ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
         <table>
