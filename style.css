@@ -6,15 +6,19 @@ body {
 }
 
 .container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 40px auto;
   padding: 20px;
+  display: flex;
+  gap: 20px;
 }
 
-h1 {
-  text-align: center;
+.col {
+  flex: 1;
+}
+
+h1, h2, h3 {
   color: #111827;
-  margin-bottom: 30px;
 }
 
 .card {
@@ -48,6 +52,7 @@ button {
   cursor: pointer;
   font-weight: bold;
   transition: background 0.3s;
+  margin: 5px 0;
 }
 
 button:hover {
@@ -59,7 +64,9 @@ button:hover {
   text-align: center;
   margin-top: 20px;
   font-weight: bold;
- .factura {
+}
+
+.factura {
   background: #fff;
   border: 2px solid #333;
   padding: 20px;
@@ -93,5 +100,23 @@ button:hover {
   text-align: center;
 }
 
-
+/* --- Estilos para impresión --- */
+@media print {
+  body * {
+    visibility: hidden; /* Oculta todo */
+  }
+  .factura, .factura * {
+    visibility: visible; /* Solo se imprime la factura */
+  }
+  .factura {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+  }
+  button {
+    display: none !important; /* Ocultar botones al imprimir */
+  }
 }
