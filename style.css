@@ -59,18 +59,23 @@ button:hover {
   text-align: center;
   margin-top: 20px;
   font-weight: bold;
-  .factura {
+ .factura {
   background: #fff;
   border: 2px solid #333;
   padding: 20px;
   margin-top: 20px;
   border-radius: 10px;
-  max-width: 600px;
+  max-width: 700px;
+  font-family: Arial, sans-serif;
 }
 
 .factura h2 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+}
+
+.factura p {
+  margin: 5px 0;
 }
 
 .factura table {
@@ -87,5 +92,6 @@ button:hover {
   padding: 8px;
   text-align: center;
 }
+
 
 }
