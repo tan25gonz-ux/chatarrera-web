@@ -88,7 +88,6 @@ function obtenerPrecios() {
 // --- Registrar pesaje ---
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
-  const resultadoDiv = document.getElementById("resultado");
 
   if (!tipo) {
     alert("Seleccione un tipo primero");
@@ -147,13 +146,27 @@ async function registrarPesaje() {
 
     await actualizarInventario(materiales);
 
+    // --- Abrir factura en nueva ventana ---
     const fechaHora = new Date().toLocaleString("es-CR", {
       dateStyle: "short",
       timeStyle: "short"
     });
 
-    resultadoDiv.innerHTML = `
-      <div class="factura">
+    const facturaHTML = `
+      <html>
+      <head>
+        <title>Factura</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h2 { text-align: center; margin-bottom: 15px; }
+          p { margin: 5px 0; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          table, th, td { border: 1px solid #ccc; }
+          th, td { padding: 8px; text-align: center; }
+          h3 { text-align: right; margin-top: 15px; }
+        </style>
+      </head>
+      <body>
         <h2>🧾 Factura de Compra</h2>
         <p><strong>Fecha:</strong> ${fechaHora}</p>
         <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
@@ -179,11 +192,16 @@ async function registrarPesaje() {
           </tbody>
         </table>
         <h3>Total General: ₡${totalGeneral}</h3>
-        <button onclick="window.print()">🖨️ Imprimir</button>
-      </div>
+        <script>window.print();</script>
+      </body>
+      </html>
     `;
+
+    const nuevaVentana = window.open("", "_blank");
+    nuevaVentana.document.write(facturaHTML);
+    nuevaVentana.document.close();
   } catch (e) {
-    resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
+    alert("❌ Error al guardar: " + e.message);
   }
 }
 
@@ -208,7 +226,6 @@ async function actualizarInventario(materiales) {
 
 // --- Nuevo pesaje ---
 function nuevoPesaje() {
-  document.getElementById("resultado").innerText = "";
   document.getElementById("tipo").value = "";
   document.getElementById("campos").innerHTML = "";
   document.getElementById("listaExtras").innerHTML = "";
