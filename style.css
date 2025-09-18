@@ -59,4 +59,33 @@ button:hover {
   text-align: center;
   margin-top: 20px;
   font-weight: bold;
+  .factura {
+  background: #fff;
+  border: 2px solid #333;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+}
+
+.factura h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.factura table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.factura table, .factura th, .factura td {
+  border: 1px solid #ccc;
+}
+
+.factura th, .factura td {
+  padding: 8px;
+  text-align: center;
+}
+
 }
