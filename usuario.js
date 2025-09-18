@@ -19,19 +19,11 @@ function mostrarCampos() {
   const campos = document.getElementById("campos");
   campos.innerHTML = "";
 
-  if (tipo === "camionGrande") {
+  if (tipo === "camionGrande" || tipo === "camionPequeno") {
     campos.innerHTML = `
-      <h3>Camión Grande (Hierro)</h3>
-      <label>Delantera llena (kg): <input type="number" id="delanteraLlena"></label>
-      <label>Trasera llena (kg): <input type="number" id="traseraLlena"></label>
-      <label>Delantera vacía (kg): <input type="number" id="delanteraVacia"></label>
-      <label>Trasera vacía (kg): <input type="number" id="traseraVacia"></label>
-    `;
-  }
-
-  if (tipo === "camionPequeno") {
-    campos.innerHTML = `
-      <h3>Camión Pequeño (Hierro)</h3>
+      <h3>${tipo === "camionGrande" ? "Camión Grande" : "Camión Pequeño"} (Hierro)</h3>
+      <label>Cédula: <input type="text" id="cedula"></label>
+      <label>Placa: <input type="text" id="placa"></label>
       <label>Peso lleno (kg): <input type="number" id="lleno"></label>
       <label>Peso vacío (kg): <input type="number" id="vacio"></label>
     `;
@@ -40,6 +32,7 @@ function mostrarCampos() {
   if (tipo === "carreta") {
     campos.innerHTML = `
       <h3>Carreta (Hierro por defecto)</h3>
+      <label>Cédula: <input type="text" id="cedula"></label>
       <label>Peso lleno (kg): <input type="number" id="lleno"></label>
       <label>Peso vacío (kg): <input type="number" id="vacio"></label>
     `;
@@ -48,6 +41,7 @@ function mostrarCampos() {
   if (tipo === "mano") {
     campos.innerHTML = `
       <h3>A Mano (Hierro por defecto)</h3>
+      <label>Cédula: <input type="text" id="cedula"></label>
       <label>Peso directo (kg): <input type="number" id="peso"></label>
     `;
   }
@@ -101,17 +95,12 @@ async function registrarPesaje() {
     return;
   }
 
+  const cedula = document.getElementById("cedula")?.value || "";
+  const placa = document.getElementById("placa")?.value || "";
+
   let neto = 0;
 
-  if (tipo === "camionGrande") {
-    const delanteraLlena = parseFloat(document.getElementById("delanteraLlena").value) || 0;
-    const traseraLlena = parseFloat(document.getElementById("traseraLlena").value) || 0;
-    const delanteraVacia = parseFloat(document.getElementById("delanteraVacia").value) || 0;
-    const traseraVacia = parseFloat(document.getElementById("traseraVacia").value) || 0;
-    neto = (delanteraLlena + traseraLlena) - (delanteraVacia + traseraVacia);
-  }
-
-  if (tipo === "camionPequeno") {
+  if (tipo === "camionGrande" || tipo === "camionPequeno") {
     const lleno = parseFloat(document.getElementById("lleno").value) || 0;
     const vacio = parseFloat(document.getElementById("vacio").value) || 0;
     neto = lleno - vacio;
@@ -149,19 +138,44 @@ async function registrarPesaje() {
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo,
+      cedula,
+      placa,
       materiales: materialesConTotal,
       totalGeneral,
       fecha: Timestamp.now()
     });
 
-    // 👇 actualizar inventario también
     await actualizarInventario(materiales);
 
-    resultadoDiv.innerHTML =
-      `✅ Registrado:<br>${materialesConTotal.map(m =>
-        `${m.peso} kg de ${m.material} × ₡${m.precioUnit} = ₡${m.total}`
-      ).join("<br>")}<br><br>
-      <strong>Total general: ₡${totalGeneral}</strong>`;
+    resultadoDiv.innerHTML = `
+      <div class="factura">
+        <h2>🧾 Factura de Compra</h2>
+        <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
+        ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
+        <table>
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>Peso (kg)</th>
+              <th>Precio ₡/kg</th>
+              <th>Total ₡</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${materialesConTotal.map(m =>
+              `<tr>
+                <td>${m.material}</td>
+                <td>${m.peso}</td>
+                <td>₡${m.precioUnit}</td>
+                <td>₡${m.total}</td>
+              </tr>`
+            ).join("")}
+          </tbody>
+        </table>
+        <h3>Total General: ₡${totalGeneral}</h3>
+        <button onclick="window.print()">🖨️ Imprimir</button>
+      </div>
+    `;
   } catch (e) {
     resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
