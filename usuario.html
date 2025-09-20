@@ -6,26 +6,25 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container flex">
-    <!-- Columna izquierda: Pesajes -->
-    <div class="col">
-      <h1>Registro de Pesaje</h1>
+  <div class="container">
+    <h1>⚖️ Registro de Pesaje</h1>
 
-      <div class="card">
-        <label for="tipo">Tipo de transporte:</label>
-        <select id="tipo">
-          <option value="">-- Seleccione --</option>
-          <option value="camionGrande">Camión Grande</option>
-          <option value="camionPequeno">Camión Pequeño</option>
-          <option value="carreta">Carreta</option>
-          <option value="mano">A Mano</option>
-        </select>
+    <div class="card">
+      <label for="tipo">Tipo de transporte:</label>
+      <select id="tipo">
+        <option value="">-- Seleccione --</option>
+        <option value="camionGrande">Camión Grande</option>
+        <option value="camionPequeno">Camión Pequeño</option>
+        <option value="carreta">Carreta</option>
+        <option value="mano">A Mano</option>
+      </select>
 
-        <div id="campos"></div>
+      <div id="campos"></div>
 
-        <!-- Materiales extra -->
-        <h3>Materiales extra</h3>
-        <div id="listaExtras"></div>
+      <!-- Materiales extra -->
+      <h3>Materiales extra</h3>
+      <div id="listaExtras"></div>
+      <div class="extra-inputs">
         <select id="materialSelect">
           <option value="">-- Seleccione material --</option>
           <option value="Hierro">Hierro</option>
@@ -41,23 +40,19 @@
           <option value="Carrocería">Carrocería</option>
         </select>
         <input type="number" id="pesoMaterial" placeholder="Peso (kg)">
-        <button type="button" onclick="agregarMaterial()">➕ Agregar material</button>
-
-        <button id="btnRegistrar">Registrar</button>
-        <button id="btnNuevo">Nuevo Pesaje</button>
+        <button type="button" onclick="agregarMaterial()">➕</button>
       </div>
 
-      <div id="resultado" class="resultado"></div>
-
-      <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
-      <button onclick="window.location.href='ventas.html'">🛒 Registrar Venta</button>
-      <button id="btnCerrar" type="button">Cerrar Sesión</button>
+      <button id="btnRegistrar">Registrar</button>
     </div>
 
-    <!-- Columna derecha: Precios -->
-    <div class="col">
-      <h2>💲 Precios de materiales (₡/kg)</h2>
-      <div id="precios">
+    <!-- Resultado -->
+    <div id="resultado" class="resultado"></div>
+
+    <!-- Menú desplegable de precios -->
+    <div class="accordion">
+      <button class="accordion-btn">💲 Precios de materiales</button>
+      <div class="accordion-content" id="precios">
         <label>Hierro: <input type="number" id="precio-Hierro" value="200"></label>
         <label>Aluminio: <input type="number" id="precio-Aluminio" value="500"></label>
         <label>Cobre: <input type="number" id="precio-Cobre" value="2000"></label>
@@ -71,8 +66,31 @@
         <label>Carrocería: <input type="number" id="precio-Carrocería" value="100"></label>
       </div>
     </div>
+
+    <!-- Menú desplegable de acciones -->
+    <div class="accordion">
+      <button class="accordion-btn">⚙️ Acciones</button>
+      <div class="accordion-content">
+        <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
+        <button onclick="window.location.href='ventas.html'">🛒 Registrar Venta</button>
+        <button onclick="cerrarSesion()">🔒 Cerrar Sesión</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="usuario.js"></script>
+  <script>
+    // Script para abrir/cerrar acordeones
+    document.addEventListener("DOMContentLoaded", () => {
+      const accBtns = document.querySelectorAll(".accordion-btn");
+      accBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          btn.classList.toggle("activo");
+          const content = btn.nextElementSibling;
+          content.style.display = content.style.display === "block" ? "none" : "block";
+        });
+      });
+    });
+  </script>
 </body>
 </html>
