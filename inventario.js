@@ -36,10 +36,9 @@ async function cargarInventario(uid) {
   });
 }
 
-// --- Cargar ventas desde subcolección ---
+// --- Cargar ventas del usuario ---
 async function cargarVentas(uid) {
-  // 👇 Acceder a la subcolección dentro de ventas/{uid}/
-  const ventasRef = collection(db, "ventas", uid);
+  const ventasRef = collection(db, "ventas", uid, "items"); // 👈 ventas/{uid}/items
   const q = query(ventasRef, orderBy("fecha", "desc"));
   const snap = await getDocs(q);
 
