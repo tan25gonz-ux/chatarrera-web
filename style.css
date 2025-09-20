@@ -6,27 +6,23 @@ body {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 800px;
   margin: 40px auto;
   padding: 20px;
-  display: flex;
-  gap: 20px;
 }
 
-.col {
-  flex: 1;
-}
-
-h1, h2, h3 {
-  color: #111827;
+h1 {
+  text-align: center;
+  color: #228B22;
+  margin-bottom: 20px;
 }
 
 .card {
   background: #fff;
   border-radius: 12px;
   padding: 20px;
-  margin: 20px 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 label {
@@ -44,11 +40,11 @@ input, select {
 }
 
 button {
-  background: #2563eb;
+  background: #32CD32;
   color: #fff;
   padding: 10px 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: 25px;
   cursor: pointer;
   font-weight: bold;
   transition: background 0.3s;
@@ -56,67 +52,59 @@ button {
 }
 
 button:hover {
-  background: #1e40af;
+  background: #2eb82e;
 }
 
-.resultado {
-  font-size: 1.2em;
-  text-align: center;
-  margin-top: 20px;
-  font-weight: bold;
-}
-
-.factura {
-  background: #fff;
-  border: 2px solid #333;
-  padding: 20px;
-  margin-top: 20px;
-  border-radius: 10px;
-  max-width: 700px;
-  font-family: Arial, sans-serif;
-}
-
-.factura h2 {
-  text-align: center;
+.extra-inputs {
+  display: flex;
+  gap: 10px;
   margin-bottom: 15px;
 }
 
-.factura p {
-  margin: 5px 0;
+.extra-inputs select, .extra-inputs input {
+  flex: 1;
 }
 
-.factura table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.factura table, .factura th, .factura td {
-  border: 1px solid #ccc;
-}
-
-.factura th, .factura td {
-  padding: 8px;
+.resultado {
+  font-size: 1.1em;
   text-align: center;
+  margin: 15px 0;
+  font-weight: bold;
 }
 
-/* --- Estilos para impresión --- */
-@media print {
-  body * {
-    visibility: hidden; /* Oculta todo */
-  }
-  .factura, .factura * {
-    visibility: visible; /* Solo se imprime la factura */
-  }
-  .factura {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    box-shadow: none;
-    border: none;
-  }
-  button {
-    display: none !important; /* Ocultar botones al imprimir */
-  }
+/* --- Acordeón (desplegable) --- */
+.accordion {
+  margin: 10px 0;
+}
+
+.accordion-btn {
+  width: 100%;
+  text-align: left;
+  padding: 12px;
+  background: #9ACD32;
+  color: #fff;
+  font-size: 1em;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 5px;
+  transition: background 0.3s;
+}
+
+.accordion-btn:hover {
+  background: #7cbf28;
+}
+
+.accordion-content {
+  display: none;
+  padding: 10px;
+  background: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.accordion-content button {
+  width: 100%;
+  margin: 5px 0;
 }
