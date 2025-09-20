@@ -1,16 +1,11 @@
 import { auth, db } from "./firebase.js";
 import { collection, addDoc, Timestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const tipoSelect = document.getElementById("tipo");
-  const btnRegistrar = document.getElementById("btnRegistrar");
-  const btnNuevo = document.getElementById("btnNuevo");
-  const btnCerrar = document.getElementById("btnCerrar");
-
-  tipoSelect.addEventListener("change", mostrarCampos);
-  btnRegistrar.addEventListener("click", registrarPesaje);
-  btnNuevo.addEventListener("click", nuevoPesaje);
-  btnCerrar.addEventListener("click", cerrarSesion);
+  document.getElementById("tipo").addEventListener("change", mostrarCampos);
+  document.getElementById("btnRegistrar").addEventListener("click", registrarPesaje);
+  document.getElementById("btnCerrar").addEventListener("click", cerrarSesion);
 });
 
 // --- Mostrar campos según tipo ---
@@ -47,47 +42,10 @@ function mostrarCampos() {
   }
 }
 
-// --- Agregar material extra ---
-window.agregarMaterial = function() {
-  const mat = document.getElementById("materialSelect").value;
-  const peso = parseFloat(document.getElementById("pesoMaterial").value) || 0;
-
-  if (!mat || peso <= 0) {
-    alert("Seleccione un material y un peso válido");
-    return;
-  }
-
-  const lista = document.getElementById("listaExtras");
-  const item = document.createElement("p");
-  item.textContent = `${peso} kg de ${mat}`;
-  item.dataset.material = mat;
-  item.dataset.peso = peso;
-
-  const btnQuitar = document.createElement("button");
-  btnQuitar.textContent = "❌";
-  btnQuitar.type = "button";
-  btnQuitar.onclick = () => item.remove();
-
-  item.appendChild(btnQuitar);
-  lista.appendChild(item);
-
-  document.getElementById("materialSelect").value = "";
-  document.getElementById("pesoMaterial").value = "";
-};
-
-// --- Obtener precios desde inputs ---
-function obtenerPrecios() {
-  const precios = {};
-  document.querySelectorAll("#precios input").forEach(input => {
-    const mat = input.id.replace("precio-", "");
-    precios[mat] = parseFloat(input.value) || 0;
-  });
-  return precios;
-}
-
 // --- Registrar pesaje ---
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
+  const resultadoDiv = document.getElementById("resultado");
 
   if (!tipo) {
     alert("Seleccione un tipo primero");
@@ -99,13 +57,7 @@ async function registrarPesaje() {
 
   let neto = 0;
 
-  if (tipo === "camionGrande" || tipo === "camionPequeno") {
-    const lleno = parseFloat(document.getElementById("lleno").value) || 0;
-    const vacio = parseFloat(document.getElementById("vacio").value) || 0;
-    neto = lleno - vacio;
-  }
-
-  if (tipo === "carreta") {
+  if (tipo === "camionGrande" || tipo === "camionPequeno" || tipo === "carreta") {
     const lleno = parseFloat(document.getElementById("lleno").value) || 0;
     const vacio = parseFloat(document.getElementById("vacio").value) || 0;
     neto = lleno - vacio;
@@ -117,91 +69,23 @@ async function registrarPesaje() {
 
   const materiales = [{ material: "Hierro", peso: neto }];
 
-  document.querySelectorAll("#listaExtras p").forEach(p => {
-    const mat = p.dataset.material;
-    const peso = parseFloat(p.dataset.peso);
-    materiales.push({ material: mat, peso });
-  });
-
-  const precios = obtenerPrecios();
-
-  const materialesConTotal = materiales.map(m => {
-    const precioUnit = precios[m.material] || 0;
-    const total = m.peso * precioUnit;
-    return { ...m, precioUnit, total };
-  });
-
-  const totalGeneral = materialesConTotal.reduce((acc, m) => acc + m.total, 0);
-
   try {
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo,
       cedula,
       placa,
-      materiales: materialesConTotal,
-      totalGeneral,
+      materiales,
       fecha: Timestamp.now()
     });
 
     await actualizarInventario(materiales);
 
-    // --- Abrir factura en nueva ventana ---
-    const fechaHora = new Date().toLocaleString("es-CR", {
-      dateStyle: "short",
-      timeStyle: "short"
-    });
+    resultadoDiv.innerHTML = `✅ Registrado ${neto} kg de Hierro`;
 
-    const facturaHTML = `
-      <html>
-      <head>
-        <title>Factura</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          h2 { text-align: center; margin-bottom: 15px; }
-          p { margin: 5px 0; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          table, th, td { border: 1px solid #ccc; }
-          th, td { padding: 8px; text-align: center; }
-          h3 { text-align: right; margin-top: 15px; }
-        </style>
-      </head>
-      <body>
-        <h2>🧾 Factura de Compra</h2>
-        <p><strong>Fecha:</strong> ${fechaHora}</p>
-        <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
-        ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
-        <table>
-          <thead>
-            <tr>
-              <th>Material</th>
-              <th>Peso (kg)</th>
-              <th>Precio ₡/kg</th>
-              <th>Total ₡</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${materialesConTotal.map(m =>
-              `<tr>
-                <td>${m.material}</td>
-                <td>${m.peso}</td>
-                <td>₡${m.precioUnit}</td>
-                <td>₡${m.total}</td>
-              </tr>`
-            ).join("")}
-          </tbody>
-        </table>
-        <h3>Total General: ₡${totalGeneral}</h3>
-        <script>window.print();</script>
-      </body>
-      </html>
-    `;
-
-    const nuevaVentana = window.open("", "_blank");
-    nuevaVentana.document.write(facturaHTML);
-    nuevaVentana.document.close();
+    limpiarFormulario(); // 👈 limpiar después de registrar
   } catch (e) {
-    alert("❌ Error al guardar: " + e.message);
+    resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
 }
 
@@ -224,15 +108,19 @@ async function actualizarInventario(materiales) {
   await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 }
 
-// --- Nuevo pesaje ---
-function nuevoPesaje() {
+// --- Limpiar formulario ---
+function limpiarFormulario() {
+  document.querySelectorAll("input").forEach(input => input.value = "");
   document.getElementById("tipo").value = "";
   document.getElementById("campos").innerHTML = "";
-  document.getElementById("listaExtras").innerHTML = "";
 }
 
 // --- Cerrar sesión ---
 function cerrarSesion() {
-  sessionStorage.clear();
-  window.location.href = "index.html";
+  signOut(auth).then(() => {
+    sessionStorage.clear();
+    window.location.href = "index.html";
+  }).catch((error) => {
+    alert("❌ Error al cerrar sesión: " + error.message);
+  });
 }
