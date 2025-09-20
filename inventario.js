@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase.js";
 import { doc, getDoc, collection, query, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 const materiales = [
   "Hierro", "Aluminio", "Cobre", "Bronce",
@@ -11,7 +11,6 @@ const materiales = [
 const tabla = document.querySelector("#tablaInventario tbody");
 const tablaVentas = document.querySelector("#tablaVentas tbody");
 
-// --- Cargar inventario del usuario ---
 async function cargarInventario(uid) {
   const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
@@ -31,14 +30,12 @@ async function cargarInventario(uid) {
 
   tabla.innerHTML = "";
   materiales.forEach(mat => {
-    const fila = `<tr><td>${mat}</td><td>${datos[mat]}</td></tr>`;
-    tabla.innerHTML += fila;
+    tabla.innerHTML += `<tr><td>${mat}</td><td>${datos[mat]}</td></tr>`;
   });
 }
 
-// --- Cargar ventas del usuario ---
 async function cargarVentas(uid) {
-  const ventasRef = collection(db, "ventas", uid, "items"); // 👈 ventas/{uid}/items
+  const ventasRef = collection(db, "ventas", uid, "items");
   const q = query(ventasRef, orderBy("fecha", "desc"));
   const snap = await getDocs(q);
 
@@ -46,17 +43,16 @@ async function cargarVentas(uid) {
   snap.forEach(doc => {
     const v = doc.data();
     const fecha = v.fecha?.toDate().toLocaleString("es-CR") || "Sin fecha";
-    const fila = `<tr>
-      <td>${fecha}</td>
-      <td>${v.material}</td>
-      <td>${v.peso}</td>
-      <td>${v.contenedor || "N/A"}</td>
-    </tr>`;
-    tablaVentas.innerHTML += fila;
+    tablaVentas.innerHTML += `
+      <tr>
+        <td>${fecha}</td>
+        <td>${v.material}</td>
+        <td>${v.peso}</td>
+        <td>${v.contenedor || "N/A"}</td>
+      </tr>`;
   });
 }
 
-// --- Esperar autenticación ---
 onAuthStateChanged(auth, (user) => {
   if (user) {
     cargarInventario(user.uid);
@@ -65,4 +61,11 @@ onAuthStateChanged(auth, (user) => {
     alert("⚠️ Debes iniciar sesión para ver inventario.");
     window.location.href = "index.html";
   }
+});
+
+document.getElementById("btnCerrar").addEventListener("click", () => {
+  signOut(auth).then(() => {
+    sessionStorage.clear();
+    window.location.href = "index.html";
+  }).catch((e) => alert("❌ Error al cerrar sesión: " + e.message));
 });
