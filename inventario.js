@@ -1,5 +1,6 @@
 import { auth, db } from "./firebase.js";
-import { doc, getDoc, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { doc, getDoc, collection, query, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 const materiales = [
   "Hierro", "Aluminio", "Cobre", "Bronce",
@@ -10,9 +11,8 @@ const materiales = [
 const tabla = document.querySelector("#tablaInventario tbody");
 const tablaVentas = document.querySelector("#tablaVentas tbody");
 
-// Cargar inventario del usuario
-async function cargarInventario() {
-  const uid = auth?.currentUser?.uid || "desconocido";
+// --- Cargar inventario del usuario ---
+async function cargarInventario(uid) {
   const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
 
@@ -36,30 +36,34 @@ async function cargarInventario() {
   });
 }
 
-// Cargar ventas con contenedor
-async function cargarVentas() {
-  const q = query(
-    collection(db, "ventas"),
-    where("usuario", "==", auth.currentUser.email),
-    orderBy("fecha", "desc")
-  );
+// --- Cargar ventas desde subcolección ---
+async function cargarVentas(uid) {
+  // 👇 Acceder a la subcolección dentro de ventas/{uid}/
+  const ventasRef = collection(db, "ventas", uid);
+  const q = query(ventasRef, orderBy("fecha", "desc"));
   const snap = await getDocs(q);
 
   tablaVentas.innerHTML = "";
   snap.forEach(doc => {
     const v = doc.data();
-    const fecha = v.fecha.toDate().toLocaleString("es-CR");
+    const fecha = v.fecha?.toDate().toLocaleString("es-CR") || "Sin fecha";
     const fila = `<tr>
       <td>${fecha}</td>
       <td>${v.material}</td>
       <td>${v.peso}</td>
-      <td>${v.contenedor}</td>
+      <td>${v.contenedor || "N/A"}</td>
     </tr>`;
     tablaVentas.innerHTML += fila;
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  cargarInventario();
-  cargarVentas();
+// --- Esperar autenticación ---
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    cargarInventario(user.uid);
+    cargarVentas(user.uid);
+  } else {
+    alert("⚠️ Debes iniciar sesión para ver inventario.");
+    window.location.href = "index.html";
+  }
 });
