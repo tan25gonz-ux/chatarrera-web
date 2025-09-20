@@ -9,15 +9,20 @@ document.addEventListener("DOMContentLoaded", () => {
 async function registrarVenta() {
   const material = document.getElementById("materialVenta").value;
   const peso = parseFloat(document.getElementById("pesoVenta").value) || 0;
+  const contenedor = document.getElementById("contenedorVenta").value.trim();
   const resultado = document.getElementById("resultado");
 
   if (!material || peso <= 0) {
     alert("Seleccione un material y un peso válido");
     return;
   }
+  if (!contenedor) {
+    alert("Ingrese el número de contenedor");
+    return;
+  }
 
   const uid = auth?.currentUser?.uid || "desconocido";
-  const docRef = doc(db, "inventarios", uid); // 👈 misma ruta
+  const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
   let datos = {};
 
@@ -42,12 +47,13 @@ async function registrarVenta() {
       usuario: auth?.currentUser?.email || "desconocido",
       material,
       peso,
+      contenedor, // 👈 Guardamos el contenedor
       fecha: Timestamp.now()
     });
 
     await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 
-    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material}`;
+    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material} (Contenedor: ${contenedor})`;
   } catch (e) {
     resultado.innerText = "❌ Error al guardar: " + e.message;
   }
