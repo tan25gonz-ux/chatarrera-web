@@ -43,14 +43,16 @@ async function registrarVenta() {
   datos[material] -= peso;
 
   try {
-    await addDoc(collection(db, "ventas"), {
+    // 👇 Guardar la venta en la subcolección por usuario
+    await addDoc(collection(db, "ventas", uid, "items"), {
       usuario: auth?.currentUser?.email || "desconocido",
       material,
       peso,
-      contenedor, // 👈 Guardamos el contenedor
+      contenedor,
       fecha: Timestamp.now()
     });
 
+    // 👇 Actualizar el inventario
     await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 
     resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material} (Contenedor: ${contenedor})`;
