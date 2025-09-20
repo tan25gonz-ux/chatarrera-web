@@ -69,21 +69,75 @@ async function registrarPesaje() {
 
   const materiales = [{ material: "Hierro", peso: neto }];
 
+  // Tomar precios de la columna derecha
+  const precios = {};
+  document.querySelectorAll("#precios input").forEach(input => {
+    const mat = input.id.replace("precio-", "");
+    precios[mat] = parseFloat(input.value) || 0;
+  });
+
+  const materialesConTotales = materiales.map(m => {
+    const precioUnit = precios[m.material] || 0;
+    return {
+      ...m,
+      precioUnit,
+      total: m.peso * precioUnit
+    };
+  });
+
+  const totalGeneral = materialesConTotales.reduce((acc, m) => acc + m.total, 0);
+
   try {
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo,
       cedula,
       placa,
-      materiales,
+      materiales: materialesConTotales,
+      totalGeneral,
       fecha: Timestamp.now()
     });
 
     await actualizarInventario(materiales);
 
-    resultadoDiv.innerHTML = `✅ Registrado ${neto} kg de Hierro`;
+    const fechaHora = new Date().toLocaleString("es-CR", {
+      dateStyle: "short",
+      timeStyle: "short"
+    });
 
-    limpiarFormulario(); // 👈 limpiar después de registrar
+    // Mostrar factura
+    resultadoDiv.innerHTML = `
+      <div class="factura">
+        <h2>🧾 Factura de Compra</h2>
+        <p><strong>Fecha:</strong> ${fechaHora}</p>
+        <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
+        ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
+        <table>
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>Peso (kg)</th>
+              <th>Precio ₡/kg</th>
+              <th>Total ₡</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${materialesConTotales.map(m => `
+              <tr>
+                <td>${m.material}</td>
+                <td>${m.peso}</td>
+                <td>₡${m.precioUnit}</td>
+                <td>₡${m.total}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        <h3>Total General: ₡${totalGeneral}</h3>
+        <button onclick="window.print()">🖨️ Imprimir</button>
+      </div>
+    `;
+
+    limpiarFormulario();
   } catch (e) {
     resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
