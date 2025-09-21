@@ -29,48 +29,80 @@ async function registrarVenta() {
   const resultado = document.getElementById("resultado");
 
   if (!material || peso <= 0) {
-    alert("Por favor ingrese datos válidos.");
+    alert("Seleccione un material y un peso válido");
     return;
   }
 
-  try {
-    const precios = obtenerPrecios();
-    const total = peso * (precios[material] || 0);
+  const uid = auth?.currentUser?.uid;
+  if (!uid) {
+    alert("⚠️ Debes iniciar sesión.");
+    return;
+  }
 
-    await addDoc(collection(db, "ventas"), {
+  const docRef = doc(db, "inventarios", uid);
+  const snap = await getDoc(docRef);
+  let datos = {};
+
+  if (snap.exists()) {
+    datos = snap.data().materiales || {};
+  }
+
+  if (!datos[material] || datos[material] < peso) {
+    resultado.innerText = `❌ No hay suficiente ${material}. Disponible: ${datos[material] || 0} kg`;
+    return;
+  }
+
+  datos[material] -= peso;
+
+  const precios = obtenerPrecios();
+  const precioUnit = precios[material] || 0;
+  const total = peso * precioUnit;
+
+  try {
+    await addDoc(collection(db, "ventas", uid, "items"), {
+      usuario: auth?.currentUser?.email || "desconocido",
       material,
       peso,
       contenedor,
+      precioUnit,
       total,
       fecha: Timestamp.now()
     });
 
-    resultado.textContent = `✅ Venta registrada: ${peso} kg de ${material} por ₡${total}`;
-    document.getElementById("pesoVenta").value = "";
-    document.getElementById("contenedor").value = "";
+    await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
+
+    resultado.innerHTML = `
+      ✅ Venta registrada:<br>
+      ${peso} kg de ${material} = <strong>₡${total}</strong>
+    `;
 
     cargarVentas();
-  } catch (error) {
-    console.error("Error al registrar venta:", error);
+  } catch (e) {
+    resultado.innerText = "❌ Error al guardar: " + e.message;
   }
 }
 
 async function cargarVentas() {
-  const tabla = document.querySelector("#tablaVentas tbody");
-  tabla.innerHTML = "";
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return;
 
-  const q = query(collection(db, "ventas"), orderBy("fecha", "desc"));
-  const querySnapshot = await getDocs(q);
+  const ventasRef = collection(db, "ventas", uid, "items");
+  const q = query(ventasRef, orderBy("fecha", "desc"));
+  const snap = await getDocs(q);
 
-  querySnapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    const fila = document.createElement("tr");
-    fila.innerHTML = `
-      <td>${data.material}</td>
-      <td>${data.peso}</td>
-      <td>${data.contenedor || "-"}</td>
-      <td>${data.fecha.toDate().toLocaleString()}</td>
-    `;
-    tabla.appendChild(fila);
+  const tablaVentas = document.querySelector("#tablaVentas tbody");
+  tablaVentas.innerHTML = "";
+
+  snap.forEach(doc => {
+    const v = doc.data();
+    const fecha = v.fecha?.toDate().toLocaleString("es-CR") || "Sin fecha";
+    tablaVentas.innerHTML += `
+      <tr>
+        <td>${fecha}</td>
+        <td>${v.material}</td>
+        <td>${v.peso}</td>
+        <td>${v.contenedor || "N/A"}</td>
+        <td>₡${v.total}</td>
+      </tr>`;
   });
 }
