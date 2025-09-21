@@ -2,58 +2,85 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Registrar Venta - Chatarrera</title>
+  <title>Registrar Venta</title>
   <link rel="stylesheet" href="style.css">
+  <script type="module" src="registrarVenta.js" defer></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    details {
+      background: #fff;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    details summary {
+      font-weight: bold;
+      cursor: pointer;
+      padding: 5px;
+    }
+    form {
+      margin-top: 10px;
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px 0;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: #fff;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: #fff;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🛒 Registrar Venta</h1>
+  <h1>Registrar Venta - Contenedores</h1>
 
-    <div class="card">
-      <label>Material:</label>
-      <select id="materialVenta">
-        <option value="Hierro">Hierro</option>
-        <option value="Aluminio">Aluminio</option>
-        <option value="Cobre">Cobre</option>
-        <option value="Bronce">Bronce</option>
-        <option value="Batería">Batería</option>
-        <option value="Acero">Acero</option>
-        <option value="Cable">Cable</option>
-        <option value="Catalizador">Catalizador</option>
-        <option value="Plástico de lavadora">Plástico de lavadora</option>
-        <option value="Plástico de caja">Plástico de caja</option>
-        <option value="Carrocería">Carrocería</option>
-      </select>
-
-      <label>Peso vendido (kg):</label>
-      <input type="number" id="pesoVenta">
-
-      <label>Número de contenedor:</label>
-      <input type="text" id="contenedor">
-
-      <button id="btnVender" type="button">Registrar Venta</button>
-    </div>
-
-    <div id="resultado"></div>
-
-    <h2>📦 Ventas registradas</h2>
-    <table id="tablaVentas">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Material</th>
-          <th>Peso (kg)</th>
-          <th>Contenedor</th>
-          <th>Total ₡</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
-    <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
+  <div id="acordeon">
+    <!-- El JS va a generar un acordeón con todos los materiales -->
   </div>
 
-  <script type="module" src="ventas.js"></script>
+  <h2>📋 Registro de Ventas</h2>
+  <table id="tablaVentas">
+    <thead>
+      <tr>
+        <th>Contenedor</th>
+        <th>Material</th>
+        <th>Kilos</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </body>
 </html>
