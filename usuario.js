@@ -1,13 +1,9 @@
 import { auth, db } from "./firebase.js";
-import { 
-  collection, addDoc, Timestamp, 
-  doc, setDoc, getDoc 
-} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { collection, addDoc, Timestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("tipo").addEventListener("change", mostrarCampos);
   document.getElementById("btnRegistrar").addEventListener("click", registrarPesaje);
-  document.getElementById("btnAgregarExtra").addEventListener("click", agregarMaterial);
   document.getElementById("btnCerrar").addEventListener("click", cerrarSesion);
 
   // Acordeón precios
@@ -65,35 +61,17 @@ function mostrarCampos() {
   }
 }
 
-// --- Agregar material extra ---
-function agregarMaterial() {
-  const mat = document.getElementById("materialSelect").value;
-  const peso = parseFloat(document.getElementById("pesoMaterial").value) || 0;
-
-  if (!mat || peso <= 0) {
-    alert("Seleccione un material y un peso válido");
-    return;
-  }
-
-  const lista = document.getElementById("listaExtras");
-  const item = document.createElement("p");
-  item.textContent = `${peso} kg de ${mat}`;
-  item.dataset.material = mat;
-  item.dataset.peso = peso;
-
-  const btnQuitar = document.createElement("button");
-  btnQuitar.textContent = "❌";
-  btnQuitar.type = "button";
-  btnQuitar.onclick = () => item.remove();
-
-  item.appendChild(btnQuitar);
-  lista.appendChild(item);
-
-  document.getElementById("materialSelect").value = "";
-  document.getElementById("pesoMaterial").value = "";
+// --- Obtener precios ---
+function obtenerPrecios() {
+  const precios = {};
+  document.querySelectorAll("#precios input").forEach(input => {
+    const mat = input.id.replace("precio-", "");
+    precios[mat] = parseFloat(input.value) || 0;
+  });
+  return precios;
 }
 
-// --- Registrar pesaje ---
+// --- Registrar pesaje (compra) ---
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
   if (!tipo) {
@@ -103,6 +81,7 @@ async function registrarPesaje() {
 
   const cedula = document.getElementById("cedula")?.value || "";
   const placa = document.getElementById("placa")?.value || "";
+  const resultadoDiv = document.getElementById("resultado");
 
   let neto = 0;
 
@@ -124,39 +103,71 @@ async function registrarPesaje() {
     neto = parseFloat(document.getElementById("peso").value) || 0;
   }
 
-  // Materiales: hierro por defecto + extras
   const materiales = [{ material: "Hierro", peso: neto }];
-  document.querySelectorAll("#listaExtras p").forEach(p => {
-    materiales.push({ material: p.dataset.material, peso: parseFloat(p.dataset.peso) });
+
+  const precios = obtenerPrecios();
+  const materialesConTotal = materiales.map(m => {
+    const precioUnit = precios[m.material] || 0;
+    const total = m.peso * precioUnit;
+    return { ...m, precioUnit, total };
   });
 
+  const totalGeneral = materialesConTotal.reduce((acc, m) => acc + m.total, 0);
+
   try {
+    // Guardar compra en pesajes
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo,
       cedula,
       placa,
-      materiales,
+      materiales: materialesConTotal,
+      totalGeneral,
       fecha: Timestamp.now()
     });
 
-    // ✅ Actualizar inventario
+    // Actualizar inventario
     await actualizarInventario(materiales);
 
-    document.getElementById("resultado").innerHTML = `
-      ✅ Registrado:<br>
-      ${materiales.map(m => `${m.peso} kg de ${m.material}`).join("<br>")}
+    // Factura
+    const fechaHora = new Date().toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short" });
+    resultadoDiv.innerHTML = `
+      <div class="factura">
+        <h2>🧾 Factura de Compra</h2>
+        <p><strong>Fecha:</strong> ${fechaHora}</p>
+        <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
+        ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
+        <table>
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>Peso (kg)</th>
+              <th>Precio ₡/kg</th>
+              <th>Total ₡</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${materialesConTotal.map(m => `
+              <tr>
+                <td>${m.material}</td>
+                <td>${m.peso}</td>
+                <td>₡${m.precioUnit}</td>
+                <td>₡${m.total}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+        <h3>Total General: ₡${totalGeneral}</h3>
+        <button onclick="window.print()">🖨 Imprimir</button>
+      </div>
     `;
   } catch (e) {
-    document.getElementById("resultado").innerText = "❌ Error al guardar: " + e.message;
+    resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
   }
 }
 
 // --- Actualizar inventario ---
 async function actualizarInventario(materiales) {
-  const uid = auth?.currentUser?.uid;
-  if (!uid) return;
-
+  const uid = auth?.currentUser?.uid || "desconocido";
   const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
 
