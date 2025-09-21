@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase.js";
-import { collection, addDoc, Timestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const tipoSelect = document.getElementById("tipo");
@@ -9,6 +9,14 @@ document.addEventListener("DOMContentLoaded", () => {
   tipoSelect.addEventListener("change", mostrarCampos);
   btnRegistrar.addEventListener("click", registrarPesaje);
   btnCerrar.addEventListener("click", cerrarSesion);
+
+  // --- Acordeón ---
+  document.querySelectorAll(".accordion-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const content = btn.nextElementSibling;
+      content.style.display = content.style.display === "block" ? "none" : "block";
+    });
+  });
 });
 
 // --- Mostrar campos según tipo ---
@@ -57,6 +65,34 @@ function mostrarCampos() {
   }
 }
 
+// --- Agregar material extra ---
+window.agregarMaterial = function() {
+  const mat = document.getElementById("materialSelect").value;
+  const peso = parseFloat(document.getElementById("pesoMaterial").value) || 0;
+
+  if (!mat || peso <= 0) {
+    alert("Seleccione un material y un peso válido");
+    return;
+  }
+
+  const lista = document.getElementById("listaExtras");
+  const item = document.createElement("p");
+  item.textContent = `${peso} kg de ${mat}`;
+  item.dataset.material = mat;
+  item.dataset.peso = peso;
+
+  const btnQuitar = document.createElement("button");
+  btnQuitar.textContent = "❌";
+  btnQuitar.type = "button";
+  btnQuitar.onclick = () => item.remove();
+
+  item.appendChild(btnQuitar);
+  lista.appendChild(item);
+
+  document.getElementById("materialSelect").value = "";
+  document.getElementById("pesoMaterial").value = "";
+};
+
 // --- Registrar pesaje ---
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
@@ -88,20 +124,32 @@ async function registrarPesaje() {
     neto = parseFloat(document.getElementById("peso").value) || 0;
   }
 
+  // Hierro por defecto + extras
+  const materiales = [{ material: "Hierro", peso: neto }];
+  document.querySelectorAll("#listaExtras p").forEach(p => {
+    materiales.push({
+      material: p.dataset.material,
+      peso: parseFloat(p.dataset.peso) || 0
+    });
+  });
+
   try {
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo,
       cedula,
       placa,
-      material: "Hierro", // por defecto
-      pesoNeto: neto,
+      materiales,
       fecha: Timestamp.now()
     });
 
     document.getElementById("resultado").innerHTML = `
-      ✅ Registrado: ${neto} kg de Hierro
+      ✅ Registrado: ${materiales.map(m => `${m.peso} kg de ${m.material}`).join(", ")}
     `;
+
+    document.getElementById("tipo").value = "";
+    document.getElementById("campos").innerHTML = "";
+    document.getElementById("listaExtras").innerHTML = "";
   } catch (e) {
     document.getElementById("resultado").innerText = "❌ Error al guardar: " + e.message;
   }
