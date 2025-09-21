@@ -4,6 +4,7 @@ import { collection, addDoc, Timestamp, doc, setDoc, getDoc } from "https://www.
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("tipo").addEventListener("change", mostrarCampos);
   document.getElementById("btnRegistrar").addEventListener("click", registrarPesaje);
+  document.getElementById("btnAgregarExtra").addEventListener("click", agregarMaterial);
   document.getElementById("btnCerrar").addEventListener("click", cerrarSesion);
 
   // Acordeón precios
@@ -61,6 +62,34 @@ function mostrarCampos() {
   }
 }
 
+// --- Agregar material extra ---
+function agregarMaterial() {
+  const mat = document.getElementById("materialSelect").value;
+  const peso = parseFloat(document.getElementById("pesoMaterial").value) || 0;
+
+  if (!mat || peso <= 0) {
+    alert("Seleccione un material y un peso válido");
+    return;
+  }
+
+  const lista = document.getElementById("listaExtras");
+  const item = document.createElement("p");
+  item.textContent = `${peso} kg de ${mat}`;
+  item.dataset.material = mat;
+  item.dataset.peso = peso;
+
+  const btnQuitar = document.createElement("button");
+  btnQuitar.textContent = "❌";
+  btnQuitar.type = "button";
+  btnQuitar.onclick = () => item.remove();
+
+  item.appendChild(btnQuitar);
+  lista.appendChild(item);
+
+  document.getElementById("materialSelect").value = "";
+  document.getElementById("pesoMaterial").value = "";
+}
+
 // --- Obtener precios ---
 function obtenerPrecios() {
   const precios = {};
@@ -71,7 +100,7 @@ function obtenerPrecios() {
   return precios;
 }
 
-// --- Registrar pesaje (compra) ---
+// --- Registrar pesaje ---
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
   if (!tipo) {
@@ -81,7 +110,6 @@ async function registrarPesaje() {
 
   const cedula = document.getElementById("cedula")?.value || "";
   const placa = document.getElementById("placa")?.value || "";
-  const resultadoDiv = document.getElementById("resultado");
 
   let neto = 0;
 
@@ -103,7 +131,11 @@ async function registrarPesaje() {
     neto = parseFloat(document.getElementById("peso").value) || 0;
   }
 
+  // Materiales: hierro por defecto + extras
   const materiales = [{ material: "Hierro", peso: neto }];
+  document.querySelectorAll("#listaExtras p").forEach(p => {
+    materiales.push({ material: p.dataset.material, peso: parseFloat(p.dataset.peso) });
+  });
 
   const precios = obtenerPrecios();
   const materialesConTotal = materiales.map(m => {
@@ -111,11 +143,9 @@ async function registrarPesaje() {
     const total = m.peso * precioUnit;
     return { ...m, precioUnit, total };
   });
-
   const totalGeneral = materialesConTotal.reduce((acc, m) => acc + m.total, 0);
 
   try {
-    // Guardar compra en pesajes
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo,
@@ -126,12 +156,10 @@ async function registrarPesaje() {
       fecha: Timestamp.now()
     });
 
-    // Actualizar inventario
     await actualizarInventario(materiales);
 
-    // Factura
     const fechaHora = new Date().toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short" });
-    resultadoDiv.innerHTML = `
+    document.getElementById("resultado").innerHTML = `
       <div class="factura">
         <h2>🧾 Factura de Compra</h2>
         <p><strong>Fecha:</strong> ${fechaHora}</p>
@@ -147,13 +175,14 @@ async function registrarPesaje() {
             </tr>
           </thead>
           <tbody>
-            ${materialesConTotal.map(m => `
-              <tr>
+            ${materialesConTotal.map(m =>
+              `<tr>
                 <td>${m.material}</td>
                 <td>${m.peso}</td>
                 <td>₡${m.precioUnit}</td>
                 <td>₡${m.total}</td>
-              </tr>`).join("")}
+              </tr>`
+            ).join("")}
           </tbody>
         </table>
         <h3>Total General: ₡${totalGeneral}</h3>
@@ -161,7 +190,7 @@ async function registrarPesaje() {
       </div>
     `;
   } catch (e) {
-    resultadoDiv.innerText = "❌ Error al guardar: " + e.message;
+    document.getElementById("resultado").innerText = "❌ Error al guardar: " + e.message;
   }
 }
 
