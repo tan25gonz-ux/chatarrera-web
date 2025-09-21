@@ -1,3 +1,4 @@
+/* --- Estilo general --- */
 body {
   font-family: Arial, sans-serif;
   background: #f3f4f6;
@@ -6,23 +7,29 @@ body {
 }
 
 .container {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 40px auto;
   padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-h1 {
-  text-align: center;
-  color: #228B22;
-  margin-bottom: 20px;
+.col {
+  flex: 1;
+  min-width: 300px;
+}
+
+h1, h2, h3 {
+  color: #111827;
 }
 
 .card {
   background: #fff;
   border-radius: 12px;
   padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 label {
@@ -40,11 +47,11 @@ input, select {
 }
 
 button {
-  background: #32CD32;
+  background: #39d353;
   color: #fff;
   padding: 10px 16px;
   border: none;
-  border-radius: 25px;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
   transition: background 0.3s;
@@ -52,86 +59,114 @@ button {
 }
 
 button:hover {
-  background: #2eb82e;
-}
-
-.extra-inputs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.extra-inputs select, .extra-inputs input {
-  flex: 1;
+  background: #2da53f;
 }
 
 .resultado {
-  font-size: 1.1em;
+  font-size: 1.2em;
   text-align: center;
-  margin: 15px 0;
+  margin-top: 20px;
   font-weight: bold;
 }
 
-/* --- Acordeón (desplegable) --- */
-.accordion {
-  margin: 10px 0;
+/* --- Factura --- */
+.factura {
+  background: #fff;
+  border: 2px solid #333;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 10px;
+  max-width: 700px;
+  font-family: Arial, sans-serif;
 }
 
-.accordion-btn {
-  width: 100%;
-  text-align: left;
-  padding: 12px;
-  background: #9ACD32;
-  color: #fff;
-  font-size: 1em;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 5px;
-  transition: background 0.3s;
+.factura h2 {
+  text-align: center;
+  margin-bottom: 15px;
 }
 
-.accordion-btn:hover {
-  background: #7cbf28;
-}
-
-.accordion-content {
-  display: none;
-  padding: 10px;
-  background: #f9f9f9;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
-
-.accordion-content button {
-  width: 100%;
+.factura p {
   margin: 5px 0;
 }
-#tablaInventario, #tablaVentas {
+
+.factura table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.factura table, .factura th, .factura td {
+  border: 1px solid #ccc;
+}
+
+.factura th, .factura td {
+  padding: 8px;
+  text-align: center;
+}
+
+/* --- Estilos acordeón --- */
+.accordion .accordion-content {
+  display: none;
+  margin-top: 10px;
+}
+
+.accordion .accordion-toggle {
+  background: #39d353;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  text-align: left;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.accordion .accordion-toggle:hover {
+  background: #2da53f;
+}
+
+/* --- Tablas de inventario/contabilidad --- */
+table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0 8px;
+  margin-top: 10px;
 }
 
-#tablaInventario th, #tablaVentas th {
-  background: #39d353; /* Verde limón */
+th {
+  background: #39d353;
   color: #fff;
-  font-size: 1.2em;
-  padding: 12px;
-  border-radius: 6px;
-}
-
-#tablaInventario td, #tablaVentas td {
-  background: #f9f9f9;
-  font-size: 1.1em;
   padding: 10px;
-  text-align: center;
-  border-radius: 6px;
-  border: 1px solid #ddd;
+  font-size: 1.1em;
+  border-radius: 5px;
 }
 
-#tablaInventario tr td:first-child {
-  font-weight: bold;
-  color: #2d3748;
+td {
+  background: #f9f9f9;
+  padding: 8px;
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+/* --- Imprimir solo factura --- */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #factura, #factura * {
+    visibility: visible;
+  }
+  #factura {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+  }
+  button {
+    display: none !important;
+  }
 }
