@@ -6,6 +6,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("tipo").addEventListener("change", mostrarCampos);
   document.getElementById("btnRegistrar").addEventListener("click", registrarPesaje);
   document.getElementById("btnCerrar").addEventListener("click", cerrarSesion);
+
+  // Inicializar acordeón de precios
+  document.querySelectorAll(".accordion-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const content = btn.nextElementSibling;
+      content.style.display = content.style.display === "block" ? "none" : "block";
+    });
+  });
 });
 
 // --- Mostrar campos según tipo ---
@@ -56,20 +64,18 @@ async function registrarPesaje() {
   const placa = document.getElementById("placa")?.value || "";
 
   let neto = 0;
-
   if (tipo === "camionGrande" || tipo === "camionPequeno" || tipo === "carreta") {
     const lleno = parseFloat(document.getElementById("lleno").value) || 0;
     const vacio = parseFloat(document.getElementById("vacio").value) || 0;
     neto = lleno - vacio;
   }
-
   if (tipo === "mano") {
     neto = parseFloat(document.getElementById("peso").value) || 0;
   }
 
   const materiales = [{ material: "Hierro", peso: neto }];
 
-  // Tomar precios de la columna derecha
+  // Obtener precios del acordeón
   const precios = {};
   document.querySelectorAll("#precios input").forEach(input => {
     const mat = input.id.replace("precio-", "");
@@ -78,11 +84,7 @@ async function registrarPesaje() {
 
   const materialesConTotales = materiales.map(m => {
     const precioUnit = precios[m.material] || 0;
-    return {
-      ...m,
-      precioUnit,
-      total: m.peso * precioUnit
-    };
+    return { ...m, precioUnit, total: m.peso * precioUnit };
   });
 
   const totalGeneral = materialesConTotales.reduce((acc, m) => acc + m.total, 0);
@@ -100,7 +102,7 @@ async function registrarPesaje() {
 
     await actualizarInventario(materiales);
 
-    // 👉 Guardar compra como egreso en contabilidad
+    // Guardar compra como egreso en contabilidad
     await addDoc(collection(db, "contabilidad", auth.currentUser.uid, "egresos"), {
       descripcion: `Compra de materiales (${tipo})`,
       monto: totalGeneral,
@@ -112,9 +114,9 @@ async function registrarPesaje() {
       timeStyle: "short"
     });
 
-    // Mostrar factura
+    // Factura dentro de un div exclusivo
     resultadoDiv.innerHTML = `
-      <div class="factura">
+      <div class="factura" id="factura">
         <h2>🧾 Factura de Compra</h2>
         <p><strong>Fecha:</strong> ${fechaHora}</p>
         <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
@@ -173,7 +175,6 @@ async function actualizarInventario(materiales) {
 function limpiarFormulario() {
   const camposPesaje = document.querySelectorAll("#campos input, #campos select");
   camposPesaje.forEach(input => input.value = "");
-
   document.getElementById("tipo").value = "";
   document.getElementById("campos").innerHTML = "";
 }
