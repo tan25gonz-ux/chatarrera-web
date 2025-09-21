@@ -4,70 +4,64 @@
   <meta charset="UTF-8">
   <title>Contabilidad - Chatarrera</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="container">
-    <div class="col">
-      <h1>💵 Contabilidad</h1>
+    <h1>💵 Contabilidad</h1>
 
-      <div class="accordion">
-        <button class="accordion-toggle">➕ Registrar Ingreso</button>
-        <div class="accordion-content">
-          <div class="card">
-            <label>Descripción:</label>
-            <input type="text" id="descIngreso">
-            <label>Monto (₡):</label>
-            <input type="number" id="montoIngreso">
-            <button id="btnIngreso">Guardar Ingreso</button>
-          </div>
-        </div>
-
-        <button class="accordion-toggle">➖ Registrar Egreso</button>
-        <div class="accordion-content">
-          <div class="card">
-            <label>Descripción:</label>
-            <input type="text" id="descEgreso">
-            <label>Monto (₡):</label>
-            <input type="number" id="montoEgreso">
-            <button id="btnEgreso">Guardar Egreso</button>
-          </div>
+    <div class="accordion">
+      <button class="accordion-toggle">➕ Registrar Ingreso</button>
+      <div class="accordion-content" style="display:none">
+        <div class="card">
+          <label>Descripción:</label>
+          <input type="text" id="descIngreso">
+          <label>Monto (₡):</label>
+          <input type="number" id="montoIngreso">
+          <button id="btnIngreso">Guardar Ingreso</button>
         </div>
       </div>
 
-      <div class="card">
-        <h2>📊 Resumen</h2>
-        <table id="tablaContabilidad">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Descripción</th>
-              <th>Monto (₡)</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <h3 id="balance"></h3>
+      <button class="accordion-toggle">➖ Registrar Egreso</button>
+      <div class="accordion-content" style="display:none">
+        <div class="card">
+          <label>Descripción:</label>
+          <input type="text" id="descEgreso">
+          <label>Monto (₡):</label>
+          <input type="number" id="montoEgreso">
+          <button id="btnEgreso">Guardar Egreso</button>
+        </div>
       </div>
-
-      <!-- Gráfico de dona -->
-      <div class="card">
-        <h2>📈 Gráfico Ingresos vs Egresos</h2>
-        <canvas id="graficoContabilidad"></canvas>
-      </div>
-
-      <!-- Gráfico histórico -->
-      <div class="card">
-        <h2>📆 Histórico mensual</h2>
-        <canvas id="graficoHistorico"></canvas>
-      </div>
-
-      <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
     </div>
-  </div>
 
-  <!-- Librería Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <div class="card">
+      <h2>📊 Resumen</h2>
+      <table id="tablaContabilidad">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Descripción</th>
+            <th>Monto (₡)</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <h3 id="balance"></h3>
+    </div>
+
+    <div class="card">
+      <h2>📈 Ingresos vs Egresos</h2>
+      <canvas id="graficoContabilidad"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>📆 Histórico mensual</h2>
+      <canvas id="graficoHistorico"></canvas>
+    </div>
+
+    <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
+  </div>
   <script type="module" src="contabilidad.js"></script>
 </body>
 </html>
