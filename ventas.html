@@ -2,20 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Registrar Venta</title>
+  <title>Registrar Venta - Chatarrera</title>
   <link rel="stylesheet" href="style.css">
-  <script type="module" src="registrarVenta.js" defer></script>
+  <script type="module" src="ventas.js" defer></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f5f5f5;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
     details {
       background: #fff;
       margin-bottom: 10px;
@@ -27,9 +17,6 @@
       font-weight: bold;
       cursor: pointer;
       padding: 5px;
-    }
-    form {
-      margin-top: 10px;
     }
     input, button {
       padding: 8px;
@@ -65,22 +52,24 @@
   </style>
 </head>
 <body>
-  <h1>Registrar Venta - Contenedores</h1>
+  <div class="container">
+    <h1>🛒 Registrar Venta - Contenedores</h1>
 
-  <div id="acordeon">
-    <!-- El JS va a generar un acordeón con todos los materiales -->
+    <div id="acordeon">
+      <!-- El JS genera acordeón dinámico con materiales -->
+    </div>
+
+    <h2>📋 Registro de Ventas</h2>
+    <table id="tablaVentas">
+      <thead>
+        <tr>
+          <th>Contenedor</th>
+          <th>Material</th>
+          <th>Kilos</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
-
-  <h2>📋 Registro de Ventas</h2>
-  <table id="tablaVentas">
-    <thead>
-      <tr>
-        <th>Contenedor</th>
-        <th>Material</th>
-        <th>Kilos</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
 </body>
 </html>
