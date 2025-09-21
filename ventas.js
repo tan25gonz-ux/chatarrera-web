@@ -6,20 +6,29 @@ document.addEventListener("DOMContentLoaded", () => {
   btnVender.addEventListener("click", registrarVenta);
 });
 
+function obtenerPrecios() {
+  const precios = {};
+  document.querySelectorAll("#preciosVenta input").forEach(input => {
+    const mat = input.id.replace("precio-", "");
+    precios[mat] = parseFloat(input.value) || 0;
+  });
+  return precios;
+}
+
 async function registrarVenta() {
   const material = document.getElementById("materialVenta").value;
   const peso = parseFloat(document.getElementById("pesoVenta").value) || 0;
-  const contenedor = document.getElementById("contenedorVenta").value.trim();
+  const contenedor = document.getElementById("contenedor").value || "N/A";
   const resultado = document.getElementById("resultado");
 
   if (!material || peso <= 0) {
     alert("Seleccione un material y un peso válido");
     return;
   }
-  if (!contenedor) {
-    alert("Ingrese el número de contenedor");
-    return;
-  }
+
+  const precios = obtenerPrecios();
+  const precioUnit = precios[material] || 0;
+  const total = peso * precioUnit;
 
   const uid = auth?.currentUser?.uid || "desconocido";
   const docRef = doc(db, "inventarios", uid);
@@ -43,19 +52,25 @@ async function registrarVenta() {
   datos[material] -= peso;
 
   try {
-    // 👇 Guardar la venta en la subcolección por usuario
     await addDoc(collection(db, "ventas", uid, "items"), {
       usuario: auth?.currentUser?.email || "desconocido",
       material,
       peso,
       contenedor,
+      total,
       fecha: Timestamp.now()
     });
 
-    // 👇 Actualizar el inventario
     await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 
-    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material} (Contenedor: ${contenedor})`;
+    // 👉 Guardar venta como ingreso en contabilidad
+    await addDoc(collection(db, "contabilidad", auth.currentUser.uid, "ingresos"), {
+      descripcion: `Venta de ${material} (Contenedor ${contenedor})`,
+      monto: total,
+      fecha: Timestamp.now()
+    });
+
+    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material} (₡${total})`;
   } catch (e) {
     resultado.innerText = "❌ Error al guardar: " + e.message;
   }
