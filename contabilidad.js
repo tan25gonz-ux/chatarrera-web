@@ -1,59 +1,62 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Contabilidad - Chatarrera</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <div class="col">
-      <h1>💵 Contabilidad</h1>
+import { auth, db } from "./firebase.js";
+import { collection, addDoc, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-      <div class="accordion">
-        <button class="accordion-toggle">➕ Registrar Ingreso</button>
-        <div class="accordion-content">
-          <div class="card">
-            <label>Descripción:</label>
-            <input type="text" id="descIngreso">
-            <label>Monto (₡):</label>
-            <input type="number" id="montoIngreso">
-            <button id="btnIngreso">Guardar Ingreso</button>
-          </div>
-        </div>
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btnIngreso").addEventListener("click", () => registrar("ingresos"));
+  document.getElementById("btnEgreso").addEventListener("click", () => registrar("egresos"));
 
-        <button class="accordion-toggle">➖ Registrar Egreso</button>
-        <div class="accordion-content">
-          <div class="card">
-            <label>Descripción:</label>
-            <input type="text" id="descEgreso">
-            <label>Monto (₡):</label>
-            <input type="number" id="montoEgreso">
-            <button id="btnEgreso">Guardar Egreso</button>
-          </div>
-        </div>
-      </div>
+  // Acordeón
+  document.querySelectorAll(".accordion-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const content = btn.nextElementSibling;
+      content.style.display = content.style.display === "block" ? "none" : "block";
+    });
+  });
 
-      <div class="card">
-        <h2>📊 Resumen</h2>
-        <table id="tablaContabilidad">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Descripción</th>
-              <th>Monto (₡)</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-        <h3 id="balance"></h3>
-      </div>
+  cargarContabilidad();
+});
 
-      <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
-    </div>
-  </div>
+async function registrar(tipo) {
+  const desc = document.getElementById(tipo === "ingresos" ? "descIngreso" : "descEgreso").value;
+  const monto = parseFloat(document.getElementById(tipo === "ingresos" ? "montoIngreso" : "montoEgreso").value) || 0;
 
-  <script type="module" src="contabilidad.js"></script>
-</body>
-</html>
+  if (!desc || monto <= 0) {
+    alert("Complete todos los campos correctamente");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "contabilidad", auth.currentUser.uid, tipo), {
+      descripcion: desc,
+      monto,
+      fecha: Timestamp.now()
+    });
+    cargarContabilidad();
+  } catch (e) {
+    alert("❌ Error: " + e.message);
+  }
+}
+
+async function cargarContabilidad() {
+  const ingresosSnap = await getDocs(collection(db, "contabilidad", auth.currentUser.uid, "ingresos"));
+  const egresosSnap = await getDocs(collection(db, "contabilidad", auth.currentUser.uid, "egresos"));
+
+  const tabla = document.querySelector("#tablaContabilidad tbody");
+  tabla.innerHTML = "";
+  let totalIngresos = 0;
+  let totalEgresos = 0;
+
+  ingresosSnap.forEach(doc => {
+    const d = doc.data();
+    totalIngresos += d.monto;
+    tabla.innerHTML += `<tr><td style="color:green">Ingreso</td><td>${d.descripcion}</td><td>₡${d.monto}</td><td>${d.fecha.toDate().toLocaleString()}</td></tr>`;
+  });
+
+  egresosSnap.forEach(doc => {
+    const d = doc.data();
+    totalEgresos += d.monto;
+    tabla.innerHTML += `<tr><td style="color:red">Egreso</td><td>${d.descripcion}</td><td>₡${d.monto}</td><td>${d.fecha.toDate().toLocaleString()}</td></tr>`;
+  });
+
+  document.getElementById("balance").innerText = `💰 Balance: ₡${totalIngresos - totalEgresos}`;
+}
