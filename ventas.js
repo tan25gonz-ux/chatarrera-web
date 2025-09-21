@@ -1,30 +1,27 @@
 import { auth, db } from "./firebase.js";
-import { collection, addDoc, Timestamp, doc, getDoc, setDoc } 
-  from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { collection, addDoc, Timestamp, doc, getDoc, setDoc, query, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnVender").addEventListener("click", registrarVenta);
-
-  // Acordeón precios
-  document.querySelectorAll(".accordion-toggle").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const content = btn.nextElementSibling;
-      content.style.display = content.style.display === "block" ? "none" : "block";
-    });
-  });
+  cargarVentas();
 });
 
-// --- Obtener precios desde inputs ---
 function obtenerPrecios() {
-  const precios = {};
-  document.querySelectorAll("#preciosVenta input").forEach(input => {
-    const mat = input.id.replace("precio-", "");
-    precios[mat] = parseFloat(input.value) || 0;
-  });
-  return precios;
+  return {
+    "Hierro": 200,
+    "Aluminio": 500,
+    "Cobre": 2000,
+    "Bronce": 1500,
+    "Batería": 300,
+    "Acero": 250,
+    "Cable": 1000,
+    "Catalizador": 4000,
+    "Plástico de lavadora": 50,
+    "Plástico de caja": 30,
+    "Carrocería": 100
+  };
 }
 
-// --- Registrar venta ---
 async function registrarVenta() {
   const material = document.getElementById("materialVenta").value;
   const peso = parseFloat(document.getElementById("pesoVenta").value) || 0;
@@ -62,7 +59,6 @@ async function registrarVenta() {
   const total = peso * precioUnit;
 
   try {
-    // ✅ Guardar venta en subcolección "items" del usuario
     await addDoc(collection(db, "ventas", uid, "items"), {
       usuario: auth?.currentUser?.email || "desconocido",
       material,
@@ -73,39 +69,40 @@ async function registrarVenta() {
       fecha: Timestamp.now()
     });
 
-    // ✅ Actualizar inventario
     await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 
-    // ✅ Mostrar comprobante
-    const fechaHora = new Date().toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short" });
     resultado.innerHTML = `
-      <div class="factura">
-        <h2>🧾 Comprobante de Venta</h2>
-        <p><strong>Fecha:</strong> ${fechaHora}</p>
-        <p><strong>Contenedor:</strong> ${contenedor || "N/A"}</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Material</th>
-              <th>Peso (kg)</th>
-              <th>Precio ₡/kg</th>
-              <th>Total ₡</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>${material}</td>
-              <td>${peso}</td>
-              <td>₡${precioUnit}</td>
-              <td>₡${total}</td>
-            </tr>
-          </tbody>
-        </table>
-        <h3>Total General: ₡${total}</h3>
-        <button onclick="window.print()">🖨 Imprimir</button>
-      </div>
+      ✅ Venta registrada:<br>
+      ${peso} kg de ${material} = <strong>₡${total}</strong>
     `;
+
+    cargarVentas();
   } catch (e) {
     resultado.innerText = "❌ Error al guardar: " + e.message;
   }
+}
+
+async function cargarVentas() {
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return;
+
+  const ventasRef = collection(db, "ventas", uid, "items");
+  const q = query(ventasRef, orderBy("fecha", "desc"));
+  const snap = await getDocs(q);
+
+  const tablaVentas = document.querySelector("#tablaVentas tbody");
+  tablaVentas.innerHTML = "";
+
+  snap.forEach(doc => {
+    const v = doc.data();
+    const fecha = v.fecha?.toDate().toLocaleString("es-CR") || "Sin fecha";
+    tablaVentas.innerHTML += `
+      <tr>
+        <td>${fecha}</td>
+        <td>${v.material}</td>
+        <td>${v.peso}</td>
+        <td>${v.contenedor || "N/A"}</td>
+        <td>₡${v.total}</td>
+      </tr>`;
+  });
 }
