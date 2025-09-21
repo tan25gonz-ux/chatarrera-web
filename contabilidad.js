@@ -1,6 +1,9 @@
 import { auth, db } from "./firebase.js";
 import { collection, addDoc, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
+let chartDona;
+let chartBarras;
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnIngreso").addEventListener("click", () => registrar("ingresos"));
   document.getElementById("btnEgreso").addEventListener("click", () => registrar("egresos"));
@@ -46,17 +49,102 @@ async function cargarContabilidad() {
   let totalIngresos = 0;
   let totalEgresos = 0;
 
+  // --- Agrupación mensual ---
+  const historico = {}; // { "2025-01": { ingresos: 0, egresos: 0 } }
+
   ingresosSnap.forEach(doc => {
     const d = doc.data();
     totalIngresos += d.monto;
     tabla.innerHTML += `<tr><td style="color:green">Ingreso</td><td>${d.descripcion}</td><td>₡${d.monto}</td><td>${d.fecha.toDate().toLocaleString()}</td></tr>`;
+    const mes = obtenerMes(d.fecha.toDate());
+    if (!historico[mes]) historico[mes] = { ingresos: 0, egresos: 0 };
+    historico[mes].ingresos += d.monto;
   });
 
   egresosSnap.forEach(doc => {
     const d = doc.data();
     totalEgresos += d.monto;
     tabla.innerHTML += `<tr><td style="color:red">Egreso</td><td>${d.descripcion}</td><td>₡${d.monto}</td><td>${d.fecha.toDate().toLocaleString()}</td></tr>`;
+    const mes = obtenerMes(d.fecha.toDate());
+    if (!historico[mes]) historico[mes] = { ingresos: 0, egresos: 0 };
+    historico[mes].egresos += d.monto;
   });
 
   document.getElementById("balance").innerText = `💰 Balance: ₡${totalIngresos - totalEgresos}`;
+
+  actualizarGrafico(totalIngresos, totalEgresos);
+  actualizarHistorico(historico);
+}
+
+function obtenerMes(fecha) {
+  const año = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+  return `${año}-${mes}`;
+}
+
+function actualizarGrafico(ingresos, egresos) {
+  const ctx = document.getElementById("graficoContabilidad").getContext("2d");
+
+  if (chartDona) chartDona.destroy();
+
+  chartDona = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Ingresos", "Egresos"],
+      datasets: [{
+        data: [ingresos, egresos],
+        backgroundColor: ["#39d353", "#ff4d4d"]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "bottom"
+        }
+      }
+    }
+  });
+}
+
+function actualizarHistorico(historico) {
+  const ctx = document.getElementById("graficoHistorico").getContext("2d");
+
+  if (chartBarras) chartBarras.destroy();
+
+  const labels = Object.keys(historico).sort();
+  const ingresosData = labels.map(m => historico[m].ingresos);
+  const egresosData = labels.map(m => historico[m].egresos);
+
+  chartBarras = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Ingresos",
+          data: ingresosData,
+          backgroundColor: "#39d353"
+        },
+        {
+          label: "Egresos",
+          data: egresosData,
+          backgroundColor: "#ff4d4d"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: "bottom"
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
 }
