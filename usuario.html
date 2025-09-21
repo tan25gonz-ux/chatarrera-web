@@ -22,45 +22,26 @@
         </select>
 
         <div id="campos"></div>
-
-        <!-- Materiales extra -->
-        <h3>Materiales extra</h3>
-        <div id="listaExtras"></div>
-        <select id="materialSelect">
-          <option value="">-- Seleccione material --</option>
-          <option value="Hierro">Hierro</option>
-          <option value="Aluminio">Aluminio</option>
-          <option value="Cobre">Cobre</option>
-          <option value="Bronce">Bronce</option>
-          <option value="Batería">Batería</option>
-          <option value="Acero">Acero</option>
-          <option value="Cable">Cable</option>
-          <option value="Catalizador">Catalizador</option>
-          <option value="Plástico de lavadora">Plástico de lavadora</option>
-          <option value="Plástico de caja">Plástico de caja</option>
-          <option value="Carrocería">Carrocería</option>
-        </select>
-        <input type="number" id="pesoMaterial" placeholder="Peso (kg)">
-        <button type="button" onclick="agregarMaterial()">➕ Agregar material</button>
-
         <button id="btnRegistrar">Registrar</button>
       </div>
 
-      <!-- Resultado: aquí se inserta la factura -->
       <div id="resultado" class="resultado"></div>
 
       <!-- Navegación -->
-      <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
-      <button onclick="window.location.href='ventas.html'">🛒 Registrar Venta</button>
-      <button onclick="window.location.href='contabilidad.html'">💵 Ver Contabilidad</button>
-      <button id="btnCerrar" type="button">Cerrar Sesión</button>
+      <div class="card">
+        <h3>Acciones</h3>
+        <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
+        <button onclick="window.location.href='ventas.html'">🛒 Registrar Venta</button>
+        <button onclick="window.location.href='contabilidad.html'">💵 Ver Contabilidad</button>
+        <button id="btnCerrar" type="button">Cerrar Sesión</button>
+      </div>
     </div>
 
     <!-- Columna derecha: Precios -->
     <div class="col">
       <div class="accordion">
         <button class="accordion-toggle">💲 Precios de materiales</button>
-        <div class="accordion-content" id="precios">
+        <div class="accordion-content" id="precios" style="display:none">
           <label>Hierro: <input type="number" id="precio-Hierro" value="200"></label>
           <label>Aluminio: <input type="number" id="precio-Aluminio" value="500"></label>
           <label>Cobre: <input type="number" id="precio-Cobre" value="2000"></label>
@@ -76,7 +57,6 @@
       </div>
     </div>
   </div>
-
   <script type="module" src="usuario.js"></script>
 </body>
 </html>
