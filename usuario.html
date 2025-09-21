@@ -1,84 +1,108 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Registro de Pesaje - Chatarrera</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container flex">
-    <!-- Columna izquierda: Pesajes -->
-    <div class="col">
-      <h1>Registro de Pesaje</h1>
+import { auth, db } from "./firebase.js";
+import { collection, addDoc, Timestamp, doc, getDoc, setDoc, query, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-      <div class="card">
-        <label for="tipo">Tipo de transporte:</label>
-        <select id="tipo">
-          <option value="">-- Seleccione --</option>
-          <option value="camionGrande">Camión Grande</option>
-          <option value="camionPequeno">Camión Pequeño</option>
-          <option value="carreta">Carreta</option>
-          <option value="mano">A Mano</option>
-        </select>
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btnVender").addEventListener("click", registrarVenta);
+  cargarVentas();
+});
 
-        <div id="campos"></div>
+function obtenerPrecios() {
+  return {
+    "Hierro": 200,
+    "Aluminio": 500,
+    "Cobre": 2000,
+    "Bronce": 1500,
+    "Batería": 300,
+    "Acero": 250,
+    "Cable": 1000,
+    "Catalizador": 4000,
+    "Plástico de lavadora": 50,
+    "Plástico de caja": 30,
+    "Carrocería": 100
+  };
+}
 
-        <!-- Materiales extra -->
-        <h3>➕ Materiales extra</h3>
-        <div id="listaExtras"></div>
-        <select id="materialSelect">
-          <option value="">-- Seleccione material --</option>
-          <option value="Hierro">Hierro</option>
-          <option value="Aluminio">Aluminio</option>
-          <option value="Cobre">Cobre</option>
-          <option value="Bronce">Bronce</option>
-          <option value="Batería">Batería</option>
-          <option value="Acero">Acero</option>
-          <option value="Cable">Cable</option>
-          <option value="Catalizador">Catalizador</option>
-          <option value="Plástico de lavadora">Plástico de lavadora</option>
-          <option value="Plástico de caja">Plástico de caja</option>
-          <option value="Carrocería">Carrocería</option>
-        </select>
-        <input type="number" id="pesoMaterial" placeholder="Peso (kg)">
-        <button type="button" id="btnAgregarExtra">Agregar</button>
+async function registrarVenta() {
+  const material = document.getElementById("materialVenta").value;
+  const peso = parseFloat(document.getElementById("pesoVenta").value) || 0;
+  const contenedor = document.getElementById("contenedor").value.trim();
+  const resultado = document.getElementById("resultado");
 
-        <button id="btnRegistrar">Registrar</button>
-      </div>
+  if (!material || peso <= 0) {
+    alert("Seleccione un material y un peso válido");
+    return;
+  }
 
-      <!-- Resultado: aquí se inserta la factura -->
-      <div id="resultado" class="resultado"></div>
+  const uid = auth?.currentUser?.uid;
+  if (!uid) {
+    alert("⚠️ Debes iniciar sesión.");
+    return;
+  }
 
-      <!-- Navegación -->
-      <div class="card">
-        <h3>Acciones</h3>
-        <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
-        <button onclick="window.location.href='ventas.html'">🛒 Registrar Venta</button>
-        <button onclick="window.location.href='contabilidad.html'">💵 Ver Contabilidad</button>
-        <button id="btnCerrar" type="button">Cerrar Sesión</button>
-      </div>
-    </div>
+  const docRef = doc(db, "inventarios", uid);
+  const snap = await getDoc(docRef);
+  let datos = {};
 
-    <!-- Columna derecha: Precios -->
-    <div class="col">
-      <div class="accordion">
-        <button class="accordion-toggle">💲 Precios de materiales</button>
-        <div class="accordion-content" id="precios" style="display:none">
-          <label>Hierro: <input type="number" id="precio-Hierro" value="200"></label>
-          <label>Aluminio: <input type="number" id="precio-Aluminio" value="500"></label>
-          <label>Cobre: <input type="number" id="precio-Cobre" value="2000"></label>
-          <label>Bronce: <input type="number" id="precio-Bronce" value="1500"></label>
-          <label>Batería: <input type="number" id="precio-Batería" value="300"></label>
-          <label>Acero: <input type="number" id="precio-Acero" value="250"></label>
-          <label>Cable: <input type="number" id="precio-Cable" value="1000"></label>
-          <label>Catalizador: <input type="number" id="precio-Catalizador" value="4000"></label>
-          <label>Plástico de lavadora: <input type="number" id="precio-Plástico de lavadora" value="50"></label>
-          <label>Plástico de caja: <input type="number" id="precio-Plástico de caja" value="30"></label>
-          <label>Carrocería: <input type="number" id="precio-Carrocería" value="100"></label>
-        </div>
-      </div>
-    </div>
-  </div>
-  <script type="module" src="usuario.js"></script>
-</body>
-</html>
+  if (snap.exists()) {
+    datos = snap.data().materiales || {};
+  }
+
+  if (!datos[material] || datos[material] < peso) {
+    resultado.innerText = `❌ No hay suficiente ${material}. Disponible: ${datos[material] || 0} kg`;
+    return;
+  }
+
+  datos[material] -= peso;
+
+  const precios = obtenerPrecios();
+  const precioUnit = precios[material] || 0;
+  const total = peso * precioUnit;
+
+  try {
+    await addDoc(collection(db, "ventas", uid, "items"), {
+      usuario: auth?.currentUser?.email || "desconocido",
+      material,
+      peso,
+      contenedor,
+      precioUnit,
+      total,
+      fecha: Timestamp.now()
+    });
+
+    await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
+
+    resultado.innerHTML = `
+      ✅ Venta registrada:<br>
+      ${peso} kg de ${material} = <strong>₡${total}</strong>
+    `;
+
+    cargarVentas();
+  } catch (e) {
+    resultado.innerText = "❌ Error al guardar: " + e.message;
+  }
+}
+
+async function cargarVentas() {
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return;
+
+  const ventasRef = collection(db, "ventas", uid, "items");
+  const q = query(ventasRef, orderBy("fecha", "desc"));
+  const snap = await getDocs(q);
+
+  const tablaVentas = document.querySelector("#tablaVentas tbody");
+  tablaVentas.innerHTML = "";
+
+  snap.forEach(doc => {
+    const v = doc.data();
+    const fecha = v.fecha?.toDate().toLocaleString("es-CR") || "Sin fecha";
+    tablaVentas.innerHTML += `
+      <tr>
+        <td>${fecha}</td>
+        <td>${v.material}</td>
+        <td>${v.peso}</td>
+        <td>${v.contenedor || "N/A"}</td>
+        <td>₡${v.total}</td>
+      </tr>`;
+  });
+}
