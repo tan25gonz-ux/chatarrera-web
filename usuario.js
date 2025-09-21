@@ -100,6 +100,13 @@ async function registrarPesaje() {
 
     await actualizarInventario(materiales);
 
+    // 👉 Guardar compra como egreso en contabilidad
+    await addDoc(collection(db, "contabilidad", auth.currentUser.uid, "egresos"), {
+      descripcion: `Compra de materiales (${tipo})`,
+      monto: totalGeneral,
+      fecha: Timestamp.now()
+    });
+
     const fechaHora = new Date().toLocaleString("es-CR", {
       dateStyle: "short",
       timeStyle: "short"
@@ -162,9 +169,8 @@ async function actualizarInventario(materiales) {
   await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 }
 
-// --- Limpiar formulario (solo pesaje, no precios) ---
+// --- Limpiar formulario ---
 function limpiarFormulario() {
-  // Limpiar inputs del bloque de pesaje
   const camposPesaje = document.querySelectorAll("#campos input, #campos select");
   camposPesaje.forEach(input => input.value = "");
 
