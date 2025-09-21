@@ -35,7 +35,7 @@ async function cargarInventario(uid) {
 }
 
 async function cargarVentas(uid) {
-  const ventasRef = collection(db, "ventas", uid, "items");
+  const ventasRef = collection(db, "ventas", uid); // ✅ corregido, ya no "items"
   const q = query(ventasRef, orderBy("fecha", "desc"));
   const snap = await getDocs(q);
 
