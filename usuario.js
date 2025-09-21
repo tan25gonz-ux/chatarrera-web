@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase.js";
-import { collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { collection, addDoc, Timestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("tipo").addEventListener("change", mostrarCampos);
@@ -137,6 +137,9 @@ async function registrarPesaje() {
       fecha: Timestamp.now()
     });
 
+    // ✅ Actualizar inventario
+    await actualizarInventario(materiales);
+
     document.getElementById("resultado").innerHTML = `
       ✅ Registrado:<br>
       ${materiales.map(m => `${m.peso} kg de ${m.material}`).join("<br>")}
@@ -144,6 +147,27 @@ async function registrarPesaje() {
   } catch (e) {
     document.getElementById("resultado").innerText = "❌ Error al guardar: " + e.message;
   }
+}
+
+// --- Actualizar inventario ---
+async function actualizarInventario(materiales) {
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return;
+
+  const docRef = doc(db, "inventarios", uid);
+  const snap = await getDoc(docRef);
+
+  let datos = {};
+  if (snap.exists()) {
+    datos = snap.data().materiales || {};
+  }
+
+  materiales.forEach(m => {
+    if (!datos[m.material]) datos[m.material] = 0;
+    datos[m.material] += m.peso;
+  });
+
+  await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 }
 
 // --- Cerrar sesión ---
