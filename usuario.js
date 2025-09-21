@@ -162,9 +162,12 @@ async function actualizarInventario(materiales) {
   await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 }
 
-// --- Limpiar formulario ---
+// --- Limpiar formulario (solo pesaje, no precios) ---
 function limpiarFormulario() {
-  document.querySelectorAll("input").forEach(input => input.value = "");
+  // Limpiar inputs del bloque de pesaje
+  const camposPesaje = document.querySelectorAll("#campos input, #campos select");
+  camposPesaje.forEach(input => input.value = "");
+
   document.getElementById("tipo").value = "";
   document.getElementById("campos").innerHTML = "";
 }
