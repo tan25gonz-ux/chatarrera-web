@@ -1,13 +1,13 @@
-/* --- Fondo con gradiente animado --- */
+/* --- Fondo animado --- */
 body {
   font-family: Arial, sans-serif;
-  font-size: 1.1em;
   margin: 0;
   padding: 0;
   min-height: 100vh;
   background: linear-gradient(270deg, #39d353, #1e90ff, #ffb347, #39d353);
   background-size: 800% 800%;
   animation: gradientBG 15s ease infinite;
+  font-size: 1.1em;
 }
 
 @keyframes gradientBG {
@@ -27,11 +27,12 @@ body {
 
 .col {
   flex: 1;
-  min-width: 300px;
+  min-width: 320px;
 }
 
 h1, h2, h3 {
   color: #111827;
+  text-align: center;
 }
 
 .card {
@@ -39,7 +40,12 @@ h1, h2, h3 {
   border-radius: 12px;
   padding: 20px;
   margin: 20px 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.02);
 }
 
 label {
@@ -81,6 +87,29 @@ button:hover {
   font-weight: bold;
 }
 
+/* --- Tablas --- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th, td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+th {
+  background: #39d353;
+  color: white;
+  font-size: 1.1em;
+}
+
+tr:nth-child(even) {
+  background: #f3f4f6;
+}
+
 /* --- Factura --- */
 .factura {
   background: #fff;
@@ -98,74 +127,22 @@ button:hover {
 }
 
 .factura table {
-  width: 100%;
-  border-collapse: collapse;
   margin-top: 10px;
 }
 
-.factura th, .factura td {
-  border: 1px solid #ccc;
-  padding: 10px;
-  text-align: center;
+.factura th {
+  background: #2563eb;
 }
 
-/* --- Acordeón --- */
-.accordion .accordion-content {
-  display: none;
-  margin-top: 10px;
-}
-
-.accordion .accordion-toggle {
-  background: #39d353;
-  color: #fff;
-  border: none;
-  padding: 12px;
-  width: 100%;
-  text-align: left;
-  font-weight: bold;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1em;
-}
-
-.accordion .accordion-toggle:hover {
-  background: #2da53f;
-}
-
-/* --- Tablas de inventario/contabilidad --- */
-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  margin-top: 10px;
-}
-
-th {
-  background: #39d353;
-  color: #fff;
-  padding: 12px;
-  font-size: 1.1em;
-  border-radius: 5px;
-}
-
-td {
-  background: #f9f9f9;
-  padding: 10px;
-  text-align: center;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 1em;
-}
-
-/* --- Imprimir solo factura --- */
+/* --- Estilos para impresión (solo factura) --- */
 @media print {
   body * {
     visibility: hidden;
   }
-  #factura, #factura * {
+  .factura, .factura * {
     visibility: visible;
   }
-  #factura {
+  .factura {
     position: absolute;
     left: 0;
     top: 0;
@@ -175,5 +152,48 @@ td {
   }
   button {
     display: none !important;
+  }
+}
+
+/* --- Acordeón (contabilidad) --- */
+.accordion-toggle {
+  width: 100%;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  margin: 5px 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.accordion-content {
+  display: none;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+/* --- Responsivo para móviles --- */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .card {
+    margin: 10px 0;
+    padding: 15px;
+  }
+
+  input, select, button {
+    font-size: 1em;
+  }
+
+  table {
+    font-size: 0.9em;
   }
 }
