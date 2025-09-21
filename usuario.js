@@ -1,5 +1,8 @@
 import { auth, db } from "./firebase.js";
-import { collection, addDoc, Timestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { 
+  collection, addDoc, Timestamp, 
+  doc, setDoc, getDoc 
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("tipo").addEventListener("change", mostrarCampos);
