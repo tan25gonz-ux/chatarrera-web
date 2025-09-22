@@ -6,7 +6,7 @@ let ingresos = [];
 let egresos = [];
 let ordenActual = "fecha"; // default
 
-let graficoIngresos, graficoEgresos;
+let graficoComparativo, graficoTotales;
 
 window.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, async (user) => {
@@ -22,13 +22,13 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("filtroFecha").addEventListener("click", () => {
     ordenActual = "fecha";
     renderTablas();
-    renderGraficos(); // 🔁 refrescar gráficos
+    renderGraficos();
   });
 
   document.getElementById("filtroAZ").addEventListener("click", () => {
     ordenActual = "az";
     renderTablas();
-    renderGraficos(); // 🔁 refrescar gráficos
+    renderGraficos();
   });
 });
 
@@ -74,51 +74,108 @@ function renderGraficos() {
   let ingresosOrdenados = ordenarDatos([...ingresos]);
   let egresosOrdenados = ordenarDatos([...egresos]);
 
-  renderGrafico("graficoIngresos", ingresosOrdenados, "Ingresos", "green");
-  renderGrafico("graficoEgresos", egresosOrdenados, "Egresos", "red");
+  renderGraficoComparativo(ingresosOrdenados, egresosOrdenados);
+  renderGraficoTotales(ingresosOrdenados, egresosOrdenados);
 }
 
-function renderGrafico(canvasId, data, label, color) {
-  const ctx = document.getElementById(canvasId);
+// --- Gráfico de barras comparativas ---
+function renderGraficoComparativo(ingresosData, egresosData) {
+  const ctx = document.getElementById("graficoComparativo");
   if (!ctx) return;
 
-  const labels = data.map(m => m.descripcion);
-  const valores = data.map(m => m.monto);
+  const ingresosPorFecha = {};
+  ingresosData.forEach(m => {
+    const fecha = m.fecha.toLocaleDateString("es-CR");
+    ingresosPorFecha[fecha] = (ingresosPorFecha[fecha] || 0) + m.monto;
+  });
 
-  // destruir gráfico previo
-  if (canvasId === "graficoIngresos" && graficoIngresos) graficoIngresos.destroy();
-  if (canvasId === "graficoEgresos" && graficoEgresos) graficoEgresos.destroy();
+  const egresosPorFecha = {};
+  egresosData.forEach(m => {
+    const fecha = m.fecha.toLocaleDateString("es-CR");
+    egresosPorFecha[fecha] = (egresosPorFecha[fecha] || 0) + m.monto;
+  });
 
-  const nuevoGrafico = new Chart(ctx, {
+  const fechas = Array.from(new Set([
+    ...Object.keys(ingresosPorFecha),
+    ...Object.keys(egresosPorFecha)
+  ])).sort((a, b) => new Date(a) - new Date(b));
+
+  const ingresosValores = fechas.map(f => ingresosPorFecha[f] || 0);
+  const egresosValores = fechas.map(f => egresosPorFecha[f] || 0);
+
+  if (graficoComparativo) graficoComparativo.destroy();
+
+  graficoComparativo = new Chart(ctx, {
     type: "bar",
     data: {
-      labels,
+      labels: fechas,
+      datasets: [
+        {
+          label: "Ingresos",
+          data: ingresosValores,
+          backgroundColor: "rgba(0, 200, 0, 0.6)"
+        },
+        {
+          label: "Egresos",
+          data: egresosValores,
+          backgroundColor: "rgba(200, 0, 0, 0.6)"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "top" },
+        tooltip: { mode: "index", intersect: false }
+      },
+      scales: {
+        x: { stacked: false },
+        y: { beginAtZero: true }
+      }
+    }
+  });
+}
+
+// --- Gráfico de dona (totales) ---
+function renderGraficoTotales(ingresosData, egresosData) {
+  const ctx = document.getElementById("graficoTotales");
+  if (!ctx) return;
+
+  const totalIngresos = ingresosData.reduce((acc, m) => acc + m.monto, 0);
+  const totalEgresos = egresosData.reduce((acc, m) => acc + m.monto, 0);
+
+  if (graficoTotales) graficoTotales.destroy();
+
+  graficoTotales = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Ingresos", "Egresos"],
       datasets: [{
-        label,
-        data: valores,
-        backgroundColor: color
+        data: [totalIngresos, totalEgresos],
+        backgroundColor: ["rgba(0, 200, 0, 0.7)", "rgba(200, 0, 0, 0.7)"]
       }]
     },
     options: {
       responsive: true,
       plugins: {
-        legend: { display: true },
-        tooltip: { enabled: true }
-      },
-      scales: {
-        y: { beginAtZero: true }
+        legend: { position: "bottom" },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const value = context.raw.toLocaleString("es-CR");
+              return `${context.label}: ₡${value}`;
+            }
+          }
+        }
       }
     }
   });
-
-  if (canvasId === "graficoIngresos") graficoIngresos = nuevoGrafico;
-  if (canvasId === "graficoEgresos") graficoEgresos = nuevoGrafico;
 }
 
-// --- Función de ordenamiento común ---
+// --- Función de ordenamiento ---
 function ordenarDatos(data) {
   if (ordenActual === "fecha") {
-    data.sort((a, b) => b.fecha - a.fecha); // más reciente primero
+    data.sort((a, b) => b.fecha - a.fecha);
   } else if (ordenActual === "az") {
     data.sort((a, b) => a.descripcion.localeCompare(b.descripcion));
   }
