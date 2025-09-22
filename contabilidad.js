@@ -12,8 +12,7 @@ window.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       await cargarDatos(user.uid);
-      renderTablas();
-      renderGraficos();
+      renderTodo();
     } else {
       alert("⚠ Inicie sesión");
     }
@@ -21,14 +20,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("filtroFecha").addEventListener("click", () => {
     ordenActual = "fecha";
-    renderTablas();
-    renderGraficos();
+    renderTodo();
   });
 
   document.getElementById("filtroAZ").addEventListener("click", () => {
     ordenActual = "az";
-    renderTablas();
-    renderGraficos();
+    renderTodo();
   });
 });
 
@@ -48,34 +45,30 @@ async function cargarColeccion(tipo, uid) {
   }));
 }
 
-// --- Renderizar tablas ---
-function renderTablas() {
-  renderTabla("tablaIngresos", ingresos);
-  renderTabla("tablaEgresos", egresos);
+// --- Renderizar TODO (tablas + gráficas) ---
+function renderTodo() {
+  let ingresosOrdenados = ordenarDatos([...ingresos]);
+  let egresosOrdenados = ordenarDatos([...egresos]);
+
+  renderTabla("tablaIngresos", ingresosOrdenados);
+  renderTabla("tablaEgresos", egresosOrdenados);
+
+  renderGraficoComparativo(ingresosOrdenados, egresosOrdenados);
+  renderGraficoTotales(ingresosOrdenados, egresosOrdenados);
 }
 
+// --- Renderizar tablas ---
 function renderTabla(id, data) {
   const tbody = document.querySelector(`#${id} tbody`);
   if (!tbody) return;
 
-  let sorted = ordenarDatos([...data]);
-
-  tbody.innerHTML = sorted.map(mov => `
+  tbody.innerHTML = data.map(mov => `
     <tr>
       <td>${mov.fecha.toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short" })}</td>
       <td>${mov.descripcion}</td>
       <td>₡${mov.monto}</td>
     </tr>
   `).join("");
-}
-
-// --- Renderizar gráficos ---
-function renderGraficos() {
-  let ingresosOrdenados = ordenarDatos([...ingresos]);
-  let egresosOrdenados = ordenarDatos([...egresos]);
-
-  renderGraficoComparativo(ingresosOrdenados, egresosOrdenados);
-  renderGraficoTotales(ingresosOrdenados, egresosOrdenados);
 }
 
 // --- Gráfico de barras comparativas ---
@@ -110,28 +103,14 @@ function renderGraficoComparativo(ingresosData, egresosData) {
     data: {
       labels: fechas,
       datasets: [
-        {
-          label: "Ingresos",
-          data: ingresosValores,
-          backgroundColor: "rgba(0, 200, 0, 0.6)"
-        },
-        {
-          label: "Egresos",
-          data: egresosValores,
-          backgroundColor: "rgba(200, 0, 0, 0.6)"
-        }
+        { label: "Ingresos", data: ingresosValores, backgroundColor: "rgba(0,200,0,0.6)" },
+        { label: "Egresos", data: egresosValores, backgroundColor: "rgba(200,0,0,0.6)" }
       ]
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: { position: "top" },
-        tooltip: { mode: "index", intersect: false }
-      },
-      scales: {
-        x: { stacked: false },
-        y: { beginAtZero: true }
-      }
+      plugins: { legend: { position: "top" } },
+      scales: { y: { beginAtZero: true } }
     }
   });
 }
@@ -152,7 +131,7 @@ function renderGraficoTotales(ingresosData, egresosData) {
       labels: ["Ingresos", "Egresos"],
       datasets: [{
         data: [totalIngresos, totalEgresos],
-        backgroundColor: ["rgba(0, 200, 0, 0.7)", "rgba(200, 0, 0, 0.7)"]
+        backgroundColor: ["rgba(0,200,0,0.7)", "rgba(200,0,0,0.7)"]
       }]
     },
     options: {
