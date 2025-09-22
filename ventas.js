@@ -1,9 +1,20 @@
 import { auth, db } from "./firebase.js";
 import { collection, addDoc, Timestamp, doc, getDoc, setDoc, query, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btnVender").addEventListener("click", registrarVenta);
-  cargarVentas(); // ✅ Mostrar historial al entrar
+  const btnVender = document.getElementById("btnVender");
+  btnVender.addEventListener("click", registrarVenta);
+
+  // ✅ Cargar tabla de ventas al iniciar sesión
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      cargarVentas(user.uid);
+    } else {
+      alert("⚠️ Debes iniciar sesión.");
+      window.location.href = "index.html";
+    }
+  });
 });
 
 async function registrarVenta() {
@@ -35,7 +46,7 @@ async function registrarVenta() {
   datos[material] -= peso;
 
   try {
-    // Guardar venta
+    // Guardar la venta en la colección anidada del usuario
     await addDoc(collection(db, "ventas", uid, "items"), {
       usuario: auth?.currentUser?.email || "desconocido",
       material,
@@ -47,23 +58,16 @@ async function registrarVenta() {
     // Actualizar inventario
     await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 
-    resultado.innerText = `✅ Contenedor Registrado: ${peso} kg de ${material} (Contenedor ${contenedor})`;
+    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material} (Contenedor ${contenedor})`;
 
-    // ✅ actualizar tabla
-    cargarVentas();
-
-    // Limpiar inputs
-    document.getElementById("pesoVenta").value = "";
-    document.getElementById("contenedorVenta").value = "";
+    // 🔄 Recargar tabla
+    cargarVentas(uid);
   } catch (e) {
     resultado.innerText = "❌ Error al guardar: " + e.message;
   }
 }
 
-async function cargarVentas() {
-  const uid = auth?.currentUser?.uid;
-  if (!uid) return;
-
+async function cargarVentas(uid) {
   const ventasRef = collection(db, "ventas", uid, "items");
   const q = query(ventasRef, orderBy("fecha", "desc"));
   const snap = await getDocs(q);
@@ -80,7 +84,6 @@ async function cargarVentas() {
         <td>${v.material}</td>
         <td>${v.peso}</td>
         <td>${v.contenedor}</td>
-      </tr>
-    `;
+      </tr>`;
   });
 }
