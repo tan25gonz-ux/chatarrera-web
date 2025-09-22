@@ -6,9 +6,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnRegistrar").addEventListener("click", registrarPesaje);
   document.getElementById("btnAgregarExtra").addEventListener("click", agregarMaterial);
   document.getElementById("btnCerrar").addEventListener("click", cerrarSesion);
+
+  // ✅ botón dentro del acordeón
   document.getElementById("btnGuardarPrecios").addEventListener("click", guardarPrecios);
 
-  // Cargar precios guardados del usuario
+  // ✅ Cargar o crear precios del usuario
   cargarPrecios();
 
   // Acordeón precios
@@ -113,26 +115,40 @@ async function guardarPrecios() {
   }
 
   const precios = obtenerPrecios();
-  await setDoc(doc(db, "precios", uid), {
-    materiales: precios,
-    actualizado: Timestamp.now()
-  });
-
-  alert("✅ Precios guardados correctamente");
+  try {
+    await setDoc(doc(db, "precios", uid), {
+      materiales: precios,
+      actualizado: Timestamp.now()
+    });
+    alert("✅ Precios guardados correctamente");
+  } catch (e) {
+    alert("❌ Error al guardar precios: " + e.message);
+  }
 }
 
-// --- Cargar precios del usuario ---
+// --- Cargar precios del usuario (o crear si no existen) ---
 async function cargarPrecios() {
   const uid = auth?.currentUser?.uid;
   if (!uid) return;
 
-  const snap = await getDoc(doc(db, "precios", uid));
+  const docRef = doc(db, "precios", uid);
+  const snap = await getDoc(docRef);
+
   if (snap.exists()) {
+    // ✅ Si ya existen, cargamos los precios guardados
     const data = snap.data().materiales;
     for (const mat in data) {
       const input = document.getElementById("precio-" + mat);
       if (input) input.value = data[mat];
     }
+  } else {
+    // ❌ No existe -> lo creamos con los valores actuales del HTML
+    const precios = obtenerPrecios();
+    await setDoc(docRef, {
+      materiales: precios,
+      actualizado: Timestamp.now()
+    });
+    console.log("✅ Precios iniciales creados en Firebase para este usuario");
   }
 }
 
