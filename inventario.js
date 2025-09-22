@@ -48,7 +48,6 @@ async function cargarCompras(uid) {
           <td>${fecha}</td>
           <td>${m.material}</td>
           <td>${m.peso}</td>
-          <td>₡${m.total || 0}</td>
         </tr>`;
     });
   });
