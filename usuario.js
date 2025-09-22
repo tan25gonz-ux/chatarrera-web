@@ -1,4 +1,5 @@
 import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { collection, addDoc, Timestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -6,12 +7,16 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnRegistrar").addEventListener("click", registrarPesaje);
   document.getElementById("btnAgregarExtra").addEventListener("click", agregarMaterial);
   document.getElementById("btnCerrar").addEventListener("click", cerrarSesion);
-
-  // ✅ botón dentro del acordeón
   document.getElementById("btnGuardarPrecios").addEventListener("click", guardarPrecios);
 
-  // ✅ Cargar o crear precios del usuario
-  cargarPrecios();
+  // ✅ Esperar a que Firebase confirme usuario
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      cargarPrecios(user.uid); // cargamos precios de ese usuario
+    } else {
+      console.warn("⚠ No hay usuario logueado");
+    }
+  });
 
   // Acordeón precios
   document.querySelectorAll(".accordion-toggle").forEach(btn => {
@@ -127,22 +132,19 @@ async function guardarPrecios() {
 }
 
 // --- Cargar precios del usuario (o crear si no existen) ---
-async function cargarPrecios() {
-  const uid = auth?.currentUser?.uid;
-  if (!uid) return;
-
+async function cargarPrecios(uid) {
   const docRef = doc(db, "precios", uid);
   const snap = await getDoc(docRef);
 
   if (snap.exists()) {
-    // ✅ Si ya existen, cargamos los precios guardados
+    // ✅ Si ya existen, los cargamos
     const data = snap.data().materiales;
     for (const mat in data) {
       const input = document.getElementById("precio-" + mat);
       if (input) input.value = data[mat];
     }
   } else {
-    // ❌ No existe -> lo creamos con los valores actuales del HTML
+    // ❌ No existe -> lo creamos en Firebase con 0
     const precios = obtenerPrecios();
     await setDoc(docRef, {
       materiales: precios,
