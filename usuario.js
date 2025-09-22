@@ -6,6 +6,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnRegistrar").addEventListener("click", registrarPesaje);
   document.getElementById("btnAgregarExtra").addEventListener("click", agregarMaterial);
   document.getElementById("btnCerrar").addEventListener("click", cerrarSesion);
+  document.getElementById("btnGuardarPrecios").addEventListener("click", guardarPrecios);
+
+  // Cargar precios guardados del usuario
+  cargarPrecios();
 
   // Acordeón precios
   document.querySelectorAll(".accordion-toggle").forEach(btn => {
@@ -100,6 +104,38 @@ function obtenerPrecios() {
   return precios;
 }
 
+// --- Guardar precios en Firestore ---
+async function guardarPrecios() {
+  const uid = auth?.currentUser?.uid;
+  if (!uid) {
+    alert("No hay usuario logueado");
+    return;
+  }
+
+  const precios = obtenerPrecios();
+  await setDoc(doc(db, "precios", uid), {
+    materiales: precios,
+    actualizado: Timestamp.now()
+  });
+
+  alert("✅ Precios guardados correctamente");
+}
+
+// --- Cargar precios del usuario ---
+async function cargarPrecios() {
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return;
+
+  const snap = await getDoc(doc(db, "precios", uid));
+  if (snap.exists()) {
+    const data = snap.data().materiales;
+    for (const mat in data) {
+      const input = document.getElementById("precio-" + mat);
+      if (input) input.value = data[mat];
+    }
+  }
+}
+
 // --- Registrar pesaje ---
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo").value;
@@ -160,7 +196,7 @@ async function registrarPesaje() {
 
     await actualizarInventario(materiales);
 
-    // ✅ Registrar como EGRESO en contabilidad
+    // Registrar como EGRESO en contabilidad
     const uid = auth?.currentUser?.uid || "desconocido";
     await addDoc(collection(db, "contabilidad", uid, "egresos"), {
       descripcion: `Compra de materiales (${materiales.map(m => m.material).join(", ")})`,
