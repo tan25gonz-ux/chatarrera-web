@@ -45,7 +45,7 @@ async function registrarVenta() {
     // Actualizar inventario
     await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 
-    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material} ${contenedor ? `(Contenedor: ${contenedor})` : ""}`;
+    resultado.innerText = `✅ Contenedor Registrado: ${peso} kg de ${material} ${contenedor ? `(Contenedor: ${contenedor})` : ""}`;
   } catch (e) {
     resultado.innerText = "❌ Error al guardar: " + e.message;
   }
