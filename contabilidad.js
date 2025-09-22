@@ -22,11 +22,13 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("filtroFecha").addEventListener("click", () => {
     ordenActual = "fecha";
     renderTablas();
+    renderGraficos(); // 🔁 refrescar gráficos
   });
 
   document.getElementById("filtroAZ").addEventListener("click", () => {
     ordenActual = "az";
     renderTablas();
+    renderGraficos(); // 🔁 refrescar gráficos
   });
 });
 
@@ -56,12 +58,7 @@ function renderTabla(id, data) {
   const tbody = document.querySelector(`#${id} tbody`);
   if (!tbody) return;
 
-  let sorted = [...data];
-  if (ordenActual === "fecha") {
-    sorted.sort((a, b) => b.fecha - a.fecha);
-  } else if (ordenActual === "az") {
-    sorted.sort((a, b) => a.descripcion.localeCompare(b.descripcion));
-  }
+  let sorted = ordenarDatos([...data]);
 
   tbody.innerHTML = sorted.map(mov => `
     <tr>
@@ -74,8 +71,11 @@ function renderTabla(id, data) {
 
 // --- Renderizar gráficos ---
 function renderGraficos() {
-  renderGrafico("graficoIngresos", ingresos, "Ingresos", "green");
-  renderGrafico("graficoEgresos", egresos, "Egresos", "red");
+  let ingresosOrdenados = ordenarDatos([...ingresos]);
+  let egresosOrdenados = ordenarDatos([...egresos]);
+
+  renderGrafico("graficoIngresos", ingresosOrdenados, "Ingresos", "green");
+  renderGrafico("graficoEgresos", egresosOrdenados, "Egresos", "red");
 }
 
 function renderGrafico(canvasId, data, label, color) {
@@ -113,4 +113,14 @@ function renderGrafico(canvasId, data, label, color) {
 
   if (canvasId === "graficoIngresos") graficoIngresos = nuevoGrafico;
   if (canvasId === "graficoEgresos") graficoEgresos = nuevoGrafico;
+}
+
+// --- Función de ordenamiento común ---
+function ordenarDatos(data) {
+  if (ordenActual === "fecha") {
+    data.sort((a, b) => b.fecha - a.fecha); // más reciente primero
+  } else if (ordenActual === "az") {
+    data.sort((a, b) => a.descripcion.localeCompare(b.descripcion));
+  }
+  return data;
 }
