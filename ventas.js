@@ -1,9 +1,9 @@
 import { auth, db } from "./firebase.js";
-import { collection, addDoc, Timestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { collection, addDoc, Timestamp, doc, getDoc, setDoc, query, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const btnVender = document.getElementById("btnVender");
-  btnVender.addEventListener("click", registrarVenta);
+  document.getElementById("btnVender").addEventListener("click", registrarVenta);
+  cargarVentas(); // ✅ Mostrar historial al entrar
 });
 
 async function registrarVenta() {
@@ -35,7 +35,7 @@ async function registrarVenta() {
   datos[material] -= peso;
 
   try {
-    // Guardar la venta en la colección anidada por usuario
+    // Guardar venta
     await addDoc(collection(db, "ventas", uid, "items"), {
       usuario: auth?.currentUser?.email || "desconocido",
       material,
@@ -47,8 +47,40 @@ async function registrarVenta() {
     // Actualizar inventario
     await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 
-    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material} (Contenedor ${contenedor})`;
+    resultado.innerText = `✅ Contenedor Registrado: ${peso} kg de ${material} (Contenedor ${contenedor})`;
+
+    // ✅ actualizar tabla
+    cargarVentas();
+
+    // Limpiar inputs
+    document.getElementById("pesoVenta").value = "";
+    document.getElementById("contenedorVenta").value = "";
   } catch (e) {
     resultado.innerText = "❌ Error al guardar: " + e.message;
   }
+}
+
+async function cargarVentas() {
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return;
+
+  const ventasRef = collection(db, "ventas", uid, "items");
+  const q = query(ventasRef, orderBy("fecha", "desc"));
+  const snap = await getDocs(q);
+
+  const tabla = document.querySelector("#tablaVentas tbody");
+  tabla.innerHTML = "";
+
+  snap.forEach(doc => {
+    const v = doc.data();
+    const fecha = v.fecha?.toDate().toLocaleString("es-CR") || "Sin fecha";
+    tabla.innerHTML += `
+      <tr>
+        <td>${fecha}</td>
+        <td>${v.material}</td>
+        <td>${v.peso}</td>
+        <td>${v.contenedor}</td>
+      </tr>
+    `;
+  });
 }
