@@ -109,8 +109,13 @@ function renderGraficoComparativo(ingresosData, egresosData) {
     },
     options: {
       responsive: true,
-      plugins: { legend: { position: "top" } },
-      scales: { y: { beginAtZero: true } }
+      maintainAspectRatio: false, // respeta el div de 350px
+      plugins: {
+        legend: { position: "top" }
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
     }
   });
 }
@@ -136,6 +141,7 @@ function renderGraficoTotales(ingresosData, egresosData) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false, // respeta el div de 300px
       plugins: {
         legend: { position: "bottom" },
         tooltip: {
