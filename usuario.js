@@ -145,7 +145,7 @@ async function registrarPesaje() {
     materiales.push({ material: p.dataset.material, peso: parseFloat(p.dataset.peso) });
   });
 
-  // ❌ Los precios ya no se leen del HTML, sino de Firebase
+  // Cargar precios desde Firebase
   const uid = auth?.currentUser?.uid;
   const docRef = doc(db, "precios", uid);
   const snap = await getDoc(docRef);
@@ -172,13 +172,13 @@ async function registrarPesaje() {
 
     await actualizarInventario(materiales);
 
-    const uid = auth?.currentUser?.uid || "desconocido";
     await addDoc(collection(db, "contabilidad", uid, "egresos"), {
       descripcion: `Compra de materiales (${materiales.map(m => m.material).join(", ")})`,
       monto: totalGeneral,
       fecha: Timestamp.now()
     });
 
+    // Factura
     const fechaHora = new Date().toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short" });
     document.getElementById("resultado").innerHTML = `
       <div class="factura">
@@ -210,9 +210,34 @@ async function registrarPesaje() {
         <button onclick="window.print()">🖨 Imprimir</button>
       </div>
     `;
+
+    // ✅ Limpiar formulario
+    limpiarFormulario();
+
   } catch (e) {
     document.getElementById("resultado").innerText = "❌ Error al guardar: " + e.message;
   }
+}
+
+// --- Limpiar formulario ---
+function limpiarFormulario() {
+  // Campos generales
+  document.getElementById("cedula")?.value = "";
+  document.getElementById("placa")?.value = "";
+  document.getElementById("delanteraLlena")?.value = "";
+  document.getElementById("traseraLlena")?.value = "";
+  document.getElementById("delanteraVacia")?.value = "";
+  document.getElementById("traseraVacia")?.value = "";
+  document.getElementById("lleno")?.value = "";
+  document.getElementById("vacio")?.value = "";
+  document.getElementById("peso")?.value = "";
+
+  // Limpiar lista de materiales extra
+  document.getElementById("listaExtras").innerHTML = "";
+
+  // Reset de select y campo de peso extra
+  document.getElementById("materialSelect").value = "";
+  document.getElementById("pesoMaterial").value = "";
 }
 
 // --- Actualizar inventario ---
