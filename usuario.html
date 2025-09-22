@@ -52,29 +52,15 @@
       <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
       <button onclick="window.location.href='ventas.html'">🛒 Registrar Contenedor</button>
       <button onclick="window.location.href='contabilidad.html'">💵 Ver Contabilidad</button>
+      <button onclick="window.location.href='precios.html'">⚙️ Editar Precios</button>
       <button id="btnCerrar" type="button">Cerrar Sesión</button>
     </div>
 
-    <!-- Columna derecha: Precios -->
+    <!-- Columna derecha: Precios (solo lectura) -->
     <div class="col">
-      <div class="accordion">
-        <button class="accordion-toggle">💲 Precios de materiales</button>
-        <div class="accordion-content" id="precios">
-          <label>Hierro: <input type="number" id="precio-Hierro"></label>
-          <label>Aluminio: <input type="number" id="precio-Aluminio"></label>
-          <label>Cobre: <input type="number" id="precio-Cobre"></label>
-          <label>Bronce: <input type="number" id="precio-Bronce"></label>
-          <label>Batería: <input type="number" id="precio-Batería"></label>
-          <label>Acero: <input type="number" id="precio-Acero"></label>
-          <label>Cable: <input type="number" id="precio-Cable"></label>
-          <label>Catalizador: <input type="number" id="precio-Catalizador"></label>
-          <label>Plástico de lavadora: <input type="number" id="precio-Plástico de lavadora"></label>
-          <label>Plástico de caja: <input type="number" id="precio-Plástico de caja"></label>
-          <label>Carrocería: <input type="number" id="precio-Carrocería"></label>
-
-          <!-- ✅ Botón dentro del acordeón -->
-          <button id="btnGuardarPrecios" type="button">💾 Guardar precios</button>
-        </div>
+      <h2>💲 Precios de materiales</h2>
+      <div id="preciosUsuario">
+        Cargando precios...
       </div>
     </div>
   </div>
