@@ -6,6 +6,16 @@
   <link rel="stylesheet" href="style.css">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Ajustes de tamaño de gráficas */
+    #graficoComparativoContainer {
+      height: 350px; /* comparativa más grande */
+    }
+    #graficoTotalesContainer {
+      width: 300px;  /* dona más compacta */
+      margin: 20px auto;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -17,10 +27,14 @@
     </div>
 
     <h2>📊 Comparación Ingresos vs Egresos</h2>
-    <canvas id="graficoComparativo" height="120"></canvas>
+    <div id="graficoComparativoContainer">
+      <canvas id="graficoComparativo"></canvas>
+    </div>
 
     <h2>🍩 Totales Acumulados</h2>
-    <canvas id="graficoTotales" height="120"></canvas>
+    <div id="graficoTotalesContainer">
+      <canvas id="graficoTotales"></canvas>
+    </div>
 
     <h2>📈 Ingresos</h2>
     <table id="tablaIngresos">
