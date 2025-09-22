@@ -1,31 +1,14 @@
 import { auth, db } from "./firebase.js";
-import { collection, addDoc, Timestamp, doc, getDoc, setDoc, query, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { collection, addDoc, Timestamp, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnVender").addEventListener("click", registrarVenta);
-  cargarVentas();
 });
-
-function obtenerPrecios() {
-  return {
-    "Hierro": 200,
-    "Aluminio": 500,
-    "Cobre": 2000,
-    "Bronce": 1500,
-    "Batería": 300,
-    "Acero": 250,
-    "Cable": 1000,
-    "Catalizador": 4000,
-    "Plástico de lavadora": 50,
-    "Plástico de caja": 30,
-    "Carrocería": 100
-  };
-}
 
 async function registrarVenta() {
   const material = document.getElementById("materialVenta").value;
   const peso = parseFloat(document.getElementById("pesoVenta").value) || 0;
-  const contenedor = document.getElementById("contenedor").value.trim();
+  const contenedor = document.getElementById("contenedorVenta")?.value || "";
   const resultado = document.getElementById("resultado");
 
   if (!material || peso <= 0) {
@@ -33,12 +16,7 @@ async function registrarVenta() {
     return;
   }
 
-  const uid = auth?.currentUser?.uid;
-  if (!uid) {
-    alert("⚠️ Debes iniciar sesión.");
-    return;
-  }
-
+  const uid = auth?.currentUser?.uid || "desconocido";
   const docRef = doc(db, "inventarios", uid);
   const snap = await getDoc(docRef);
   let datos = {};
@@ -54,55 +32,21 @@ async function registrarVenta() {
 
   datos[material] -= peso;
 
-  const precios = obtenerPrecios();
-  const precioUnit = precios[material] || 0;
-  const total = peso * precioUnit;
-
   try {
+    // Guardar venta sin total
     await addDoc(collection(db, "ventas", uid, "items"), {
       usuario: auth?.currentUser?.email || "desconocido",
       material,
       peso,
       contenedor,
-      precioUnit,
-      total,
       fecha: Timestamp.now()
     });
 
+    // Actualizar inventario
     await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
 
-    resultado.innerHTML = `
-      ✅ Venta registrada:<br>
-      ${peso} kg de ${material} = <strong>₡${total}</strong>
-    `;
-
-    cargarVentas();
+    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material} ${contenedor ? `(Contenedor: ${contenedor})` : ""}`;
   } catch (e) {
     resultado.innerText = "❌ Error al guardar: " + e.message;
   }
-}
-
-async function cargarVentas() {
-  const uid = auth?.currentUser?.uid;
-  if (!uid) return;
-
-  const ventasRef = collection(db, "ventas", uid, "items");
-  const q = query(ventasRef, orderBy("fecha", "desc"));
-  const snap = await getDocs(q);
-
-  const tablaVentas = document.querySelector("#tablaVentas tbody");
-  tablaVentas.innerHTML = "";
-
-  snap.forEach(doc => {
-    const v = doc.data();
-    const fecha = v.fecha?.toDate().toLocaleString("es-CR") || "Sin fecha";
-    tablaVentas.innerHTML += `
-      <tr>
-        <td>${fecha}</td>
-        <td>${v.material}</td>
-        <td>${v.peso}</td>
-        <td>${v.contenedor || "N/A"}</td>
-        <td>₡${v.total}</td>
-      </tr>`;
-  });
 }
