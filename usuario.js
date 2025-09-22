@@ -90,7 +90,7 @@ function agregarMaterial() {
   document.getElementById("pesoMaterial").value = "";
 }
 
-// --- Obtener precios ---
+// --- Obtener precios desde inputs ---
 function obtenerPrecios() {
   const precios = {};
   document.querySelectorAll("#precios input").forEach(input => {
@@ -143,9 +143,11 @@ async function registrarPesaje() {
     const total = m.peso * precioUnit;
     return { ...m, precioUnit, total };
   });
+
   const totalGeneral = materialesConTotal.reduce((acc, m) => acc + m.total, 0);
 
   try {
+    // Guardar en pesajes
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo,
@@ -158,6 +160,15 @@ async function registrarPesaje() {
 
     await actualizarInventario(materiales);
 
+    // ✅ Registrar como EGRESO en contabilidad
+    const uid = auth?.currentUser?.uid || "desconocido";
+    await addDoc(collection(db, "contabilidad", uid, "egresos"), {
+      descripcion: `Compra de materiales (${materiales.map(m => m.material).join(", ")})`,
+      monto: totalGeneral,
+      fecha: Timestamp.now()
+    });
+
+    // Factura
     const fechaHora = new Date().toLocaleString("es-CR", { dateStyle: "short", timeStyle: "short" });
     document.getElementById("resultado").innerHTML = `
       <div class="factura">
