@@ -1,89 +1,83 @@
+// ventas.js
 import { auth, db } from "./firebase.js";
-import { collection, addDoc, Timestamp, doc, getDoc, setDoc, query, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  addDoc,
+  collection,
+  serverTimestamp,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  const btnVender = document.getElementById("btnVender");
-  btnVender.addEventListener("click", registrarVenta);
-
-  // ✅ Cargar tabla de ventas al iniciar sesión
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      cargarVentas(user.uid);
-    } else {
-      alert("⚠️ Debes iniciar sesión.");
-      window.location.href = "index.html";
-    }
-  });
-});
-
-async function registrarVenta() {
-  const material = document.getElementById("materialVenta").value;
-  const peso = parseFloat(document.getElementById("pesoVenta").value) || 0;
-  const contenedor = document.getElementById("contenedorVenta").value;
-  const resultado = document.getElementById("resultado");
-
-  if (!material || peso <= 0 || !contenedor) {
-    alert("Complete todos los campos correctamente");
+// Registrar venta
+async function registrarVenta(materiales) {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("⚠️ Debes iniciar sesión para registrar ventas");
     return;
   }
 
-  const uid = auth?.currentUser?.uid || "desconocido";
-  const docRef = doc(db, "inventarios", uid);
-  const snap = await getDoc(docRef);
-  let datos = {};
-
-  if (snap.exists()) {
-    datos = snap.data().materiales || {};
-  }
-
-  if (!datos[material] || datos[material] < peso) {
-    resultado.innerText = `❌ No hay suficiente ${material}. Disponible: ${datos[material] || 0} kg`;
-    return;
-  }
-
-  // Restar del inventario
-  datos[material] -= peso;
+  const uid = user.uid;
 
   try {
-    // Guardar la venta en la colección anidada del usuario
-    await addDoc(collection(db, "ventas", uid, "items"), {
-      usuario: auth?.currentUser?.email || "desconocido",
-      material,
-      peso,
-      contenedor,
-      fecha: Timestamp.now()
+    // 1. Cargar inventario actual
+    const invRef = doc(db, "inventarios", uid);
+    const snap = await getDoc(invRef);
+    let data = snap.exists() ? snap.data() : { materiales: {} };
+
+    // 2. Restar cantidades del inventario
+    materiales.forEach((m) => {
+      if (!data.materiales[m.material]) data.materiales[m.material] = 0;
+      data.materiales[m.material] -= m.peso;
+      if (data.materiales[m.material] < 0) data.materiales[m.material] = 0;
     });
 
-    // Actualizar inventario
-    await setDoc(docRef, { materiales: datos, actualizado: Timestamp.now() });
+    await setDoc(invRef, data, { merge: true });
 
-    resultado.innerText = `✅ Venta registrada: ${peso} kg de ${material} (Contenedor ${contenedor})`;
+    // 3. Guardar en la colección de pesajes (registro agrupado)
+    await addDoc(collection(db, "pesajes"), {
+      usuario: user.email,
+      uid: uid,
+      materiales: materiales,
+      fecha: serverTimestamp()
+    });
 
-    // 🔄 Recargar tabla
-    cargarVentas(uid);
+    // 4. Guardar cada material en inventario_historial (registro individual)
+    for (const m of materiales) {
+      await addDoc(collection(db, "inventario_historial"), {
+        uid: uid,
+        material: m.material,
+        peso: m.peso,
+        fecha: serverTimestamp()
+      });
+    }
+
+    alert("✅ Venta registrada con éxito");
   } catch (e) {
-    resultado.innerText = "❌ Error al guardar: " + e.message;
+    console.error("Error registrando venta:", e);
+    alert("❌ Error registrando venta");
   }
 }
 
-async function cargarVentas(uid) {
-  const ventasRef = collection(db, "ventas", uid, "items");
-  const q = query(ventasRef, orderBy("fecha", "desc"));
-  const snap = await getDocs(q);
+// Ejemplo de cómo capturas el click en tu HTML
+document.getElementById("btnRegistrar")?.addEventListener("click", async () => {
+  // aquí recolectas los materiales del formulario
+  const materiales = [];
 
-  const tabla = document.querySelector("#tablaVentas tbody");
-  tabla.innerHTML = "";
-
-  snap.forEach(doc => {
-    const v = doc.data();
-    const fecha = v.fecha?.toDate().toLocaleString("es-CR") || "Sin fecha";
-    tabla.innerHTML += `
-      <tr>
-        <td>${fecha}</td>
-        <td>${v.material}</td>
-        <td>${v.peso}</td>
-        <td>${v.contenedor}</td>
-      </tr>`;
+  document.querySelectorAll("#listaExtras .item").forEach((div) => {
+    const material = div.querySelector(".nombre")?.textContent || "";
+    const peso = parseFloat(div.querySelector(".peso")?.textContent) || 0;
+    if (material && peso > 0) {
+      materiales.push({ material, peso });
+    }
   });
-}
+
+  if (materiales.length === 0) {
+    alert("⚠️ Agregue al menos un material");
+    return;
+  }
+
+  await registrarVenta(materiales);
+});
