@@ -6,6 +6,7 @@ const materiales = [
   "Hierro", "Aluminio", "Cobre", "Bronce",
   "Batería", "Acero", "Cable", "Catalizador",
   "Plástico de lavadora", "Plástico de caja", "Carrocería"
+  ,"RCB","RCA","RA","TARJETA mala","TARJETA buena"
 ];
 
 const tabla = document.querySelector("#tablaInventario tbody");
