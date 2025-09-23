@@ -23,7 +23,7 @@ function mostrarCampos() {
 
   const bloques = {
     camionGrande: `
-      <h3>Camión Grande (Hierro)</h3>
+      <h3>Camión Grande</h3>
       <label>Nombre: <input type="text" id="nombre"></label>
       <label>Cédula: <input type="text" id="cedula"></label>
       <label>Placa: <input type="text" id="placa"></label>
@@ -33,7 +33,7 @@ function mostrarCampos() {
       <label>Trasera vacía (kg): <input type="number" id="traseraVacia"></label>
     `,
     camionPequeno: `
-      <h3>Camión Pequeño (Hierro)</h3>
+      <h3>Camión Pequeño</h3>
       <label>Nombre: <input type="text" id="nombre"></label>
       <label>Cédula: <input type="text" id="cedula"></label>
       <label>Placa: <input type="text" id="placa"></label>
@@ -161,17 +161,7 @@ async function registrarPesaje() {
       fecha: serverTimestamp()
     });
 
-    // Actualizar inventario
-    await actualizarInventario(materiales);
-
-    // Contabilidad (egreso)
-    await addDoc(collection(db, "contabilidad", uid, "egresos"), {
-      descripcion: `Compra de materiales (${materiales.map(m=>m.material).join(", ")})`,
-      monto: totalGeneral,
-      fecha: serverTimestamp()
-    });
-
-    // Mostrar factura
+    // Mostrar factura estilo recibo
     const fechaHoraCR = new Date().toLocaleString("es-CR", {
       timeZone: "America/Costa_Rica",
       dateStyle: "short",
@@ -179,41 +169,30 @@ async function registrarPesaje() {
     });
 
     document.getElementById("resultado").innerHTML = `
-      <div class="factura no-print">
-        <h2>🧾 Factura #${numeroFactura}</h2>
+      <div class="factura">
         <p><strong>${cfg.nombreLocal || "Mi Local"}</strong></p>
         <p>Hacienda: ${cfg.numHacienda || "N/A"}</p>
         <p>Tel: ${cfg.telefono1 || "-"} / ${cfg.telefono2 || "-"}</p>
+        <p><strong>Factura #${numeroFactura}</strong></p>
         <p>Fecha: ${fechaHoraCR}</p>
         <hr>
-        <p><strong>Cliente:</strong> ${nombre || "N/A"}</p>
-        <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
-        ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
-        <table>
-          <thead>
-            <tr><th>Material</th><th>Peso (kg)</th><th>₡/kg</th><th>Total</th></tr>
-          </thead>
-          <tbody>
-            ${materialesConTotal.map(m => `
-              <tr>
-                <td>${m.material}</td>
-                <td>${m.peso}</td>
-                <td>₡${m.precioUnit}</td>
-                <td>₡${m.total}</td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-        <h3>Total: ₡${totalGeneral}</h3>
-        <p class="footer">¡Gracias por su compra!</p>
+        <p>Cliente: ${nombre || "N/A"}</p>
+        <p>Cédula: ${cedula || "N/A"}</p>
+        ${placa ? `<p>Placa: ${placa}</p>` : ""}
+        <hr>
+        ${materialesConTotal.map(m => `
+          <p>${m.material} x ${m.peso}kg = ₡${m.total}</p>
+        `).join("")}
+        <hr>
+        <p><strong>Total: ₡${totalGeneral}</strong></p>
+        <p style="text-align:center">¡Gracias por su compra!</p>
       </div>
       <button id="btnImprimirFactura" class="no-print">🖨 Imprimir</button>
     `;
 
-    // ---- imprimir y limpiar
+    // Conectar impresión
     document.getElementById("btnImprimirFactura").addEventListener("click", () => {
       window.print();
-      document.getElementById("resultado").innerHTML = "";
     });
 
     limpiarFormulario();
