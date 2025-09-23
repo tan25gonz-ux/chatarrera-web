@@ -135,7 +135,7 @@ input.error {
   margin-bottom: 15px;
 }
 
-/* ----- Tablas generales ----- */
+/* ----- Tablas ----- */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -158,99 +158,79 @@ tr:nth-child(even) {
   background: #f2f2f2;
 }
 
-/* ===================== FACTURA ===================== */
-/* ----- Factura en pantalla (moderna) ----- */
+/* ----- Factura (formato térmico 58mm) ----- */
 .factura {
+  width: 58mm;
+  padding: 5px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
   background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  margin-top: 20px;
-  font-family: Arial, sans-serif;
 }
 
-.factura h2 {
+.factura h2, .factura h3 {
+  font-size: 14px;
+  margin: 4px 0;
   text-align: center;
-  margin-bottom: 10px;
-  color: #222;
-  font-size: 20px;
 }
 
 .factura p {
-  margin: 4px 0;
-  font-size: 14px;
+  margin: 2px 0;
+  text-align: center;
 }
 
 .factura table {
   width: 100%;
   border-collapse: collapse;
-  margin: 10px 0;
+  font-size: 11px;
+  margin-top: 5px;
 }
 
 .factura th, .factura td {
-  border: 1px solid #ddd;
-  padding: 6px;
-  text-align: center;
-  font-size: 13px;
-}
-
-.factura th {
-  background: #007bff;
-  color: #fff;
+  text-align: left;
+  padding: 2px 0;
+  border-bottom: 1px dashed #000;
 }
 
 .factura h3 {
+  border-top: 1px solid #000;
+  padding-top: 4px;
   text-align: right;
+}
+
+.footer {
   margin-top: 10px;
-  font-size: 16px;
-}
-
-.factura .footer {
   text-align: center;
-  margin-top: 15px;
-  font-size: 13px;
-  color: #555;
+  font-size: 11px;
+  border-top: 1px dashed #000;
+  padding-top: 5px;
 }
 
-/* ----- Factura en impresión (térmica 58mm) ----- */
+/* ----- Solo imprimir factura (58mm) ----- */
 @media print {
+  @page {
+    size: 58mm auto; /* ancho fijo, alto dinámico */
+    margin: 0;
+  }
+
   body * {
-    display: none !important;
+    visibility: hidden;
   }
+
   .factura, .factura * {
-    display: block !important;
-    visibility: visible !important;
+    visibility: visible;
   }
+
   .factura {
-    width: 58mm;      /* ancho rollo térmico */
-    padding: 5px;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    font-family: monospace;
-    font-size: 12px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 58mm;
+    margin: 0;
+    padding: 0;
   }
-  .factura table {
-    font-size: 11px;
-    border: none;
-  }
-  .factura th {
-    background: none;
-    color: #000;
-    border-bottom: 1px dashed #000;
-  }
-  .factura td {
-    border-bottom: 1px dashed #000;
-  }
-  .factura h2, .factura h3 {
-    font-size: 13px;
-    margin: 3px 0;
-  }
-  .factura .footer {
-    font-size: 11px;
-    border-top: 1px dashed #000;
-    margin-top: 5px;
-    padding-top: 5px;
+
+  button, .navbar, .sidebar {
+    display: none !important;
   }
 }
 
