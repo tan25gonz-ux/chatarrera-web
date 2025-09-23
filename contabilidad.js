@@ -1,63 +1,99 @@
-let movimientos = JSON.parse(localStorage.getItem("movimientos")) || [];
+import { auth, db } from "./firebase.js";
+import { 
+  collection, addDoc, serverTimestamp, getDocs, query, orderBy 
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+let movimientos = [];
 let grafico;
 
-// Render inicial
-mostrarTodos();
+// 🚀 Al cargar la página, esperar login y traer datos
+document.addEventListener("DOMContentLoaded", () => {
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      cargarMovimientos();
+    } else {
+      alert("Debes iniciar sesión");
+      window.location.href = "index.html";
+    }
+  });
+});
 
-// Guardar movimiento manual
-function agregarMovimiento() {
+// ------------------ GUARDAR MOVIMIENTO ------------------
+export async function agregarMovimiento() {
   const descripcion = document.getElementById("descripcion").value;
   const monto = parseFloat(document.getElementById("monto").value);
   const tipo = document.getElementById("tipoMovimiento").value;
+  const uid = auth?.currentUser?.uid;
 
-  if (!descripcion || isNaN(monto)) {
+  if (!descripcion || isNaN(monto) || !uid) {
     alert("Ingrese una descripción y un monto válido");
     return;
   }
 
-  const nuevo = {
+  await addDoc(collection(db, "contabilidad", uid, tipo === "ingreso" ? "ingresos" : "egresos"), {
     descripcion,
     monto,
     tipo,
-    fecha: new Date().toLocaleDateString(),
-    hora: new Date().toLocaleTimeString()
-  };
-
-  movimientos.push(nuevo);
-  localStorage.setItem("movimientos", JSON.stringify(movimientos));
+    fecha: serverTimestamp()
+  });
 
   document.getElementById("descripcion").value = "";
   document.getElementById("monto").value = "";
 
+  cargarMovimientos();
+}
+
+// ------------------ CARGAR MOVIMIENTOS ------------------
+async function cargarMovimientos() {
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return;
+
+  let lista = [];
+
+  // Ingresos
+  const ingresosSnap = await getDocs(query(collection(db, "contabilidad", uid, "ingresos"), orderBy("fecha", "desc")));
+  ingresosSnap.forEach(doc => {
+    lista.push({ id: doc.id, ...doc.data(), tipo: "ingreso" });
+  });
+
+  // Egresos
+  const egresosSnap = await getDocs(query(collection(db, "contabilidad", uid, "egresos"), orderBy("fecha", "desc")));
+  egresosSnap.forEach(doc => {
+    lista.push({ id: doc.id, ...doc.data(), tipo: "egreso" });
+  });
+
+  movimientos = lista;
+
   mostrarTodos();
 }
 
-// Mostrar todos los movimientos
-function mostrarTodos() {
+// ------------------ MOSTRAR TODOS ------------------
+export function mostrarTodos() {
   renderListas(movimientos);
   mostrarBalance(movimientos);
   actualizarGrafico(movimientos);
 }
 
-// Filtrar ingresos o egresos
-function filtrar(tipo) {
+// ------------------ FILTRAR INGRESOS / EGRESOS ------------------
+export function filtrar(tipo) {
   const filtrados = movimientos.filter(m => m.tipo === tipo);
   renderListas(filtrados);
   mostrarBalance(filtrados);
   actualizarGrafico(filtrados);
 }
 
-// Filtrar por fecha
-function filtrarPorFecha() {
+// ------------------ FILTRAR POR FECHA ------------------
+export function filtrarPorFecha() {
   const fecha = document.getElementById("filtroFecha").value;
   if (!fecha) {
     alert("Seleccione una fecha");
     return;
   }
+
   const filtrados = movimientos.filter(m => {
-    const partes = m.fecha.split("/");
-    const formatoISO = `${partes[2]}-${partes[1].padStart(2,"0")}-${partes[0].padStart(2,"0")}`;
-    return formatoISO === fecha;
+    if (!m.fecha) return false;
+    const fechaMovimiento = new Date(m.fecha.seconds * 1000).toISOString().split("T")[0];
+    return fechaMovimiento === fecha;
   });
 
   renderListas(filtrados);
@@ -65,7 +101,7 @@ function filtrarPorFecha() {
   actualizarGrafico(filtrados);
 }
 
-// Renderizar listas de ingresos y egresos
+// ------------------ RENDER LISTAS ------------------
 function renderListas(lista) {
   const ingresosUl = document.getElementById("listaIngresos");
   const egresosUl = document.getElementById("listaEgresos");
@@ -75,13 +111,14 @@ function renderListas(lista) {
 
   lista.forEach(m => {
     const li = document.createElement("li");
-    li.textContent = `${m.fecha} ${m.hora} - ${m.descripcion}: ₡${m.monto}`;
+    const fechaLocal = m.fecha?.seconds ? new Date(m.fecha.seconds * 1000).toLocaleString("es-CR") : "N/A";
+    li.textContent = `${fechaLocal} - ${m.descripcion}: ₡${m.monto}`;
     if (m.tipo === "ingreso") ingresosUl.appendChild(li);
     else egresosUl.appendChild(li);
   });
 }
 
-// Mostrar balance dinámico
+// ------------------ BALANCE ------------------
 function mostrarBalance(lista) {
   let totalIngresos = 0;
   let totalEgresos = 0;
@@ -104,7 +141,7 @@ function mostrarBalance(lista) {
   }
 }
 
-// Gráfico de ingresos/egresos
+// ------------------ GRÁFICO ------------------
 function actualizarGrafico(lista) {
   let totalIngresos = 0;
   let totalEgresos = 0;
