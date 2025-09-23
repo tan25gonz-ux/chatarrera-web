@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// --- Mostrar campos según tipo ---
+// ---- UI dinámico según tipo ----
 function mostrarCampos() {
   const tipo = document.getElementById("tipo")?.value || "";
   const campos = document.getElementById("campos");
@@ -24,6 +24,7 @@ function mostrarCampos() {
   const bloques = {
     camionGrande: `
       <h3>Camión Grande (Hierro)</h3>
+      <label>Nombre: <input type="text" id="nombre"></label>
       <label>Cédula: <input type="text" id="cedula"></label>
       <label>Placa: <input type="text" id="placa"></label>
       <label>Delantera llena (kg): <input type="number" id="delanteraLlena"></label>
@@ -33,6 +34,7 @@ function mostrarCampos() {
     `,
     camionPequeno: `
       <h3>Camión Pequeño (Hierro)</h3>
+      <label>Nombre: <input type="text" id="nombre"></label>
       <label>Cédula: <input type="text" id="cedula"></label>
       <label>Placa: <input type="text" id="placa"></label>
       <label>Peso lleno (kg): <input type="number" id="lleno"></label>
@@ -40,12 +42,14 @@ function mostrarCampos() {
     `,
     carreta: `
       <h3>Carreta</h3>
+      <label>Nombre: <input type="text" id="nombre"></label>
       <label>Cédula: <input type="text" id="cedula"></label>
       <label>Peso lleno (kg): <input type="number" id="lleno"></label>
       <label>Peso vacío (kg): <input type="number" id="vacio"></label>
     `,
     mano: `
       <h3>A Mano</h3>
+      <label>Nombre: <input type="text" id="nombre"></label>
       <label>Cédula: <input type="text" id="cedula"></label>
       <label>Peso directo (kg): <input type="number" id="peso"></label>
     `
@@ -54,7 +58,7 @@ function mostrarCampos() {
   campos.innerHTML = bloques[tipo] || "";
 }
 
-// --- Agregar material extra ---
+// ---- Agregar material extra ----
 function agregarMaterial() {
   const mat = document.getElementById("materialSelect")?.value || "";
   const peso = parseFloat(document.getElementById("pesoMaterial")?.value) || 0;
@@ -77,7 +81,7 @@ function agregarMaterial() {
   document.getElementById("pesoMaterial").value = "";
 }
 
-// --- Cargar precios (solo lectura) ---
+// ---- Cargar precios (solo lectura) ----
 async function cargarPrecios(uid) {
   const div = document.getElementById("preciosUsuario");
   if (!div) return;
@@ -93,14 +97,16 @@ async function cargarPrecios(uid) {
   }
 }
 
-// --- Registrar pesaje ---
+// ---- Registrar pesaje + Factura ----
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo")?.value;
   if (!tipo) return alert("Seleccione un tipo de transporte");
 
+  const nombre = document.getElementById("nombre")?.value || "";
   const cedula = document.getElementById("cedula")?.value || "";
   const placa  = document.getElementById("placa")?.value || "";
 
+  // Calcular neto
   let neto = 0;
   if (tipo === "camionGrande") {
     const dl = +document.getElementById("delanteraLlena")?.value || 0;
@@ -116,6 +122,7 @@ async function registrarPesaje() {
     neto = +document.getElementById("peso")?.value || 0;
   }
 
+  // Materiales: hierro + extras
   const materiales = [{ material: "Hierro", peso: neto }];
   document.querySelectorAll("#listaExtras p").forEach(p => {
     materiales.push({ material: p.dataset.material, peso: parseFloat(p.dataset.peso) });
@@ -124,6 +131,7 @@ async function registrarPesaje() {
   const uid = auth?.currentUser?.uid;
   if (!uid) return alert("No hay usuario logueado");
 
+  // Precios
   const pRef = doc(db, "precios", uid);
   const pSnap = await getDoc(pRef);
   const precios = pSnap.exists() ? (pSnap.data().materiales || {}) : {};
@@ -135,33 +143,50 @@ async function registrarPesaje() {
   }));
   const totalGeneral = materialesConTotal.reduce((a,b)=>a+b.total,0);
 
+  // Configuración de factura (nombre local, hacienda, teléfonos) + consecutivo
+  const cfgRef = doc(db, "facturas", uid);
+  const cfgSnap = await getDoc(cfgRef);
+  const cfg = cfgSnap.exists() ? cfgSnap.data() : {};
+  const numeroFactura = (cfg.contadorFactura || 0) + 1;
+  await setDoc(cfgRef, { contadorFactura: numeroFactura }, { merge: true });
+
   try {
+    // Guardar pesaje
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
-      tipo, cedula, placa,
+      tipo, nombre, cedula, placa,
       materiales: materialesConTotal,
       totalGeneral,
+      numeroFactura,
       fecha: serverTimestamp()
     });
 
+    // Actualizar inventario
     await actualizarInventario(materiales);
 
+    // Contabilidad (egreso)
     await addDoc(collection(db, "contabilidad", uid, "egresos"), {
       descripcion: `Compra de materiales (${materiales.map(m=>m.material).join(", ")})`,
       monto: totalGeneral,
       fecha: serverTimestamp()
     });
 
-    // ✅ Mostrar con hora local del dispositivo
-    const fechaHoraLocal = new Date().toLocaleString(undefined, {
+    // Mostrar factura (hora CR fija)
+    const fechaHoraCR = new Date().toLocaleString("es-CR", {
+      timeZone: "America/Costa_Rica",
       dateStyle: "short",
       timeStyle: "short"
     });
 
     document.getElementById("resultado").innerHTML = `
       <div class="factura">
-        <h2>🧾 Factura de Compra</h2>
-        <p><strong>Fecha:</strong> ${fechaHoraLocal}</p>
+        <h2>🧾 Factura #${numeroFactura}</h2>
+        <p><strong>${cfg.nombreLocal || "Mi Local"}</strong></p>
+        <p>Hacienda: ${cfg.numHacienda || "N/A"}</p>
+        <p>Tel: ${cfg.telefono1 || "-"} / ${cfg.telefono2 || "-"}</p>
+        <hr>
+        <p><strong>Fecha:</strong> ${fechaHoraCR}</p>
+        <p><strong>Nombre:</strong> ${nombre || "N/A"}</p>
         <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
         ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
         <table>
@@ -169,7 +194,10 @@ async function registrarPesaje() {
           <tbody>
             ${materialesConTotal.map(m => `
               <tr>
-                <td>${m.material}</td><td>${m.peso}</td><td>₡${m.precioUnit}</td><td>₡${m.total}</td>
+                <td>${m.material}</td>
+                <td>${m.peso}</td>
+                <td>₡${m.precioUnit}</td>
+                <td>₡${m.total}</td>
               </tr>`).join("")}
           </tbody>
         </table>
@@ -177,13 +205,15 @@ async function registrarPesaje() {
         <button onclick="window.print()">🖨 Imprimir</button>
       </div>
     `;
+
+    limpiarFormulario();
   } catch (e) {
     console.error(e);
     alert("❌ Error al guardar: " + (e?.message || e));
   }
 }
 
-// --- Inventario ---
+// ---- Inventario ----
 async function actualizarInventario(materiales) {
   const uid = auth?.currentUser?.uid || "desconocido";
   const ref = doc(db, "inventarios", uid);
@@ -191,6 +221,20 @@ async function actualizarInventario(materiales) {
   let datos = snap.exists() ? (snap.data().materiales || {}) : {};
   materiales.forEach(m => { datos[m.material] = (datos[m.material] || 0) + m.peso; });
   await setDoc(ref, { materiales: datos, actualizado: serverTimestamp() }, { merge: true });
+}
+
+// ---- Util ----
+function limpiarFormulario() {
+  ["nombre","cedula","placa","delanteraLlena","traseraLlena","delanteraVacia","traseraVacia","lleno","vacio","peso"]
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+
+  const lista = document.getElementById("listaExtras");
+  if (lista) lista.innerHTML = "";
+
+  document.getElementById("materialSelect").value = "";
+  document.getElementById("pesoMaterial").value = "";
+  document.getElementById("tipo").value = "";
+  document.getElementById("campos").innerHTML = "";
 }
 
 function cerrarSesion() {
