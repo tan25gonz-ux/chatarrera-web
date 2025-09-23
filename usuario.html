@@ -22,13 +22,10 @@
     <button id="btnCerrar" type="button">🚪 Cerrar Sesión</button>
   </div>
 
-  <div class="container" style="text-align:center;">
-    <div class="col" style="max-width:600px;margin:auto;">
-      
-      <!-- Formulario -->
+  <div class="container" style="text-align: center;">
+    <!-- Columna principal -->
+    <div class="col" style="max-width: 600px; margin: auto;">
       <div class="card">
-        <h2>Registrar Pesaje</h2>
-
         <label for="tipo">Tipo de transporte:</label>
         <select id="tipo">
           <option value="">-- Seleccione --</option>
@@ -38,12 +35,13 @@
           <option value="mano">A Mano</option>
         </select>
 
-        <!-- Extras -->
+        <div id="campos"></div>
+
+        <!-- Materiales extra -->
         <h3>Materiales extra</h3>
         <div id="listaExtras"></div>
         <select id="materialSelect">
           <option value="">-- Seleccione material --</option>
-          <option value="Hierro">Hierro</option>
           <option value="Aluminio">Aluminio</option>
           <option value="Cobre">Cobre</option>
           <option value="Bronce">Bronce</option>
@@ -66,24 +64,48 @@
         <button id="btnRegistrar">Registrar</button>
       </div>
 
-      <!-- Factura -->
+      <!-- Resultado: factura dentro de card -->
       <div class="card" id="resultado"></div>
 
-      <!-- Precios -->
+      <!-- 💲 Precios debajo de la factura -->
       <div class="card">
         <h2>💲 Precios de materiales</h2>
         <div id="preciosUsuario">Cargando precios...</div>
       </div>
+
+      <!-- 🧾 Historial de compras con filtro -->
+      <div class="card">
+        <h2>🧾 Historial de compras</h2>
+        <div>
+          <label>Desde: <input type="date" id="fechaInicio"></label>
+          <label>Hasta: <input type="date" id="fechaFin"></label>
+          <button onclick="filtrarCompras()">Filtrar</button>
+          <button onclick="mostrarCompras()">Ver Todo</button>
+        </div>
+        <table id="tablaCompras">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Material</th>
+              <th>Peso (kg)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
+  <!-- Script menú -->
   <script>
     function toggleMenu() {
       document.getElementById("sidebar").classList.toggle("open");
     }
-    document.addEventListener("click", (e) => {
+
+    document.addEventListener("click", function(e) {
       const sidebar = document.getElementById("sidebar");
       const toggle = document.querySelector(".menu-toggle");
+
       if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
         sidebar.classList.remove("open");
       }
