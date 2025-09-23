@@ -1,104 +1,33 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Contabilidad - Chatarrera</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <!-- Navbar -->
-  <div class="navbar">
-    <span class="menu-toggle" onclick="toggleMenu()">☰</span>
-    <h1>Contabilidad</h1>
-  </div>
+<!-- 📌 Formulario ingreso/egreso manual -->
+<div class="card">
+  <h2>➕ Agregar Movimiento Manual</h2>
+  <label>Descripción:</label>
+  <input type="text" id="descMovimiento" placeholder="Ej: Pago de alquiler">
 
-  <!-- Sidebar -->
-  <div id="sidebar" class="sidebar">
-    <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
-    <button onclick="window.location.href='ventas.html'">🛒 Registrar Contenedor</button>
-    <button onclick="window.location.href='contabilidad.html'">💵 Ver Contabilidad</button>
-    <button onclick="window.location.href='precios.html'">💲 Editar Precios</button>
-    <button onclick="window.location.href='factura.html'">🧾 Configurar Factura</button>
-    <button id="btnCerrar" type="button">🚪 Cerrar Sesión</button>
-  </div>
+  <label>Monto (₡):</label>
+  <input type="number" id="montoMovimiento" placeholder="Ej: 50000">
 
-  <div class="container">
-    <!-- Filtros -->
-    <div class="card filters">
-      <h2>📅 Filtros</h2>
-      <button onclick="mostrarTodos()">Todo</button>
-      <button onclick="filtrar('ingreso')">Ingresos</button>
-      <button onclick="filtrar('egreso')">Egresos</button>
-    </div>
+  <label>Tipo:</label>
+  <select id="tipoMovimiento">
+    <option value="ingreso">Ingreso</option>
+    <option value="egreso">Egreso</option>
+  </select>
 
-    <!-- Agregar movimiento manual -->
-    <div class="card">
-      <h2>➕ Agregar Movimiento Manual</h2>
-      <input type="text" id="descripcion" placeholder="Descripción" />
-      <input type="number" id="monto" placeholder="Monto ₡" />
-      <select id="tipoMovimiento">
-        <option value="ingreso">Ingreso</option>
-        <option value="egreso">Egreso</option>
-      </select>
-      <button onclick="agregarMovimiento()">Guardar Movimiento</button>
-    </div>
+  <button id="btnAgregarMovimiento">✅ Guardar Movimiento</button>
+</div>
 
-    <!-- Filtro por fecha -->
-    <div class="card">
-      <h2>📆 Filtrar por fechas</h2>
-      <input type="date" id="filtroFecha" />
-      <button onclick="filtrarPorFecha()">Filtrar</button>
-      <button onclick="mostrarTodos()">Ver Todo</button>
-    </div>
+<!-- 📌 Filtro por fecha -->
+<div class="card filters">
+  <h2>📅 Filtrar por fecha</h2>
+  <input type="date" id="filtroFecha">
+  <button id="btnAplicarFiltro">🔍 Filtrar</button>
+  <button id="btnVerTodo">📂 Ver Todo</button>
+</div>
 
-    <!-- Balance -->
-    <div class="card balance">
-      <h2>💰 Balance</h2>
-      <p id="balanceGeneral" class="neutro">Balance: ₡0</p>
-    </div>
-
-    <!-- Listados -->
-    <div class="card">
-      <h2>📈 Ingresos</h2>
-      <ul id="listaIngresos"></ul>
-    </div>
-
-    <div class="card">
-      <h2>📉 Egresos</h2>
-      <ul id="listaEgresos"></ul>
-    </div>
-
-    <!-- Gráficos -->
-    <div class="card">
-      <h2>📊 Gráficos</h2>
-      <canvas id="grafico"></canvas>
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Importar el módulo con Firebase -->
-  <script type="module">
-    import { agregarMovimiento, mostrarTodos, filtrar, filtrarPorFecha } from "./contabilidad.js";
-
-    // Hacer accesibles las funciones al HTML
-    window.agregarMovimiento = agregarMovimiento;
-    window.mostrarTodos = mostrarTodos;
-    window.filtrar = filtrar;
-    window.filtrarPorFecha = filtrarPorFecha;
-  </script>
-
-  <script>
-    function toggleMenu() {
-      document.getElementById("sidebar").classList.toggle("open");
-    }
-    document.addEventListener("click", function(e) {
-      const sidebar = document.getElementById("sidebar");
-      const toggle = document.querySelector(".menu-toggle");
-      if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
-        sidebar.classList.remove("open");
-      }
-    });
-  </script>
-</body>
-</html>
+<!-- 📌 Balance -->
+<div class="card balance">
+  <h2>📊 Balance</h2>
+  <p id="totalIngresos">Total Ingresos: ₡0</p>
+  <p id="totalEgresos">Total Egresos: ₡0</p>
+  <h3 id="balanceFinal">Balance: ₡0</h3>
+</div>
