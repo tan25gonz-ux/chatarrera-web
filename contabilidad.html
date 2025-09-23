@@ -25,7 +25,7 @@
   <div class="container">
     <!-- Filtros -->
     <div class="card filters">
-      <h2>📅 Filtros</h2>
+      <h2>📅 Filtros rápidos</h2>
       <button onclick="mostrarTodos()">Todo</button>
       <button onclick="filtrar('ingreso')">Ingresos</button>
       <button onclick="filtrar('egreso')">Egresos</button>
@@ -43,11 +43,12 @@
       <button onclick="agregarMovimiento()">Guardar Movimiento</button>
     </div>
 
-    <!-- Filtro por fecha -->
+    <!-- Filtro por rango de fechas -->
     <div class="card">
-      <h2>📆 Filtrar por fecha</h2>
-      <input type="date" id="filtroFecha" />
-      <button onclick="filtrarPorFecha()">Filtrar</button>
+      <h2>📆 Filtrar por rango de fechas</h2>
+      <label>Desde: <input type="date" id="filtroFechaInicio" /></label>
+      <label>Hasta: <input type="date" id="filtroFechaFin" /></label>
+      <button onclick="filtrarPorRango()">Filtrar</button>
       <button onclick="mostrarTodos()">Ver Todo</button>
     </div>
 
@@ -77,15 +78,15 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Importar el módulo con Firebase -->
+  <!-- Importar funciones de contabilidad.js -->
   <script type="module">
-    import { agregarMovimiento, mostrarTodos, filtrar, filtrarPorFecha } from "./contabilidad.js";
+    import { agregarMovimiento, mostrarTodos, filtrar, filtrarPorFecha, filtrarPorRango } from "./contabilidad.js";
 
-    // Hacer accesibles las funciones al HTML
     window.agregarMovimiento = agregarMovimiento;
     window.mostrarTodos = mostrarTodos;
     window.filtrar = filtrar;
     window.filtrarPorFecha = filtrarPorFecha;
+    window.filtrarPorRango = filtrarPorRango;
   </script>
 
   <script>
