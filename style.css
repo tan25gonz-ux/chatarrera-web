@@ -1,20 +1,165 @@
-/* --- Fondo simple blanco --- */
+/* ----- Reset general ----- */
 body {
-  font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fa;
+  color: #333;
   min-height: 100vh;
-  background: #ffffff; /* 👈 fondo blanco */
-  font-size: 1.1em;
+  font-size: 1em;
+  line-height: 1.4;
 }
 
-/* --- Contenedor general --- */
+/* ----- Contenedor principal ----- */
 .container {
   max-width: 1200px;
-  margin: 40px auto;
+  margin: auto;
   padding: 20px;
+}
+
+h1, h2, h3 {
+  color: #222;
+  margin-bottom: 10px;
+}
+
+/* ----- Botones ----- */
+button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 15px;
+  margin: 5px 0;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* ----- Inputs y selects ----- */
+input, select {
+  padding: 8px;
+  margin: 5px 0 10px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+input:focus, select:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 3px rgba(0,123,255,0.5);
+}
+
+/* Feedback error */
+input.error {
+  border-color: red;
+  background: #ffeaea;
+}
+
+/* ----- Tarjetas (cards) ----- */
+.card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+/* ----- Tablas ----- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  font-size: 14px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  background: #007bff;
+  color: #fff;
+}
+
+tr:nth-child(even) {
+  background: #f2f2f2;
+}
+
+/* ----- Factura (formato térmico 58mm) ----- */
+.factura {
+  width: 58mm;
+  padding: 5px;
+  font-family: monospace;
+  font-size: 12px;
+  background: #fff;
+}
+
+.factura h2, .factura h3 {
+  font-size: 14px;
+  margin: 4px 0;
+  text-align: center;
+}
+
+.factura p {
+  margin: 2px 0;
+  text-align: center;
+}
+
+.factura table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-top: 5px;
+}
+
+.factura th, .factura td {
+  text-align: left;
+  padding: 2px 0;
+  border-bottom: 1px dashed #000;
+}
+
+.factura h3 {
+  border-top: 1px solid #000;
+  padding-top: 4px;
+  text-align: right;
+}
+
+.footer {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 11px;
+  border-top: 1px dashed #000;
+  padding-top: 5px;
+}
+
+/* ❌ Ocultar botones en impresión */
+@media print {
+  button {
+    display: none;
+  }
+  body {
+    background: #fff;
+  }
+}
+
+/* ----- Layout de columnas (usuario.html) ----- */
+.flex {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 20px;
 }
 
@@ -23,174 +168,28 @@ body {
   min-width: 320px;
 }
 
-h1, h2, h3 {
-  color: #111827;
-  text-align: center;
-}
-
-/* --- Tarjetas --- */
-.card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  margin: 20px 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  transition: transform 0.2s;
-}
-
-.card:hover {
-  transform: scale(1.02);
-}
-
-/* --- Inputs y selects --- */
-label {
-  display: block;
-  margin: 10px 0 5px;
-  font-weight: bold;
-}
-
-input, select {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  margin-bottom: 12px;
-  font-size: 1em;
-}
-
-/* --- Botones --- */
-button {
-  background: #39d353; /* verde */
-  color: #fff;
-  padding: 14px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.3s;
-  margin: 5px 0;
-  font-size: 1em;
-}
-
-button:hover {
-  background: #2da53f;
-}
-
-/* --- Resultado --- */
-.resultado {
-  font-size: 1.2em;
-  text-align: center;
-  margin-top: 20px;
-  font-weight: bold;
-}
-
-/* --- Tablas --- */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-}
-
-th, td {
-  padding: 12px;
-  border: 1px solid #ddd;
-  text-align: center;
-}
-
-th {
-  background: #39d353;
-  color: white;
-  font-size: 1.1em;
-}
-
-tr:nth-child(even) {
-  background: #f3f4f6;
-}
-
-/* --- Factura --- */
-.factura {
-  background: #fff;
-  border: 2px solid #333;
-  padding: 20px;
-  margin-top: 20px;
-  border-radius: 10px;
-  max-width: 700px;
-  font-family: Arial, sans-serif;
-}
-
-.factura h2 {
-  text-align: center;
+/* ----- Filtros contabilidad ----- */
+.filters {
   margin-bottom: 15px;
 }
 
-.factura table {
-  margin-top: 10px;
+.filters button {
+  margin-right: 10px;
 }
 
-.factura th {
-  background: #2563eb;
-  color: white;
-}
-
-/* --- Estilos para impresión (solo factura) --- */
-@media print {
-  body * {
-    visibility: hidden;
+/* ----- Responsive mejoras ----- */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 20px;
   }
-  .factura, .factura * {
-    visibility: visible;
-  }
-  .factura {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    box-shadow: none;
-    border: none;
+  table {
+    font-size: 12px;
   }
   button {
-    display: none !important;
+    font-size: 12px;
+    padding: 8px 12px;
   }
-}
-
-/* --- Acordeón --- */
-.accordion-toggle {
-  width: 100%;
-  background: #2563eb;
-  color: white;
-  font-weight: bold;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  margin: 5px 0;
-  cursor: pointer;
-  text-align: left;
-}
-
-.accordion-content {
-  display: none;
-  padding: 10px;
-  background: #f9f9f9;
-  border-radius: 6px;
-  margin-bottom: 10px;
-}
-
-/* --- Responsivo --- */
-@media (max-width: 768px) {
-  .container {
-    padding: 10px;
-  }
-
-  .card {
-    margin: 10px 0;
-    padding: 15px;
-  }
-
-  input, select, button {
-    font-size: 1em;
-  }
-
-  table {
-    font-size: 0.9em;
+  input, select {
+    font-size: 12px;
   }
 }
