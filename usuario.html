@@ -6,71 +6,86 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- 🔹 Menú hamburguesa -->
+  <!-- Navbar -->
   <div class="navbar">
     <span class="menu-toggle" onclick="toggleMenu()">☰</span>
     <h1>Registro de Pesaje</h1>
   </div>
 
-  <!-- Sidebar oculto -->
+  <!-- Sidebar -->
   <div id="sidebar" class="sidebar">
     <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
     <button onclick="window.location.href='ventas.html'">🛒 Registrar Contenedor</button>
     <button onclick="window.location.href='contabilidad.html'">💵 Ver Contabilidad</button>
     <button onclick="window.location.href='precios.html'">💲 Editar Precios</button>
     <button onclick="window.location.href='factura.html'">🧾 Configurar Factura</button>
-    <button id="btnCerrar" type="button">Cerrar Sesión</button>
+    <button id="btnCerrar" type="button">🚪 Cerrar Sesión</button>
   </div>
 
   <div class="container">
-    <div class="card">
-      <label for="tipo">Tipo de transporte:</label>
-      <select id="tipo">
-        <option value="">-- Seleccione --</option>
-        <option value="camionGrande">Camión Grande</option>
-        <option value="camionPequeno">Camión Pequeño</option>
-        <option value="carreta">Carreta</option>
-        <option value="mano">A Mano</option>
-      </select>
+    <!-- Columna principal -->
+    <div class="col">
+      <div class="card">
+        <label for="tipo">Tipo de transporte:</label>
+        <select id="tipo">
+          <option value="">-- Seleccione --</option>
+          <option value="camionGrande">Camión Grande</option>
+          <option value="camionPequeno">Camión Pequeño</option>
+          <option value="carreta">Carreta</option>
+          <option value="mano">A Mano</option>
+        </select>
 
-      <div id="campos"></div>
+        <div id="campos"></div>
 
-      <!-- Materiales extra -->
-      <h3>Materiales extra</h3>
-      <div id="listaExtras"></div>
-      <select id="materialSelect">
-        <option value="">-- Seleccione material --</option>
-        <option value="Aluminio">Aluminio</option>
-        <option value="Cobre">Cobre</option>
-        <option value="Bronce">Bronce</option>
-        <option value="Batería">Batería</option>
-        <option value="Acero">Acero</option>
-        <option value="Cable">Cable</option>
-        <option value="Catalizador">Catalizador</option>
-        <option value="Plástico de lavadora">Plástico de lavadora</option>
-        <option value="Plástico de caja">Plástico de caja</option>
-        <option value="Carrocería">Carrocería</option>
-      </select>
-      <input type="number" id="pesoMaterial" placeholder="Peso (kg)" />
-      <button id="btnAgregarExtra" type="button">➕ Agregar material</button>
-      <button id="btnRegistrar">Registrar</button>
+        <!-- Materiales extra -->
+        <h3>Materiales extra</h3>
+        <div id="listaExtras"></div>
+        <select id="materialSelect">
+          <option value="">-- Seleccione material --</option>
+          <option value="Aluminio">Aluminio</option>
+          <option value="Cobre">Cobre</option>
+          <option value="Bronce">Bronce</option>
+          <option value="Batería">Batería</option>
+          <option value="Acero">Acero</option>
+          <option value="Cable">Cable</option>
+          <option value="Catalizador">Catalizador</option>
+          <option value="Plástico de lavadora">Plástico de lavadora</option>
+          <option value="Plástico de caja">Plástico de caja</option>
+          <option value="Carrocería">Carrocería</option>
+        </select>
+        <input type="number" id="pesoMaterial" placeholder="Peso (kg)" />
+        <button id="btnAgregarExtra" type="button">➕ Agregar material</button>
+
+        <button id="btnRegistrar">Registrar</button>
+      </div>
+
+      <!-- 💲 Precios debajo del registro -->
+      <div class="card">
+        <h2>💲 Precios de materiales</h2>
+        <div id="preciosUsuario">Cargando precios...</div>
+      </div>
+
+      <!-- Resultado: aquí se inserta la factura -->
+      <div id="resultado" class="resultado"></div>
     </div>
-
-    <!-- 🔹 Precios debajo del formulario -->
-    <div class="card">
-      <h2>💲 Precios de materiales</h2>
-      <div id="preciosUsuario">Cargando precios...</div>
-    </div>
-
-    <!-- Resultado: aquí se inserta la factura -->
-    <div id="resultado" class="resultado"></div>
   </div>
 
-  <script type="module" src="usuario.js"></script>
+  <!-- Script menú -->
   <script>
     function toggleMenu() {
       document.getElementById("sidebar").classList.toggle("open");
     }
+
+    document.addEventListener("click", function(e) {
+      const sidebar = document.getElementById("sidebar");
+      const toggle = document.querySelector(".menu-toggle");
+
+      if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+        sidebar.classList.remove("open");
+      }
+    });
   </script>
+
+  <script type="module" src="usuario.js"></script>
 </body>
 </html>
