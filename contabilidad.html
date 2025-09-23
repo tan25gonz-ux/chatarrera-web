@@ -1,48 +1,92 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>💵 Contabilidad</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    #graficoComparativoContainer { height: 360px; }
-    #graficoTotalesContainer { width: 300px; margin: 20px auto; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
+  <!-- Navbar -->
+  <div class="navbar">
+    <span class="menu-toggle" onclick="toggleMenu()">☰</span>
     <h1>💵 Contabilidad</h1>
-
-    <div class="filters">
-      <button id="filtroFecha">Ordenar por fecha (Recientes primero)</button>
-      <button id="filtroAZ">Ordenar A-Z</button>
-    </div>
-
-    <h2>📊 Comparación Ingresos vs Egresos</h2>
-    <div id="graficoComparativoContainer">
-      <canvas id="graficoComparativo"></canvas>
-    </div>
-
-    <h2>🍩 Totales Acumulados</h2>
-    <div id="graficoTotalesContainer">
-      <canvas id="graficoTotales"></canvas>
-    </div>
-
-    <h2>📈 Ingresos</h2>
-    <table id="tablaIngresos">
-      <thead><tr><th>Fecha</th><th>Descripción</th><th>Monto ₡</th></tr></thead>
-      <tbody></tbody>
-    </table>
-
-    <h2>📉 Egresos</h2>
-    <table id="tablaEgresos">
-      <thead><tr><th>Fecha</th><th>Descripción</th><th>Monto ₡</th></tr></thead>
-      <tbody></tbody>
-    </table>
-
-    <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
   </div>
+
+  <!-- Sidebar -->
+  <div id="sidebar" class="sidebar">
+    <button onclick="window.location.href='usuario.html'">🚚 Registrar Pesaje</button>
+    <button onclick="window.location.href='inventario.html'">📊 Inventario</button>
+    <button onclick="window.location.href='ventas.html'">🛒 Contenedor</button>
+    <button onclick="window.location.href='precios.html'">💲 Precios</button>
+    <button onclick="window.location.href='factura.html'">🧾 Configurar Factura</button>
+    <button id="btnCerrar">🚪 Cerrar Sesión</button>
+  </div>
+
+  <div class="container">
+    <!-- 📌 Formulario ingreso/egreso manual -->
+    <div class="card">
+      <h2>➕ Agregar Movimiento</h2>
+      <label>Descripción:</label>
+      <input type="text" id="descMovimiento" placeholder="Ej: Pago de alquiler">
+
+      <label>Monto (₡):</label>
+      <input type="number" id="montoMovimiento" placeholder="Ej: 50000">
+
+      <label>Tipo:</label>
+      <select id="tipoMovimiento">
+        <option value="ingreso">Ingreso</option>
+        <option value="egreso">Egreso</option>
+      </select>
+
+      <button id="btnAgregarMovimiento">✅ Guardar Movimiento</button>
+    </div>
+
+    <!-- 📌 Filtro por fecha -->
+    <div class="card filters">
+      <h2>📅 Filtrar por fecha</h2>
+      <input type="date" id="filtroFecha">
+      <button id="btnAplicarFiltro">🔍 Filtrar</button>
+      <button id="btnVerTodo">📂 Ver Todo</button>
+    </div>
+
+    <!-- 📌 Listado -->
+    <div class="card">
+      <h2>📋 Movimientos</h2>
+      <table id="tablaMovimientos">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Tipo</th>
+            <th>Monto (₡)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- 📌 Balance -->
+    <div class="card balance">
+      <h2>📊 Balance</h2>
+      <p id="totalIngresos">Total Ingresos: ₡0</p>
+      <p id="totalEgresos">Total Egresos: ₡0</p>
+      <h3 id="balanceFinal">Balance: ₡0</h3>
+    </div>
+  </div>
+
+  <!-- Script menú -->
+  <script>
+    function toggleMenu() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+    document.addEventListener("click", function(e) {
+      const sidebar = document.getElementById("sidebar");
+      const toggle = document.querySelector(".menu-toggle");
+      if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+        sidebar.classList.remove("open");
+      }
+    });
+  </script>
 
   <script type="module" src="contabilidad.js"></script>
 </body>
