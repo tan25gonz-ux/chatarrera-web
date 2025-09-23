@@ -135,7 +135,7 @@ input.error {
   margin-bottom: 15px;
 }
 
-/* ----- Tablas ----- */
+/* ----- Tablas generales ----- */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -158,19 +158,27 @@ tr:nth-child(even) {
   background: #f2f2f2;
 }
 
+/* ===================== FACTURA ===================== */
 /* ----- Factura en pantalla (moderna) ----- */
 .factura {
   background: #fff;
-  padding: 15px;
+  padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   margin-top: 20px;
+  font-family: Arial, sans-serif;
 }
 
 .factura h2 {
   text-align: center;
   margin-bottom: 10px;
   color: #222;
+  font-size: 20px;
+}
+
+.factura p {
+  margin: 4px 0;
+  font-size: 14px;
 }
 
 .factura table {
@@ -178,55 +186,71 @@ tr:nth-child(even) {
   border-collapse: collapse;
   margin: 10px 0;
 }
+
 .factura th, .factura td {
   border: 1px solid #ddd;
   padding: 6px;
   text-align: center;
+  font-size: 13px;
+}
+
+.factura th {
+  background: #007bff;
+  color: #fff;
+}
+
+.factura h3 {
+  text-align: right;
+  margin-top: 10px;
+  font-size: 16px;
 }
 
 .factura .footer {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 15px;
   font-size: 13px;
   color: #555;
 }
 
-/* ----- Control impresión ----- */
-.no-print {
-  display: block;
-}
-.only-print {
-  display: none;
-}
-
+/* ----- Factura en impresión (térmica 58mm) ----- */
 @media print {
   body * {
-    visibility: hidden;
+    display: none !important;
   }
   .factura, .factura * {
-    visibility: visible;
+    display: block !important;
+    visibility: visible !important;
   }
   .factura {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 58mm; /* formato impresora térmica */
+    width: 58mm;      /* ancho rollo térmico */
+    padding: 5px;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
     font-family: monospace;
     font-size: 12px;
-    box-shadow: none;
-    border-radius: 0;
   }
-  .no-print {
-    display: none !important;
+  .factura table {
+    font-size: 11px;
+    border: none;
   }
-  .only-print {
-    display: block !important;
+  .factura th {
+    background: none;
+    color: #000;
+    border-bottom: 1px dashed #000;
   }
-  button {
-    display: none !important;
+  .factura td {
+    border-bottom: 1px dashed #000;
   }
-  .navbar, .sidebar {
-    display: none !important;
+  .factura h2, .factura h3 {
+    font-size: 13px;
+    margin: 3px 0;
+  }
+  .factura .footer {
+    font-size: 11px;
+    border-top: 1px dashed #000;
+    margin-top: 5px;
+    padding-top: 5px;
   }
 }
 
