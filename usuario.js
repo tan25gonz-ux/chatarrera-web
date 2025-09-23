@@ -152,8 +152,8 @@ async function registrarPesaje() {
       fecha: serverTimestamp()
     });
 
-    // ✅ Mostrar fecha en local (Costa Rica por defecto en tu PC)
-    const fechaHoraCR = new Date().toLocaleString("es-CR", {
+    // ✅ Mostrar con hora local del dispositivo
+    const fechaHoraLocal = new Date().toLocaleString(undefined, {
       dateStyle: "short",
       timeStyle: "short"
     });
@@ -161,7 +161,7 @@ async function registrarPesaje() {
     document.getElementById("resultado").innerHTML = `
       <div class="factura">
         <h2>🧾 Factura de Compra</h2>
-        <p><strong>Fecha:</strong> ${fechaHoraCR}</p>
+        <p><strong>Fecha:</strong> ${fechaHoraLocal}</p>
         <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
         ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
         <table>
