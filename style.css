@@ -146,16 +146,6 @@ tr:nth-child(even) {
   padding-top: 5px;
 }
 
-/* ❌ Ocultar botones en impresión */
-@media print {
-  button {
-    display: none;
-  }
-  body {
-    background: #fff;
-  }
-}
-
 /* ----- Layout de columnas (usuario.html) ----- */
 .flex {
   display: flex;
@@ -192,7 +182,9 @@ tr:nth-child(even) {
   input, select {
     font-size: 12px;
   }
-  /* ----- Solo imprimir factura ----- */
+}
+
+/* ----- Solo imprimir factura ----- */
 @media print {
   body * {
     visibility: hidden;   /* Oculta todo */
@@ -207,10 +199,15 @@ tr:nth-child(even) {
     left: 0;
     top: 0;
     width: 58mm;
+    margin: 0;
+    padding: 0;
   }
 
   button {
     display: none !important; /* Quita botones */
   }
 
+  body {
+    background: #fff;
+  }
 }
