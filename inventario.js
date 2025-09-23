@@ -1,151 +1,153 @@
-// inventario.js
 import { auth, db } from "./firebase.js";
-import {
-  collection,
-  query,
-  getDocs,
-  orderBy,
-  where
-} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { doc, getDoc, collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-let uid = null;
-let historial = []; // todos los registros de inventario_historial
+const materiales = [
+  "Hierro", "Aluminio", "Cobre", "Bronce",
+  "Batería", "Acero", "Cable", "Catalizador",
+  "Plástico de lavadora", "Plástico de caja", "Carrocería",
+  "RCB", "RCA", "RA", "TARJETA mala", "TARJETA buena"
+];
+
+const tabla = document.querySelector("#tablaInventario tbody");
+const tablaCompras = document.querySelector("#tablaCompras tbody");
+
+let compras = []; // historial completo
 let grafico = null;
 
-// === Formateadores ===
-function formatFecha(ts) {
-  if (!ts?.seconds) return "N/A";
-  return new Date(ts.seconds * 1000).toLocaleString("es-CR");
-}
+// ---- Cargar Inventario ----
+async function cargarInventario(uid) {
+  const docRef = doc(db, "inventarios", uid);
+  const snap = await getDoc(docRef);
 
-function formatPeso(p) {
-  return `${p} kg`;
-}
+  const datos = {};
+  materiales.forEach(m => datos[m] = 0);
 
-// === Cargar historial ===
-async function cargarHistorial() {
-  if (!uid) return;
-  const q = query(
-    collection(db, "inventario_historial"),
-    where("uid", "==", uid),
-    orderBy("fecha", "desc")
-  );
-  const snap = await getDocs(q);
-
-  historial = [];
-  snap.forEach((docSnap) => {
-    historial.push({ id: docSnap.id, ...docSnap.data() });
-  });
-
-  mostrarTabla(historial);
-  actualizarGrafico(historial);
-}
-
-// === Mostrar tabla ===
-function mostrarTabla(lista) {
-  const tbody = document.querySelector("#tablaHistorial tbody");
-  if (!tbody) return;
-  tbody.innerHTML = "";
-
-  if (lista.length === 0) {
-    tbody.innerHTML = "<tr><td colspan='3'>Sin registros</td></tr>";
-    return;
+  if (snap.exists()) {
+    const data = snap.data();
+    const inventario = data.materiales || {};
+    materiales.forEach(m => {
+      if (inventario[m] !== undefined) {
+        datos[m] = inventario[m];
+      }
+    });
   }
 
-  lista.forEach((m) => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${formatFecha(m.fecha)}</td>
-        <td>${m.material}</td>
-        <td>${formatPeso(m.peso)}</td>
-      </tr>
-    `;
+  tabla.innerHTML = "";
+  materiales.forEach(mat => {
+    tabla.innerHTML += `<tr><td>${mat}</td><td>${datos[mat]}</td></tr>`;
   });
 }
 
-// === Filtrar por rango de fechas ===
-function filtrarPorRango() {
-  const desde = document.getElementById("fechaDesde").value;
-  const hasta = document.getElementById("fechaHasta").value;
+// ---- Cargar Compras ----
+async function cargarCompras(uid) {
+  const q = query(collection(db, "pesajes"), where("usuario", "==", auth.currentUser.email), orderBy("fecha", "desc"));
+  const snap = await getDocs(q);
 
-  if (!desde || !hasta) {
+  compras = [];
+  tablaCompras.innerHTML = "";
+
+  snap.forEach(doc => {
+    const p = doc.data();
+    const fecha = p.fecha?.toDate() || new Date();
+    p.materiales.forEach(m => {
+      compras.push({
+        fecha,
+        material: m.material,
+        peso: m.peso
+      });
+    });
+  });
+
+  mostrarTodo();
+}
+
+// ---- Mostrar Todo ----
+function mostrarTodo() {
+  renderCompras(compras);
+  actualizarGrafico(compras);
+}
+
+// ---- Filtrar por Rango ----
+window.filtrarPorRango = function() {
+  const inicio = document.getElementById("fechaInicio").value;
+  const fin = document.getElementById("fechaFin").value;
+
+  if (!inicio || !fin) {
     alert("Seleccione ambas fechas");
     return;
   }
 
-  const desdeDate = new Date(desde);
-  const hastaDate = new Date(hasta);
-  hastaDate.setHours(23, 59, 59, 999);
+  const inicioDate = new Date(inicio + "T00:00:00");
+  const finDate = new Date(fin + "T23:59:59");
 
-  const filtrados = historial.filter((m) => {
-    const d = new Date(m.fecha.seconds * 1000);
-    return d >= desdeDate && d <= hastaDate;
+  const filtradas = compras.filter(c => c.fecha >= inicioDate && c.fecha <= finDate);
+  renderCompras(filtradas);
+  actualizarGrafico(filtradas);
+};
+
+window.mostrarTodo = mostrarTodo;
+
+// ---- Renderizar Compras ----
+function renderCompras(lista) {
+  tablaCompras.innerHTML = "";
+  if (!lista.length) {
+    tablaCompras.innerHTML = "<tr><td colspan='3'>Sin registros</td></tr>";
+    return;
+  }
+  lista.forEach(c => {
+    tablaCompras.innerHTML += `
+      <tr>
+        <td>${c.fecha.toLocaleString("es-CR")}</td>
+        <td>${c.material}</td>
+        <td>${c.peso}</td>
+      </tr>`;
   });
-
-  mostrarTabla(filtrados);
-  actualizarGrafico(filtrados);
 }
 
-// === Mostrar todo ===
-function mostrarTodo() {
-  mostrarTabla(historial);
-  actualizarGrafico(historial);
-}
-
-// === Gráfico ===
+// ---- Gráfico ----
 function actualizarGrafico(lista) {
-  const ctx = document.getElementById("grafico");
-  if (!ctx) return;
-
-  const agrupado = {};
-  lista.forEach((m) => {
-    if (!agrupado[m.material]) agrupado[m.material] = 0;
-    agrupado[m.material] += Number(m.peso) || 0;
+  const resumen = {};
+  lista.forEach(c => {
+    resumen[c.material] = (resumen[c.material] || 0) + c.peso;
   });
 
-  const labels = Object.keys(agrupado);
-  const datos = Object.values(agrupado);
-
+  const ctx = document.getElementById("graficoCompras").getContext("2d");
   if (grafico) grafico.destroy();
+
   grafico = new Chart(ctx, {
     type: "bar",
     data: {
-      labels,
-      datasets: [
-        {
-          label: "Peso (kg)",
-          data: datos,
-          backgroundColor: "#007bff"
-        }
-      ]
+      labels: Object.keys(resumen),
+      datasets: [{
+        label: "Kg comprados",
+        data: Object.values(resumen),
+        backgroundColor: "#007bff"
+      }]
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: { display: false }
+      scales: {
+        y: { beginAtZero: true }
       }
     }
   });
 }
 
-// === Eventos ===
+// ---- Auth ----
 onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    alert("Debes iniciar sesión");
+  if (user) {
+    cargarInventario(user.uid);
+    cargarCompras(user.uid);
+  } else {
+    alert("⚠️ Debes iniciar sesión para ver inventario.");
     window.location.href = "index.html";
-    return;
   }
-  uid = user.uid;
-  cargarHistorial();
 });
 
-document.getElementById("btnFiltrar")?.addEventListener("click", filtrarPorRango);
-document.getElementById("btnTodo")?.addEventListener("click", mostrarTodo);
-
-document.getElementById("btnCerrar")?.addEventListener("click", () => {
+document.getElementById("btnCerrar").addEventListener("click", () => {
   signOut(auth).then(() => {
     sessionStorage.clear();
     window.location.href = "index.html";
-  });
+  }).catch((e) => alert("❌ Error al cerrar sesión: " + e.message));
 });
