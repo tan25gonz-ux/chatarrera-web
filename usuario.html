@@ -22,9 +22,9 @@
     <button id="btnCerrar" type="button">🚪 Cerrar Sesión</button>
   </div>
 
-  <div class="container">
+  <div class="container" style="text-align: center;">
     <!-- Columna principal -->
-    <div class="col">
+    <div class="col" style="max-width: 600px; margin: auto;">
       <div class="card">
         <label for="tipo">Tipo de transporte:</label>
         <select id="tipo">
@@ -59,14 +59,14 @@
         <button id="btnRegistrar">Registrar</button>
       </div>
 
-      <!-- 💲 Precios debajo del registro -->
+      <!-- Resultado: factura dentro de card -->
+      <div class="card" id="resultado"></div>
+
+      <!-- 💲 Precios debajo de la factura -->
       <div class="card">
         <h2>💲 Precios de materiales</h2>
         <div id="preciosUsuario">Cargando precios...</div>
       </div>
-
-      <!-- Resultado: aquí se inserta la factura -->
-      <div id="resultado" class="resultado"></div>
     </div>
   </div>
 
