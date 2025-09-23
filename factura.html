@@ -2,62 +2,33 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>⚙ Configuración de Factura</title>
+  <title>Configuración de Factura</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>⚙ Configuración de Factura</h1>
+    <h1>🧾 Configuración de Factura</h1>
 
-    <label>📞 Teléfono 1: <input type="text" id="telefono1"></label>
-    <label>📞 Teléfono 2: <input type="text" id="telefono2"></label>
-    <label>🏪 Nombre del local: <input type="text" id="nombreLocal"></label>
-    <label>🧾 Número de Hacienda: <input type="text" id="hacienda"></label>
+    <label>Nombre del Local:
+      <input type="text" id="nombreLocal">
+    </label>
 
-    <button id="btnGuardarFactura">💾 Guardar Configuración</button>
-    <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
+    <label>Número de Hacienda:
+      <input type="text" id="numHacienda">
+    </label>
+
+    <label>Teléfono 1:
+      <input type="text" id="telefono1">
+    </label>
+
+    <label>Teléfono 2:
+      <input type="text" id="telefono2">
+    </label>
+
+    <button id="btnGuardarFactura">💾 Guardar configuración</button>
+    <button onclick="window.location.href='usuario.html'">⬅ Volver</button>
   </div>
 
-  <script type="module">
-    import { auth, db } from "./firebase.js";
-    import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-
-    let uid = null;
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        alert("Debe iniciar sesión");
-        window.location.href = "index.html";
-        return;
-      }
-      uid = user.uid;
-      await cargarConfig();
-    });
-
-    async function cargarConfig() {
-      const ref = doc(db, "configuracionFactura", uid);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const data = snap.data();
-        document.getElementById("telefono1").value = data.telefono1 || "";
-        document.getElementById("telefono2").value = data.telefono2 || "";
-        document.getElementById("nombreLocal").value = data.nombreLocal || "";
-        document.getElementById("hacienda").value = data.hacienda || "";
-      }
-    }
-
-    document.getElementById("btnGuardarFactura").addEventListener("click", async () => {
-      const ref = doc(db, "configuracionFactura", uid);
-      await setDoc(ref, {
-        telefono1: document.getElementById("telefono1").value,
-        telefono2: document.getElementById("telefono2").value,
-        nombreLocal: document.getElementById("nombreLocal").value,
-        hacienda: document.getElementById("hacienda").value,
-      }, { merge: true });
-
-      alert("✅ Configuración guardada correctamente");
-    });
-  </script>
+  <script type="module" src="factura.js"></script>
 </body>
 </html>
