@@ -59,10 +59,10 @@ function renderTabla(idTabla, datos) {
   `).join("");
 }
 
-// ---- Mostrar en local (sin forzar tz) ----
+// ---- Usar hora local del dispositivo ----
 function formatLocal(ts) {
   if (!ts || typeof ts.toDate !== "function") return "N/A";
-  return ts.toDate().toLocaleString("es-CR", {
+  return ts.toDate().toLocaleString(undefined, {
     dateStyle: "short",
     timeStyle: "short"
   });
