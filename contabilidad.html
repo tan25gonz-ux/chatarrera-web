@@ -1,20 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>💵 Contabilidad</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Chart.js -->
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Ajustes de tamaño de gráficas */
-    #graficoComparativoContainer {
-      height: 350px; /* comparativa más grande */
-    }
-    #graficoTotalesContainer {
-      width: 300px;  /* dona más compacta */
-      margin: 20px auto;
-    }
+    #graficoComparativoContainer { height: 360px; }
+    #graficoTotalesContainer { width: 300px; margin: 20px auto; }
   </style>
 </head>
 <body>
@@ -31,32 +24,20 @@
       <canvas id="graficoComparativo"></canvas>
     </div>
 
-    <h2> Totales Acumulados</h2>
+    <h2>🍩 Totales Acumulados</h2>
     <div id="graficoTotalesContainer">
       <canvas id="graficoTotales"></canvas>
     </div>
 
     <h2>📈 Ingresos</h2>
     <table id="tablaIngresos">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Descripción</th>
-          <th>Monto ₡</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Fecha</th><th>Descripción</th><th>Monto ₡</th></tr></thead>
       <tbody></tbody>
     </table>
 
     <h2>📉 Egresos</h2>
     <table id="tablaEgresos">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Descripción</th>
-          <th>Monto ₡</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Fecha</th><th>Descripción</th><th>Monto ₡</th></tr></thead>
       <tbody></tbody>
     </table>
 
