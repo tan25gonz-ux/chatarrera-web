@@ -76,8 +76,18 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- 👇 Aquí quitamos type="module" -->
-  <script src="contabilidad.js"></script>
+
+  <!-- Importar el módulo con Firebase -->
+  <script type="module">
+    import { agregarMovimiento, mostrarTodos, filtrar, filtrarPorFecha } from "./contabilidad.js";
+
+    // Hacer accesibles las funciones al HTML
+    window.agregarMovimiento = agregarMovimiento;
+    window.mostrarTodos = mostrarTodos;
+    window.filtrar = filtrar;
+    window.filtrarPorFecha = filtrarPorFecha;
+  </script>
+
   <script>
     function toggleMenu() {
       document.getElementById("sidebar").classList.toggle("open");
