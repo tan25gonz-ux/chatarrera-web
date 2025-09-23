@@ -5,74 +5,14 @@ body {
   font-family: Arial, sans-serif;
   background: #f5f7fa;
   color: #333;
-  min-height: 100vh;
   font-size: 1em;
   line-height: 1.4;
-}
-
-/* ----- Navbar con menú hamburguesa ----- */
-.navbar {
-  background: #007bff;
-  color: #fff;
-  padding: 10px 15px;
-  display: flex;
-  align-items: center;
-}
-
-.navbar h1 {
-  flex: 1;
-  text-align: center;
-  margin: 0;
-  font-size: 20px;
-}
-
-.menu-toggle {
-  font-size: 24px;
-  cursor: pointer;
-}
-
-/* ----- Sidebar lateral ----- */
-.sidebar {
-  height: 100%;
-  width: 0; /* empieza cerrado */
-  position: fixed;
-  top: 0;
-  left: 0;
-  background: #fff;
-  border-right: 1px solid #ccc;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-  padding-top: 60px;
-  transition: 0.3s;
-  z-index: 1000;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar.open {
-  width: 220px; /* ancho al abrir */
-}
-
-.sidebar button {
-  margin: 5px 15px;
-  padding: 10px;
-  text-align: left;
-  border: none;
-  border-radius: 4px;
-  background: #007bff;
-  color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.sidebar button:hover {
-  background: #0056b3;
 }
 
 /* ----- Contenedor principal ----- */
 .container {
   max-width: 1200px;
-  margin: 20px;
+  margin: auto;
   padding: 20px;
 }
 
@@ -120,12 +60,6 @@ input:focus, select:focus {
   box-shadow: 0 0 3px rgba(0,123,255,0.5);
 }
 
-/* Feedback error */
-input.error {
-  border-color: red;
-  background: #ffeaea;
-}
-
 /* ----- Tarjetas (cards) ----- */
 .card {
   background: #fff;
@@ -158,89 +92,78 @@ tr:nth-child(even) {
   background: #f2f2f2;
 }
 
-/* ----- Factura (formato térmico 58mm) ----- */
+/* ================================
+   FACTURA RECIBO ESTILO 58mm
+================================ */
 .factura {
   width: 58mm;
+  margin: auto;
   padding: 5px;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 12px;
-  background: #fff;
-}
-
-.factura h2, .factura h3 {
+  font-family: "Courier New", Courier, monospace;
   font-size: 14px;
-  margin: 4px 0;
-  text-align: center;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
 .factura p {
   margin: 2px 0;
+}
+
+.factura hr {
+  border: 0;
+  border-top: 1px dashed #000;
+  margin: 4px 0;
+}
+
+.factura h2 {
+  font-size: 16px;
+  margin: 4px 0;
   text-align: center;
-}
-
-.factura table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 11px;
-  margin-top: 5px;
-}
-
-.factura th, .factura td {
-  text-align: left;
-  padding: 2px 0;
-  border-bottom: 1px dashed #000;
-}
-
-.factura h3 {
-  border-top: 1px solid #000;
-  padding-top: 4px;
-  text-align: right;
 }
 
 .footer {
   margin-top: 10px;
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   border-top: 1px dashed #000;
   padding-top: 5px;
 }
 
-/* ----- Solo imprimir factura (58mm) ----- */
-@media print {
-  @page {
-    size: 58mm auto; /* ancho fijo, alto dinámico */
-    margin: 0;
-  }
+/* ----- Botón imprimir ----- */
+.no-print {
+  display: block;
+  margin: 10px auto;
+  padding: 8px 12px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
 
+.no-print:hover {
+  background: #0056b3;
+}
+
+/* ================================
+   SOLO IMPRIMIR FACTURA
+================================ */
+@media print {
   body * {
     visibility: hidden;
   }
-
   .factura, .factura * {
     visibility: visible;
   }
-
   .factura {
     position: absolute;
     left: 0;
     top: 0;
-    width: 58mm;
-    margin: 0;
-    padding: 0;
   }
-
-  button, .navbar, .sidebar {
+  .no-print {
     display: none !important;
   }
-}
-
-/* ----- Filtros contabilidad ----- */
-.filters {
-  margin-bottom: 15px;
-}
-
-.filters button {
-  margin-right: 10px;
 }
 
 /* ----- Responsive mejoras ----- */
