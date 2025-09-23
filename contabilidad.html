@@ -2,30 +2,39 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>💵 Contabilidad</title>
+  <title>Contabilidad - Chatarrera</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- Navbar -->
   <div class="navbar">
     <span class="menu-toggle" onclick="toggleMenu()">☰</span>
-    <h1>💵 Contabilidad</h1>
+    <h1>Contabilidad</h1>
   </div>
 
   <!-- Sidebar -->
   <div id="sidebar" class="sidebar">
-    <button onclick="window.location.href='usuario.html'">🚚 Registrar Pesaje</button>
+    <button onclick="window.location.href='usuario.html'">⚖️ Pesajes</button>
     <button onclick="window.location.href='inventario.html'">📊 Inventario</button>
-    <button onclick="window.location.href='ventas.html'">🛒 Contenedor</button>
+    <button onclick="window.location.href='ventas.html'">🛒 Contenedores</button>
     <button onclick="window.location.href='precios.html'">💲 Precios</button>
-    <button onclick="window.location.href='factura.html'">🧾 Configurar Factura</button>
-    <button id="btnCerrar">🚪 Cerrar Sesión</button>
+    <button onclick="window.location.href='factura.html'">🧾 Factura</button>
+    <button id="btnCerrar" type="button">🚪 Cerrar Sesión</button>
   </div>
 
   <div class="container">
+    <!-- Filtros generales -->
+    <div class="card filters">
+      <h2>📅 Filtros</h2>
+      <button id="filtroHoy">Hoy</button>
+      <button id="filtroSemana">Esta semana</button>
+      <button id="filtroMes">Este mes</button>
+      <button id="filtroTodo">Todo</button>
+    </div>
+
     <!-- 📌 Formulario ingreso/egreso manual -->
     <div class="card">
-      <h2>➕ Agregar Movimiento</h2>
+      <h2>➕ Agregar Movimiento Manual</h2>
       <label>Descripción:</label>
       <input type="text" id="descMovimiento" placeholder="Ej: Pago de alquiler">
 
@@ -41,28 +50,12 @@
       <button id="btnAgregarMovimiento">✅ Guardar Movimiento</button>
     </div>
 
-    <!-- 📌 Filtro por fecha -->
+    <!-- 📌 Filtro por fecha puntual -->
     <div class="card filters">
       <h2>📅 Filtrar por fecha</h2>
       <input type="date" id="filtroFecha">
       <button id="btnAplicarFiltro">🔍 Filtrar</button>
       <button id="btnVerTodo">📂 Ver Todo</button>
-    </div>
-
-    <!-- 📌 Listado -->
-    <div class="card">
-      <h2>📋 Movimientos</h2>
-      <table id="tablaMovimientos">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Descripción</th>
-            <th>Tipo</th>
-            <th>Monto (₡)</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
     </div>
 
     <!-- 📌 Balance -->
@@ -72,13 +65,26 @@
       <p id="totalEgresos">Total Egresos: ₡0</p>
       <h3 id="balanceFinal">Balance: ₡0</h3>
     </div>
+
+    <!-- Listado -->
+    <div class="card">
+      <h2>📑 Ingresos y Egresos</h2>
+      <div id="listaMovimientos">Cargando...</div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="card">
+      <h2>📈 Gráficos</h2>
+      <canvas id="graficoBarras"></canvas>
+      <canvas id="graficoLineas"></canvas>
+    </div>
   </div>
 
-  <!-- Script menú -->
   <script>
     function toggleMenu() {
       document.getElementById("sidebar").classList.toggle("open");
     }
+
     document.addEventListener("click", function(e) {
       const sidebar = document.getElementById("sidebar");
       const toggle = document.querySelector(".menu-toggle");
@@ -88,6 +94,7 @@
     });
   </script>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="contabilidad.js"></script>
 </body>
 </html>
