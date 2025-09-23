@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Inventario - Chatarrera</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <!-- Navbar -->
@@ -22,61 +22,45 @@
     <button id="btnCerrar" type="button">🚪 Cerrar Sesión</button>
   </div>
 
-  <div class="container">
-    <!-- Tabla de inventario -->
-    <div class="card">
-      <h2>📦 Inventario actual</h2>
-      <table id="tablaInventario">
-        <thead>
-          <tr>
-            <th>Material</th>
-            <th>Cantidad (kg)</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+  <div class="container" style="text-align: center;">
+    <div class="col" style="max-width: 800px; margin: auto;">
+      <!-- Inventario -->
+      <div class="card">
+        <h2>📦 Inventario de Materiales</h2>
+        <table id="tablaInventario">
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>Cantidad (kg)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
 
-    <!-- Tabla de compras -->
-    <div class="card">
-      <h2>🧾 Historial de compras</h2>
-      <table id="tablaCompras">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Material</th>
-            <th>Peso (kg)</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <!-- Filtro por rango de fechas -->
-    <div class="card">
-      <h2>📆 Filtrar por rango de fechas</h2>
-      <label>Desde: <input type="date" id="fechaInicio"></label>
-      <label>Hasta: <input type="date" id="fechaFin"></label>
-      <button onclick="filtrarPorRango()">Filtrar</button>
-      <button onclick="mostrarTodo()">Ver Todo</button>
-    </div>
-
-    <!-- Gráfico -->
-    <div class="card">
-      <h2>📊 Gráfico de compras por material</h2>
-      <canvas id="graficoCompras"></canvas>
+      <!-- Compras (historial de pesajes) -->
+      <div class="card">
+        <h2>📝 Historial de Pesajes</h2>
+        <table id="tablaCompras">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Material</th>
+              <th>Peso (kg)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="inventario.js"></script>
 
   <!-- Script menú -->
   <script>
     function toggleMenu() {
       document.getElementById("sidebar").classList.toggle("open");
     }
-    document.addEventListener("click", function(e) {
+    document.addEventListener("click", function (e) {
       const sidebar = document.getElementById("sidebar");
       const toggle = document.querySelector(".menu-toggle");
       if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
@@ -84,5 +68,7 @@
       }
     });
   </script>
+
+  <script type="module" src="inventario.js"></script>
 </body>
 </html>
