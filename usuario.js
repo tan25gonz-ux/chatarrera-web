@@ -206,8 +206,8 @@ async function registrarPesaje() {
         </table>
         <h3>Total: ₡${totalGeneral}</h3>
         <div class="footer">
-          ¡Gracias por su compra!<br>
-          *** No se aceptan devoluciones ***
+          ¡Gracias por preferirnos!<br>
+          *** Lo esperamos de nuevo ***
         </div>
       </div>
       <button onclick="imprimirFactura()">🖨 Imprimir</button>
