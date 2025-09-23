@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Inventario - Chatarrera</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <!-- Navbar -->
@@ -23,32 +23,25 @@
   </div>
 
   <div class="container">
-    <!-- Inventario acumulado -->
+    <!-- Filtro de fechas -->
     <div class="card">
-      <h2>📦 Inventario Actual</h2>
-      <table id="tablaInventario">
-        <thead>
-          <tr><th>Material</th><th>Cantidad (kg)</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <h2>📆 Filtrar por rango de fechas</h2>
+      <input type="date" id="fechaDesde" />
+      <input type="date" id="fechaHasta" />
+      <button id="btnFiltrar">Filtrar</button>
+      <button id="btnTodo">Ver Todo</button>
     </div>
 
-    <!-- Historial -->
+    <!-- Tabla historial -->
     <div class="card">
-      <h2>📜 Historial de Movimientos</h2>
-      
-      <!-- Filtros -->
-      <div class="filters">
-        <label>Desde: <input type="date" id="fechaInicio"></label>
-        <label>Hasta: <input type="date" id="fechaFin"></label>
-        <button onclick="filtrarHistorial()">Filtrar</button>
-        <button onclick="cargarHistorial()">Ver Todo</button>
-      </div>
-
+      <h2>📋 Historial</h2>
       <table id="tablaHistorial">
         <thead>
-          <tr><th>Fecha</th><th>Material</th><th>Cantidad (kg)</th></tr>
+          <tr>
+            <th>Fecha</th>
+            <th>Material</th>
+            <th>Peso</th>
+          </tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -56,11 +49,12 @@
 
     <!-- Gráfico -->
     <div class="card">
-      <h2>📊 Entradas por Material</h2>
-      <canvas id="graficoInventario"></canvas>
+      <h2>📊 Gráfico</h2>
+      <canvas id="grafico"></canvas>
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="inventario.js"></script>
 
@@ -68,6 +62,7 @@
     function toggleMenu() {
       document.getElementById("sidebar").classList.toggle("open");
     }
+
     document.addEventListener("click", function(e) {
       const sidebar = document.getElementById("sidebar");
       const toggle = document.querySelector(".menu-toggle");
