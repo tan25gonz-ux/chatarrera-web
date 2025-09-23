@@ -1,150 +1,110 @@
 import { auth, db } from "./firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import {
-  collection, getDocs, query, orderBy
+  collection, addDoc, getDocs, query, orderBy, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-let ingresos = [];
-let egresos = [];
-let ordenActual = "fecha"; // "fecha" | "az"
-let chartComparativo = null;
-let chartTotales = null;
+let uidActual = null;
+let movimientos = []; // todos los movimientos
 
-window.addEventListener("DOMContentLoaded", () => {
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) return alert("⚠ Inicie sesión");
-    await cargarDatos(user.uid);
-    renderTodo();
-  });
-
-  document.getElementById("filtroFecha")?.addEventListener("click", () => {
-    ordenActual = "fecha";
-    renderTodo();
-  });
-  document.getElementById("filtroAZ")?.addEventListener("click", () => {
-    ordenActual = "az";
-    renderTodo();
-  });
+// ⏳ Esperar usuario logueado
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    uidActual = user.uid;
+    cargarMovimientos();
+  }
 });
 
-async function cargarDatos(uid) {
-  ingresos = await cargarColeccionOrdenada("ingresos", uid);
-  egresos  = await cargarColeccionOrdenada("egresos", uid);
-}
+// 📌 Agregar movimiento manual
+document.getElementById("btnAgregarMovimiento")?.addEventListener("click", async () => {
+  const desc = document.getElementById("descMovimiento").value.trim();
+  const monto = parseFloat(document.getElementById("montoMovimiento").value);
+  const tipo = document.getElementById("tipoMovimiento").value;
 
-async function cargarColeccionOrdenada(tipo, uid) {
-  const q = query(collection(db, "contabilidad", uid, tipo), orderBy("fecha", "desc"));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-function renderTodo() {
-  // Copias para no mutar
-  let ing = [...ingresos];
-  let egr = [...egresos];
-
-  if (ordenActual === "az") {
-    ing.sort((a,b) => (a.descripcion || "").localeCompare(b.descripcion || ""));
-    egr.sort((a,b) => (a.descripcion || "").localeCompare(b.descripcion || ""));
+  if (!desc || isNaN(monto) || monto <= 0) {
+    alert("❌ Complete todos los campos correctamente");
+    return;
   }
-  // si es "fecha", ya vienen en DESC desde Firestore
 
-  renderTabla("tablaIngresos", ing);
-  renderTabla("tablaEgresos", egr);
-  renderGraficas(ing, egr);
-}
-
-// ----- Tablas -----
-function renderTabla(idTabla, datos) {
-  const tbody = document.querySelector(`#${idTabla} tbody`);
-  if (!tbody) return;
-  tbody.innerHTML = datos.map(d => `
-    <tr>
-      <td>${formatCR(d.fecha)}</td>
-      <td>${d.descripcion || "-"}</td>
-      <td>₡${d.monto ?? 0}</td>
-    </tr>
-  `).join("");
-}
-
-// ----- Gráficas -----
-function renderGraficas(ingresosData, egresosData) {
-  // Agrupar por fecha (día) en CR
-  const ingPorDia = groupByDayCR(ingresosData);
-  const egrPorDia = groupByDayCR(egresosData);
-
-  const fechas = Array.from(new Set([...Object.keys(ingPorDia), ...Object.keys(egrPorDia)]))
-    .sort((a,b) => new Date(a) - new Date(b)); // ascendente para lectura
-
-  const datosIng = fechas.map(f => ingPorDia[f] || 0);
-  const datosEgr = fechas.map(f => egrPorDia[f] || 0);
-
-  // Comparativo barras
-  const ctx1 = document.getElementById("graficoComparativo");
-  if (chartComparativo) chartComparativo.destroy();
-  chartComparativo = new Chart(ctx1, {
-    type: "bar",
-    data: {
-      labels: fechas,
-      datasets: [
-        { label: "Ingresos", data: datosIng, backgroundColor: "rgba(0,200,0,0.6)" },
-        { label: "Egresos", data: datosEgr, backgroundColor: "rgba(200,0,0,0.6)" }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: "top" } },
-      scales: { y: { beginAtZero: true } }
-    }
+  await addDoc(collection(db, "contabilidad", uidActual, tipo === "ingreso" ? "ingresos" : "egresos"), {
+    descripcion: desc,
+    monto: monto,
+    fecha: serverTimestamp()
   });
 
-  // Donut totales
-  const totalIng = ingresosData.reduce((a,m)=>a+(m.monto||0),0);
-  const totalEgr = egresosData.reduce((a,m)=>a+(m.monto||0),0);
+  document.getElementById("descMovimiento").value = "";
+  document.getElementById("montoMovimiento").value = "";
 
-  const ctx2 = document.getElementById("graficoTotales");
-  if (chartTotales) chartTotales.destroy();
-  chartTotales = new Chart(ctx2, {
-    type: "doughnut",
-    data: {
-      labels: ["Ingresos","Egresos"],
-      datasets: [{ data: [totalIng, totalEgr], backgroundColor: ["rgba(0,200,0,0.7)","rgba(200,0,0,0.7)"] }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: "bottom" },
-        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ₡${(ctx.raw||0).toLocaleString("es-CR")}` } }
-      }
-    }
-  });
+  cargarMovimientos();
+});
+
+// 📌 Cargar movimientos
+async function cargarMovimientos() {
+  if (!uidActual) return;
+  movimientos = [];
+
+  const qIngresos = query(collection(db, "contabilidad", uidActual, "ingresos"), orderBy("fecha", "desc"));
+  const qEgresos = query(collection(db, "contabilidad", uidActual, "egresos"), orderBy("fecha", "desc"));
+
+  const [snapIngresos, snapEgresos] = await Promise.all([getDocs(qIngresos), getDocs(qEgresos)]);
+
+  snapIngresos.forEach(doc => movimientos.push({ ...doc.data(), tipo: "Ingreso" }));
+  snapEgresos.forEach(doc => movimientos.push({ ...doc.data(), tipo: "Egreso" }));
+
+  mostrarMovimientos(movimientos);
 }
 
-// Agrupar por día usando zona CR
-function groupByDayCR(arr) {
-  const out = {};
-  arr.forEach(m => {
-    if (!m.fecha || typeof m.fecha.toDate !== "function") return;
-    const d = m.fecha.toDate();
-    // formatear yyyy-mm-dd en CR (sin horas)
-    const dCR = new Date(d.toLocaleString("en-US", { timeZone: "America/Costa_Rica" }));
-    const yyyy = dCR.getFullYear();
-    const mm = String(dCR.getMonth()+1).padStart(2,"0");
-    const dd = String(dCR.getDate()).padStart(2,"0");
-    const key = `${yyyy}-${mm}-${dd}`;
-    out[key] = (out[key] || 0) + (m.monto || 0);
+// 📌 Mostrar en tabla
+function mostrarMovimientos(lista) {
+  const tbody = document.querySelector("#tablaMovimientos tbody");
+  tbody.innerHTML = "";
+
+  let totalIngresos = 0;
+  let totalEgresos = 0;
+
+  lista.forEach(mov => {
+    const fecha = mov.fecha?.toDate().toLocaleDateString("es-CR", {
+      day: "2-digit", month: "2-digit", year: "numeric"
+    }) || "N/A";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${fecha}</td>
+      <td>${mov.descripcion}</td>
+      <td>${mov.tipo}</td>
+      <td>₡${mov.monto}</td>
+    `;
+    tbody.appendChild(tr);
+
+    if (mov.tipo === "Ingreso") totalIngresos += mov.monto;
+    else totalEgresos += mov.monto;
   });
-  return out;
+
+  document.getElementById("totalIngresos").textContent = `Total Ingresos: ₡${totalIngresos}`;
+  document.getElementById("totalEgresos").textContent = `Total Egresos: ₡${totalEgresos}`;
+
+  const balance = totalIngresos - totalEgresos;
+  const balanceEl = document.getElementById("balanceFinal");
+  balanceEl.textContent = `Balance: ₡${balance}`;
+  balanceEl.style.color = balance >= 0 ? "green" : "red";
 }
 
-// Mostrar siempre en hora de Costa Rica
-function formatCR(ts) {
-  if (!ts || typeof ts.toDate !== "function") return "N/A";
-  return ts.toDate().toLocaleString("es-CR", {
-    timeZone: "America/Costa_Rica",
-    dateStyle: "short",
-    timeStyle: "short"
+// 📌 Filtro por fecha
+document.getElementById("btnAplicarFiltro")?.addEventListener("click", () => {
+  const fechaSel = document.getElementById("filtroFecha").value;
+  if (!fechaSel) return alert("Seleccione una fecha");
+
+  const filtrados = movimientos.filter(m => {
+    if (!m.fecha) return false;
+    const f = m.fecha.toDate();
+    const fechaStr = f.toISOString().split("T")[0]; // yyyy-mm-dd
+    return fechaStr === fechaSel;
   });
-}
+
+  mostrarMovimientos(filtrados);
+});
+
+// 📌 Ver todo
+document.getElementById("btnVerTodo")?.addEventListener("click", () => {
+  mostrarMovimientos(movimientos);
+});
