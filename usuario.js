@@ -97,7 +97,7 @@ async function cargarPrecios(uid) {
   }
 }
 
-// ---- Registrar pesaje + Factura recibo ----
+// ---- Registrar pesaje + Factura ----
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo")?.value;
   if (!tipo) return alert("Seleccione un tipo de transporte");
@@ -171,51 +171,49 @@ async function registrarPesaje() {
       fecha: serverTimestamp()
     });
 
-    // Factura estilo recibo
-    const fecha = new Date().toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" });
-    const hora  = new Date().toLocaleTimeString("es-CR", { timeZone: "America/Costa_Rica" });
+    // Mostrar factura
+    const fechaHoraCR = new Date().toLocaleString("es-CR", {
+      timeZone: "America/Costa_Rica",
+      dateStyle: "short",
+      timeStyle: "short"
+    });
 
-    let reciboHTML = `
-      <div class="recibo">
+    document.getElementById("resultado").innerHTML = `
+      <div class="factura no-print">
+        <h2>🧾 Factura #${numeroFactura}</h2>
         <p><strong>${cfg.nombreLocal || "Mi Local"}</strong></p>
         <p>Hacienda: ${cfg.numHacienda || "N/A"}</p>
         <p>Tel: ${cfg.telefono1 || "-"} / ${cfg.telefono2 || "-"}</p>
-        <p>Factura #${numeroFactura}</p>
-        <p>Fecha: ${fecha} ${hora}</p>
+        <p>Fecha: ${fechaHoraCR}</p>
         <hr>
-        <p>Cliente: ${nombre || "N/A"}</p>
-        <p>Cédula: ${cedula || "N/A"}</p>
-        ${placa ? `<p>Placa: ${placa}</p>` : ""}
-        <hr>`;
-
-    materialesConTotal.forEach(m => {
-      reciboHTML += `<p>${m.material} x ${m.peso} = ₡${m.total}</p>`;
-    });
-
-    reciboHTML += `
-        <hr>
-        <p><strong>Total: ₡${totalGeneral}</strong></p>
-        <hr>
-        <p style="text-align:center"><strong>¡Gracias por su compra!</strong></p>
-        <p style="text-align:center">🐼</p>
+        <p><strong>Cliente:</strong> ${nombre || "N/A"}</p>
+        <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
+        ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
+        <table>
+          <thead>
+            <tr><th>Material</th><th>Peso (kg)</th><th>₡/kg</th><th>Total</th></tr>
+          </thead>
+          <tbody>
+            ${materialesConTotal.map(m => `
+              <tr>
+                <td>${m.material}</td>
+                <td>${m.peso}</td>
+                <td>₡${m.precioUnit}</td>
+                <td>₡${m.total}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        <h3>Total: ₡${totalGeneral}</h3>
+        <p class="footer">¡Gracias por su compra!</p>
       </div>
-      <button id="btnImprimirFactura">🖨 Imprimir</button>
+      <button id="btnImprimirFactura" class="no-print">🖨 Imprimir</button>
     `;
 
-    document.getElementById("resultado").innerHTML = reciboHTML;
-
-    // imprimir
+    // ---- imprimir y limpiar
     document.getElementById("btnImprimirFactura").addEventListener("click", () => {
-      const ventana = window.open("", "PRINT");
-      ventana.document.write("<html><head><title>Factura</title>");
-      ventana.document.write("<style>body{font-family:Courier;font-size:14px}.recibo{width:300px;margin:auto}</style>");
-      ventana.document.write("</head><body>");
-      ventana.document.write(reciboHTML);
-      ventana.document.write("</body></html>");
-      ventana.document.close();
-      ventana.focus();
-      ventana.print();
-      ventana.close();
+      window.print();
+      document.getElementById("resultado").innerHTML = "";
     });
 
     limpiarFormulario();
