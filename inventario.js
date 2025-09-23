@@ -1,145 +1,151 @@
 // inventario.js
 import { auth, db } from "./firebase.js";
 import {
-  doc, getDoc,
-  collection, query, where, orderBy, getDocs
+  collection,
+  query,
+  getDocs,
+  orderBy,
+  where
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 let uid = null;
-let historialCache = [];
+let historial = []; // todos los registros de inventario_historial
 let grafico = null;
 
-const tablaInventario = document.querySelector("#tablaInventario tbody");
-const tablaHistorial = document.querySelector("#tablaHistorial tbody");
-
-// --- Formato fechas ---
-function tsToCR(ts) {
-  if (!ts || !ts.seconds) return "N/A";
+// === Formateadores ===
+function formatFecha(ts) {
+  if (!ts?.seconds) return "N/A";
   return new Date(ts.seconds * 1000).toLocaleString("es-CR");
 }
-function tsToISO(ts) {
-  if (!ts || !ts.seconds) return "";
-  return new Date(ts.seconds * 1000).toISOString().split("T")[0];
+
+function formatPeso(p) {
+  return `${p} kg`;
 }
 
-// --- Sesión ---
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    alert("⚠️ Debes iniciar sesión.");
-    window.location.href = "index.html";
-    return;
-  }
-  uid = user.uid;
-  await cargarInventario();
-  await cargarHistorial();
-});
-
-document.getElementById("btnCerrar").addEventListener("click", () => {
-  signOut(auth).then(() => {
-    sessionStorage.clear();
-    window.location.href = "index.html";
-  });
-});
-
-// --- Inventario acumulado ---
-async function cargarInventario() {
-  const docRef = doc(db, "inventarios", uid);
-  const snap = await getDoc(docRef);
-
-  const datos = snap.exists() ? snap.data().materiales || {} : {};
-  tablaInventario.innerHTML = "";
-  Object.entries(datos).forEach(([mat, cant]) => {
-    tablaInventario.innerHTML += `<tr><td>${mat}</td><td>${cant}</td></tr>`;
-  });
-}
-
-// --- Historial ---
-export async function cargarHistorial() {
+// === Cargar historial ===
+async function cargarHistorial() {
   if (!uid) return;
-
   const q = query(
     collection(db, "inventario_historial"),
-    where("usuario", "==", uid),
+    where("uid", "==", uid),
     orderBy("fecha", "desc")
   );
   const snap = await getDocs(q);
 
-  historialCache = [];
-  snap.forEach(d => {
-    historialCache.push({ id: d.id, ...d.data() });
+  historial = [];
+  snap.forEach((docSnap) => {
+    historial.push({ id: docSnap.id, ...docSnap.data() });
   });
 
-  renderHistorial(historialCache);
-  actualizarGrafico(historialCache);
+  mostrarTabla(historial);
+  actualizarGrafico(historial);
 }
 
-// --- Filtrar historial por rango ---
-export function filtrarHistorial() {
-  const inicio = document.getElementById("fechaInicio").value;
-  const fin = document.getElementById("fechaFin").value;
+// === Mostrar tabla ===
+function mostrarTabla(lista) {
+  const tbody = document.querySelector("#tablaHistorial tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
 
-  if (!inicio && !fin) {
-    alert("⚠️ Selecciona al menos una fecha");
+  if (lista.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='3'>Sin registros</td></tr>";
     return;
   }
 
-  const filtrados = historialCache.filter(m => {
-    const iso = tsToISO(m.fecha);
-    if (inicio && iso < inicio) return false;
-    if (fin && iso > fin) return false;
-    return true;
-  });
-
-  renderHistorial(filtrados);
-  actualizarGrafico(filtrados);
-}
-
-// --- Render historial ---
-function renderHistorial(lista) {
-  tablaHistorial.innerHTML = "";
-  if (!lista.length) {
-    tablaHistorial.innerHTML = "<tr><td colspan='3'>Sin registros</td></tr>";
-    return;
-  }
-
-  lista.forEach(m => {
-    tablaHistorial.innerHTML += `
+  lista.forEach((m) => {
+    tbody.innerHTML += `
       <tr>
-        <td>${tsToCR(m.fecha)}</td>
+        <td>${formatFecha(m.fecha)}</td>
         <td>${m.material}</td>
-        <td>${m.cantidad}</td>
+        <td>${formatPeso(m.peso)}</td>
       </tr>
     `;
   });
 }
 
-// --- Gráfico entradas por material ---
-function actualizarGrafico(lista) {
-  const datos = {};
-  lista.forEach(m => {
-    datos[m.material] = (datos[m.material] || 0) + Number(m.cantidad);
+// === Filtrar por rango de fechas ===
+function filtrarPorRango() {
+  const desde = document.getElementById("fechaDesde").value;
+  const hasta = document.getElementById("fechaHasta").value;
+
+  if (!desde || !hasta) {
+    alert("Seleccione ambas fechas");
+    return;
+  }
+
+  const desdeDate = new Date(desde);
+  const hastaDate = new Date(hasta);
+  hastaDate.setHours(23, 59, 59, 999);
+
+  const filtrados = historial.filter((m) => {
+    const d = new Date(m.fecha.seconds * 1000);
+    return d >= desdeDate && d <= hastaDate;
   });
 
-  const ctx = document.getElementById("graficoInventario").getContext("2d");
-  if (grafico) grafico.destroy();
+  mostrarTabla(filtrados);
+  actualizarGrafico(filtrados);
+}
 
+// === Mostrar todo ===
+function mostrarTodo() {
+  mostrarTabla(historial);
+  actualizarGrafico(historial);
+}
+
+// === Gráfico ===
+function actualizarGrafico(lista) {
+  const ctx = document.getElementById("grafico");
+  if (!ctx) return;
+
+  const agrupado = {};
+  lista.forEach((m) => {
+    if (!agrupado[m.material]) agrupado[m.material] = 0;
+    agrupado[m.material] += Number(m.peso) || 0;
+  });
+
+  const labels = Object.keys(agrupado);
+  const datos = Object.values(agrupado);
+
+  if (grafico) grafico.destroy();
   grafico = new Chart(ctx, {
     type: "bar",
     data: {
-      labels: Object.keys(datos),
-      datasets: [{
-        label: "Kg",
-        data: Object.values(datos),
-        backgroundColor: "#40e0d0"
-      }]
+      labels,
+      datasets: [
+        {
+          label: "Peso (kg)",
+          data: datos,
+          backgroundColor: "#007bff"
+        }
+      ]
     },
     options: {
       responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true }
+      plugins: {
+        legend: { display: false }
       }
     }
   });
 }
+
+// === Eventos ===
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    alert("Debes iniciar sesión");
+    window.location.href = "index.html";
+    return;
+  }
+  uid = user.uid;
+  cargarHistorial();
+});
+
+document.getElementById("btnFiltrar")?.addEventListener("click", filtrarPorRango);
+document.getElementById("btnTodo")?.addEventListener("click", mostrarTodo);
+
+document.getElementById("btnCerrar")?.addEventListener("click", () => {
+  signOut(auth).then(() => {
+    sessionStorage.clear();
+    window.location.href = "index.html";
+  });
+});
