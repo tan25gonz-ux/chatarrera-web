@@ -9,19 +9,20 @@
   <!-- 🔹 Menú hamburguesa -->
   <div class="navbar">
     <span class="menu-toggle" onclick="toggleMenu()">☰</span>
-    <div id="menu" class="menu">
-      <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
-      <button onclick="window.location.href='ventas.html'">🛒 Registrar Contenedor</button>
-      <button onclick="window.location.href='contabilidad.html'">💵 Ver Contabilidad</button>
-      <button onclick="window.location.href='precios.html'">💲 Editar Precios</button>
-      <button onclick="window.location.href='factura.html'">🧾 Configurar Factura</button>
-      <button id="btnCerrar" type="button">Cerrar Sesión</button>
-    </div>
+    <h1>Registro de Pesaje</h1>
+  </div>
+
+  <!-- Sidebar oculto -->
+  <div id="sidebar" class="sidebar">
+    <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
+    <button onclick="window.location.href='ventas.html'">🛒 Registrar Contenedor</button>
+    <button onclick="window.location.href='contabilidad.html'">💵 Ver Contabilidad</button>
+    <button onclick="window.location.href='precios.html'">💲 Editar Precios</button>
+    <button onclick="window.location.href='factura.html'">🧾 Configurar Factura</button>
+    <button id="btnCerrar" type="button">Cerrar Sesión</button>
   </div>
 
   <div class="container">
-    <h1>Registro de Pesaje</h1>
-
     <div class="card">
       <label for="tipo">Tipo de transporte:</label>
       <select id="tipo">
@@ -68,7 +69,7 @@
   <script type="module" src="usuario.js"></script>
   <script>
     function toggleMenu() {
-      document.getElementById("menu").classList.toggle("show");
+      document.getElementById("sidebar").classList.toggle("open");
     }
   </script>
 </body>
