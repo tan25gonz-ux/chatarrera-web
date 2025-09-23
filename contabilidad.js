@@ -1,168 +1,280 @@
+// contabilidad.js (Firebase + filtros + gráficos)
+// ——————————————————————————————————————————————————
+
 import { auth, db } from "./firebase.js";
-import { 
-  collection, addDoc, serverTimestamp, getDocs, query, orderBy 
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  getDocs,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-let movimientos = [];
-let grafico;
+let uid = null;
+let movimientos = []; // [{descripcion, monto, tipo, fecha(Timestamp)}]
+let grafico = null;
 
-// 🚀 Al cargar la página, esperar login y traer datos
-document.addEventListener("DOMContentLoaded", () => {
-  firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-      cargarMovimientos();
-    } else {
-      alert("Debes iniciar sesión");
-      window.location.href = "index.html";
-    }
-  });
+// —— Utils de formato ——
+
+// Fecha local CR para mostrar (ej: "22/9/25, 10:30 a. m.")
+const fmtCRDateTime = new Intl.DateTimeFormat("es-CR", {
+  timeZone: "America/Costa_Rica",
+  dateStyle: "short",
+  timeStyle: "short"
 });
 
-// ------------------ GUARDAR MOVIMIENTO ------------------
-export async function agregarMovimiento() {
-  const descripcion = document.getElementById("descripcion").value;
-  const monto = parseFloat(document.getElementById("monto").value);
-  const tipo = document.getElementById("tipoMovimiento").value;
-  const uid = auth?.currentUser?.uid;
+// Fecha ISO para comparar con <input type="date"> (YYYY-MM-DD)
+const fmtCRISO = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Costa_Rica",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit"
+});
 
-  if (!descripcion || isNaN(monto) || !uid) {
-    alert("Ingrese una descripción y un monto válido");
+function tsToCRISO(ts) {
+  if (!ts || !ts.seconds) return "";
+  const d = new Date(ts.seconds * 1000);
+  return fmtCRISO.format(d); // "YYYY-MM-DD"
+}
+
+function tsToCRLocal(ts) {
+  if (!ts || !ts.seconds) return "N/A";
+  const d = new Date(ts.seconds * 1000);
+  return fmtCRDateTime.format(d);
+}
+
+function formatCRC(n) {
+  try {
+    return new Intl.NumberFormat("es-CR", {
+      style: "currency",
+      currency: "CRC",
+      maximumFractionDigits: 0
+    }).format(n || 0);
+  } catch {
+    return `₡${(n || 0).toLocaleString("es-CR")}`;
+  }
+}
+
+// —— Arranque: esperar login y cargar datos ——
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    alert("Debes iniciar sesión");
+    window.location.href = "index.html";
+    return;
+  }
+  uid = user.uid;
+  await cargarMovimientos();  // esto llenará `movimientos`
+  mostrarTodos();             // y pinta todo al inicio
+});
+
+// —— Guardar movimiento manual ——
+export async function agregarMovimiento() {
+  if (!uid) {
+    alert("Debes iniciar sesión");
     return;
   }
 
-  await addDoc(collection(db, "contabilidad", uid, tipo === "ingreso" ? "ingresos" : "egresos"), {
-    descripcion,
-    monto,
-    tipo,
-    fecha: serverTimestamp()
-  });
+  const descripcion = document.getElementById("descripcion")?.value?.trim();
+  const monto = parseFloat(document.getElementById("monto")?.value);
+  const tipo = document.getElementById("tipoMovimiento")?.value; // "ingreso" | "egreso"
 
-  document.getElementById("descripcion").value = "";
-  document.getElementById("monto").value = "";
+  if (!descripcion || isNaN(monto)) {
+    alert("Ingrese una descripción y un monto válido");
+    return;
+  }
+  if (tipo !== "ingreso" && tipo !== "egreso") {
+    alert("Seleccione tipo de movimiento");
+    return;
+  }
 
-  cargarMovimientos();
+  try {
+    await addDoc(collection(db, "contabilidad", uid, tipo === "ingreso" ? "ingresos" : "egresos"), {
+      descripcion,
+      monto: Number(monto),
+      tipo,
+      fecha: serverTimestamp()
+    });
+
+    // limpiar inputs
+    const dEl = document.getElementById("descripcion");
+    const mEl = document.getElementById("monto");
+    if (dEl) dEl.value = "";
+    if (mEl) mEl.value = "";
+
+    // recargar
+    await cargarMovimientos();
+    mostrarTodos();
+  } catch (e) {
+    console.error("Error guardando movimiento:", e);
+    alert("Error guardando movimiento");
+  }
 }
 
-// ------------------ CARGAR MOVIMIENTOS ------------------
+// —— Cargar movimientos desde Firestore ——
 async function cargarMovimientos() {
-  const uid = auth?.currentUser?.uid;
   if (!uid) return;
 
-  let lista = [];
+  const lista = [];
 
-  // Ingresos
-  const ingresosSnap = await getDocs(query(collection(db, "contabilidad", uid, "ingresos"), orderBy("fecha", "desc")));
-  ingresosSnap.forEach(doc => {
-    lista.push({ id: doc.id, ...doc.data(), tipo: "ingreso" });
+  // ingresos
+  const qIng = query(
+    collection(db, "contabilidad", uid, "ingresos"),
+    orderBy("fecha", "desc")
+  );
+  const snapIng = await getDocs(qIng);
+  snapIng.forEach((docSnap) => {
+    const data = docSnap.data();
+    lista.push({
+      id: docSnap.id,
+      ...data,
+      tipo: "ingreso"
+    });
   });
 
-  // Egresos
-  const egresosSnap = await getDocs(query(collection(db, "contabilidad", uid, "egresos"), orderBy("fecha", "desc")));
-  egresosSnap.forEach(doc => {
-    lista.push({ id: doc.id, ...doc.data(), tipo: "egreso" });
+  // egresos
+  const qEgr = query(
+    collection(db, "contabilidad", uid, "egresos"),
+    orderBy("fecha", "desc")
+  );
+  const snapEgr = await getDocs(qEgr);
+  snapEgr.forEach((docSnap) => {
+    const data = docSnap.data();
+    lista.push({
+      id: docSnap.id,
+      ...data,
+      tipo: "egreso"
+    });
+  });
+
+  // Mezclar y ordenar por fecha (recientes primero)
+  lista.sort((a, b) => {
+    const ta = a?.fecha?.seconds || 0;
+    const tb = b?.fecha?.seconds || 0;
+    return tb - ta;
   });
 
   movimientos = lista;
-
-  mostrarTodos();
 }
 
-// ------------------ MOSTRAR TODOS ------------------
+// —— Mostrar todo ——
 export function mostrarTodos() {
   renderListas(movimientos);
   mostrarBalance(movimientos);
   actualizarGrafico(movimientos);
 }
 
-// ------------------ FILTRAR INGRESOS / EGRESOS ------------------
+// —— Filtrar por tipo ——
 export function filtrar(tipo) {
-  const filtrados = movimientos.filter(m => m.tipo === tipo);
+  const filtrados = movimientos.filter((m) => m.tipo === tipo);
   renderListas(filtrados);
   mostrarBalance(filtrados);
   actualizarGrafico(filtrados);
 }
 
-// ------------------ FILTRAR POR FECHA ------------------
+// —— Filtrar por fecha (YYYY-MM-DD de <input type="date">) ——
 export function filtrarPorFecha() {
-  const fecha = document.getElementById("filtroFecha").value;
+  const fecha = document.getElementById("filtroFecha")?.value; // "YYYY-MM-DD"
   if (!fecha) {
     alert("Seleccione una fecha");
     return;
   }
-
-  const filtrados = movimientos.filter(m => {
-    if (!m.fecha) return false;
-    const fechaMovimiento = new Date(m.fecha.seconds * 1000).toISOString().split("T")[0];
-    return fechaMovimiento === fecha;
-  });
-
+  const filtrados = movimientos.filter((m) => tsToCRISO(m.fecha) === fecha);
   renderListas(filtrados);
   mostrarBalance(filtrados);
   actualizarGrafico(filtrados);
 }
 
-// ------------------ RENDER LISTAS ------------------
+// —— Render de listas ——
 function renderListas(lista) {
   const ingresosUl = document.getElementById("listaIngresos");
   const egresosUl = document.getElementById("listaEgresos");
+  if (!ingresosUl || !egresosUl) return;
 
   ingresosUl.innerHTML = "";
   egresosUl.innerHTML = "";
 
-  lista.forEach(m => {
+  if (!lista.length) {
+    ingresosUl.innerHTML = "<li>Sin registros</li>";
+    egresosUl.innerHTML = "<li>Sin registros</li>";
+    return;
+  }
+
+  for (const m of lista) {
     const li = document.createElement("li");
-    const fechaLocal = m.fecha?.seconds ? new Date(m.fecha.seconds * 1000).toLocaleString("es-CR") : "N/A";
-    li.textContent = `${fechaLocal} - ${m.descripcion}: ₡${m.monto}`;
+    li.textContent = `${tsToCRLocal(m.fecha)} — ${m.descripcion}: ${formatCRC(m.monto)}`;
     if (m.tipo === "ingreso") ingresosUl.appendChild(li);
     else egresosUl.appendChild(li);
-  });
-}
-
-// ------------------ BALANCE ------------------
-function mostrarBalance(lista) {
-  let totalIngresos = 0;
-  let totalEgresos = 0;
-
-  lista.forEach(m => {
-    if (m.tipo === "ingreso") totalIngresos += m.monto;
-    else totalEgresos += m.monto;
-  });
-
-  const balance = totalIngresos - totalEgresos;
-  const balanceDiv = document.getElementById("balanceGeneral");
-  balanceDiv.textContent = `Balance: ₡${balance}`;
-
-  if (balance > 0) {
-    balanceDiv.className = "positivo";
-  } else if (balance < 0) {
-    balanceDiv.className = "negativo";
-  } else {
-    balanceDiv.className = "neutro";
   }
 }
 
-// ------------------ GRÁFICO ------------------
+// —— Balance ——
+function mostrarBalance(lista) {
+  const el = document.getElementById("balanceGeneral");
+  if (!el) return;
+
+  let ingresos = 0;
+  let egresos = 0;
+
+  for (const m of lista) {
+    if (m.tipo === "ingreso") ingresos += Number(m.monto) || 0;
+    else egresos += Number(m.monto) || 0;
+  }
+
+  const balance = ingresos - egresos;
+  el.textContent = `Balance: ${formatCRC(balance)}`;
+
+  if (balance > 0) el.className = "positivo";
+  else if (balance < 0) el.className = "negativo";
+  else el.className = "neutro";
+}
+
+// —— Gráfico ——
 function actualizarGrafico(lista) {
-  let totalIngresos = 0;
-  let totalEgresos = 0;
+  const canvas = document.getElementById("grafico");
+  if (!canvas) return;
 
-  lista.forEach(m => {
-    if (m.tipo === "ingreso") totalIngresos += m.monto;
-    else totalEgresos += m.monto;
-  });
+  let ingresos = 0;
+  let egresos = 0;
+  for (const m of lista) {
+    if (m.tipo === "ingreso") ingresos += Number(m.monto) || 0;
+    else egresos += Number(m.monto) || 0;
+  }
 
-  const ctx = document.getElementById("grafico").getContext("2d");
+  const ctx = canvas.getContext("2d");
   if (grafico) grafico.destroy();
 
   grafico = new Chart(ctx, {
     type: "bar",
     data: {
       labels: ["Ingresos", "Egresos"],
-      datasets: [{
-        label: "₡",
-        data: [totalIngresos, totalEgresos],
-        backgroundColor: ["#28a745", "#dc3545"]
-      }]
+      datasets: [
+        {
+          label: "₡",
+          data: [ingresos, egresos],
+          backgroundColor: ["#28a745", "#dc3545"]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ` ${formatCRC(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (v) => v.toLocaleString("es-CR")
+          }
+        }
+      }
     }
   });
 }
