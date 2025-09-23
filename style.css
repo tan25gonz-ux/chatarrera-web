@@ -10,10 +10,69 @@ body {
   line-height: 1.4;
 }
 
+/* ----- Navbar con menú hamburguesa ----- */
+.navbar {
+  background: #007bff;
+  color: #fff;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+}
+
+.navbar h1 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+  font-size: 20px;
+}
+
+.menu-toggle {
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* ----- Sidebar lateral ----- */
+.sidebar {
+  height: 100%;
+  width: 0; /* empieza cerrado */
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #fff;
+  border-right: 1px solid #ccc;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+  padding-top: 60px;
+  transition: 0.3s;
+  z-index: 1000;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.open {
+  width: 220px; /* ancho al abrir */
+}
+
+.sidebar button {
+  margin: 5px 15px;
+  padding: 10px;
+  text-align: left;
+  border: none;
+  border-radius: 4px;
+  background: #007bff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.sidebar button:hover {
+  background: #0056b3;
+}
+
 /* ----- Contenedor principal ----- */
 .container {
   max-width: 1200px;
-  margin: auto;
+  margin: 20px;
   padding: 20px;
 }
 
@@ -146,16 +205,26 @@ tr:nth-child(even) {
   padding-top: 5px;
 }
 
-/* ----- Layout de columnas (usuario.html) ----- */
-.flex {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.col {
-  flex: 1;
-  min-width: 320px;
+/* ----- Solo imprimir factura ----- */
+@media print {
+  body * {
+    visibility: hidden;   /* Oculta todo */
+  }
+  .factura, .factura * {
+    visibility: visible;  /* Solo muestra la factura */
+  }
+  .factura {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 58mm;
+  }
+  button {
+    display: none !important;
+  }
+  .navbar, .sidebar {
+    display: none !important;
+  }
 }
 
 /* ----- Filtros contabilidad ----- */
@@ -180,26 +249,6 @@ tr:nth-child(even) {
     padding: 8px 12px;
   }
   input, select {
-    font-size: 12px;
-  }
-}
-
-/* ----- Solo imprimir factura ----- */
-@media print {
-  body * {
-    display: none !important; /* Oculta todo */
-  }
-
-  #resultado, #resultado * {
-    display: block !important; /* Solo deja visible la factura */
-    visibility: visible !important;
-  }
-
-  .factura {
-    width: 58mm !important;
-    margin: 0;
-    padding: 0;
-    font-family: monospace;
     font-size: 12px;
   }
 }
