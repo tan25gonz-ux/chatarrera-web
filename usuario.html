@@ -22,10 +22,13 @@
     <button id="btnCerrar" type="button">🚪 Cerrar Sesión</button>
   </div>
 
-  <div class="container" style="text-align: center;">
-    <!-- Columna principal -->
-    <div class="col" style="max-width: 600px; margin: auto;">
+  <div class="container" style="text-align:center;">
+    <div class="col" style="max-width:600px;margin:auto;">
+      
+      <!-- Formulario -->
       <div class="card">
+        <h2>Registrar Pesaje</h2>
+
         <label for="tipo">Tipo de transporte:</label>
         <select id="tipo">
           <option value="">-- Seleccione --</option>
@@ -35,13 +38,12 @@
           <option value="mano">A Mano</option>
         </select>
 
-        <div id="campos"></div>
-
-        <!-- Materiales extra -->
+        <!-- Extras -->
         <h3>Materiales extra</h3>
         <div id="listaExtras"></div>
         <select id="materialSelect">
           <option value="">-- Seleccione material --</option>
+          <option value="Hierro">Hierro</option>
           <option value="Aluminio">Aluminio</option>
           <option value="Cobre">Cobre</option>
           <option value="Bronce">Bronce</option>
@@ -54,7 +56,7 @@
           <option value="Carrocería">Carrocería</option>
           <option value="RCB">RCB</option>
           <option value="RCA">RCA</option>
-          <option value="RCA">RCA</option>
+          <option value="RA">RA</option>
           <option value="TARJETA mala">TARJETA mala</option>
           <option value="TARJETA buena">TARJETA buena</option>
         </select>
@@ -64,10 +66,10 @@
         <button id="btnRegistrar">Registrar</button>
       </div>
 
-      <!-- Resultado: factura dentro de card -->
+      <!-- Factura -->
       <div class="card" id="resultado"></div>
 
-      <!-- 💲 Precios debajo de la factura -->
+      <!-- Precios -->
       <div class="card">
         <h2>💲 Precios de materiales</h2>
         <div id="preciosUsuario">Cargando precios...</div>
@@ -75,16 +77,13 @@
     </div>
   </div>
 
-  <!-- Script menú -->
   <script>
     function toggleMenu() {
       document.getElementById("sidebar").classList.toggle("open");
     }
-
-    document.addEventListener("click", function(e) {
+    document.addEventListener("click", (e) => {
       const sidebar = document.getElementById("sidebar");
       const toggle = document.querySelector(".menu-toggle");
-
       if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
         sidebar.classList.remove("open");
       }
