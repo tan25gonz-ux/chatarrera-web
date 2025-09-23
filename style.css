@@ -162,7 +162,7 @@ tr:nth-child(even) {
 .factura {
   width: 58mm;
   padding: 5px;
-  font-family: monospace;
+  font-family: 'Courier New', Courier, monospace;
   font-size: 12px;
   background: #fff;
 }
@@ -205,19 +205,19 @@ tr:nth-child(even) {
   padding-top: 5px;
 }
 
-/* ----- Solo imprimir factura ----- */
+/* ----- Solo imprimir factura (58mm) ----- */
 @media print {
   @page {
-    size: 58mm auto;   /* ancho del rollo, alto dinámico */
-    margin: 0;         /* sin márgenes extra */
+    size: 58mm auto; /* ancho fijo, alto dinámico */
+    margin: 0;
   }
 
   body * {
-    visibility: hidden;   /* Oculta todo */
+    visibility: hidden;
   }
 
   .factura, .factura * {
-    visibility: visible;  /* Solo muestra la factura */
+    visibility: visible;
   }
 
   .factura {
