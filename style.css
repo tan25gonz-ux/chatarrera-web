@@ -187,27 +187,19 @@ tr:nth-child(even) {
 /* ----- Solo imprimir factura ----- */
 @media print {
   body * {
-    visibility: hidden;   /* Oculta todo */
+    display: none !important; /* Oculta todo */
   }
 
-  .factura, .factura * {
-    visibility: visible;  /* Solo muestra la factura */
+  #resultado, #resultado * {
+    display: block !important; /* Solo deja visible la factura */
+    visibility: visible !important;
   }
 
   .factura {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 58mm;
+    width: 58mm !important;
     margin: 0;
     padding: 0;
-  }
-
-  button {
-    display: none !important; /* Quita botones */
-  }
-
-  body {
-    background: #fff;
+    font-family: monospace;
+    font-size: 12px;
   }
 }
