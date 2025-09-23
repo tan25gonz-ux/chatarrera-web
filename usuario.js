@@ -210,7 +210,7 @@ async function registrarPesaje() {
           *** No se aceptan devoluciones ***
         </div>
       </div>
-      <button onclick="window.print()">🖨 Imprimir</button>
+      <button onclick="imprimirFactura()">🖨 Imprimir</button>
     `;
 
     limpiarFormulario();
@@ -247,4 +247,32 @@ function limpiarFormulario() {
 function cerrarSesion() {
   sessionStorage.clear();
   window.location.href = "index.html";
+}
+
+// ---- Imprimir solo la factura ----
+function imprimirFactura() {
+  const factura = document.querySelector(".factura");
+  if (!factura) return alert("❌ No hay factura para imprimir");
+
+  const w = window.open("", "PRINT", "height=600,width=400");
+  w.document.write(`
+    <html>
+      <head>
+        <title>Factura</title>
+        <style>
+          body { font-family: monospace; margin: 0; padding: 0; }
+          .factura { width: 58mm; font-size: 12px; }
+          table { width: 100%; font-size: 11px; border-collapse: collapse; }
+          th, td { text-align: left; padding: 2px 0; border-bottom: 1px dashed #000; }
+          h2, h3, p { text-align: center; margin: 4px 0; }
+          .footer { border-top: 1px dashed #000; margin-top: 10px; padding-top: 5px; text-align: center; }
+        </style>
+      </head>
+      <body>${factura.outerHTML}</body>
+    </html>
+  `);
+  w.document.close();
+  w.focus();
+  w.print();
+  w.close();
 }
