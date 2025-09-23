@@ -97,7 +97,7 @@ async function cargarPrecios(uid) {
   }
 }
 
-// ---- Registrar pesaje + Factura ----
+// ---- Registrar pesaje + Factura 58mm ----
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo")?.value;
   if (!tipo) return alert("Seleccione un tipo de transporte");
@@ -143,7 +143,7 @@ async function registrarPesaje() {
   }));
   const totalGeneral = materialesConTotal.reduce((a,b)=>a+b.total,0);
 
-  // Configuración de factura (nombre local, hacienda, teléfonos) + consecutivo
+  // Configuración de factura + consecutivo
   const cfgRef = doc(db, "facturas", uid);
   const cfgSnap = await getDoc(cfgRef);
   const cfg = cfgSnap.exists() ? cfgSnap.data() : {};
@@ -171,7 +171,7 @@ async function registrarPesaje() {
       fecha: serverTimestamp()
     });
 
-    // Mostrar factura (hora CR fija)
+    // Mostrar factura 58mm
     const fechaHoraCR = new Date().toLocaleString("es-CR", {
       timeZone: "America/Costa_Rica",
       dateStyle: "short",
@@ -180,17 +180,19 @@ async function registrarPesaje() {
 
     document.getElementById("resultado").innerHTML = `
       <div class="factura">
-        <h2>🧾 Factura #${numeroFactura}</h2>
-        <p><strong>${cfg.nombreLocal || "Mi Local"}</strong></p>
+        <h2>${cfg.nombreLocal || "Mi Local"}</h2>
         <p>Hacienda: ${cfg.numHacienda || "N/A"}</p>
         <p>Tel: ${cfg.telefono1 || "-"} / ${cfg.telefono2 || "-"}</p>
+        <p><strong>Factura #${numeroFactura}</strong></p>
+        <p>Fecha: ${fechaHoraCR}</p>
         <hr>
-        <p><strong>Fecha:</strong> ${fechaHoraCR}</p>
-        <p><strong>Nombre:</strong> ${nombre || "N/A"}</p>
+        <p><strong>Cliente:</strong> ${nombre || "N/A"}</p>
         <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
         ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
         <table>
-          <thead><tr><th>Material</th><th>Peso (kg)</th><th>Precio ₡/kg</th><th>Total ₡</th></tr></thead>
+          <thead>
+            <tr><th>Material</th><th>Cant</th><th>₡/kg</th><th>Total</th></tr>
+          </thead>
           <tbody>
             ${materialesConTotal.map(m => `
               <tr>
@@ -198,12 +200,17 @@ async function registrarPesaje() {
                 <td>${m.peso}</td>
                 <td>₡${m.precioUnit}</td>
                 <td>₡${m.total}</td>
-              </tr>`).join("")}
+              </tr>
+            `).join("")}
           </tbody>
         </table>
-        <h3>Total General: ₡${totalGeneral}</h3>
-        <button onclick="window.print()">🖨 Imprimir</button>
+        <h3>Total: ₡${totalGeneral}</h3>
+        <div class="footer">
+          ¡Gracias por su compra!<br>
+          *** No se aceptan devoluciones ***
+        </div>
       </div>
+      <button onclick="window.print()">🖨 Imprimir</button>
     `;
 
     limpiarFormulario();
