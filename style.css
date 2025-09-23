@@ -207,22 +207,29 @@ tr:nth-child(even) {
 
 /* ----- Solo imprimir factura ----- */
 @media print {
+  @page {
+    size: 58mm auto;   /* ancho del rollo, alto dinámico */
+    margin: 0;         /* sin márgenes extra */
+  }
+
   body * {
     visibility: hidden;   /* Oculta todo */
   }
+
   .factura, .factura * {
     visibility: visible;  /* Solo muestra la factura */
   }
+
   .factura {
     position: absolute;
     left: 0;
     top: 0;
     width: 58mm;
+    margin: 0;
+    padding: 0;
   }
-  button {
-    display: none !important;
-  }
-  .navbar, .sidebar {
+
+  button, .navbar, .sidebar {
     display: none !important;
   }
 }
