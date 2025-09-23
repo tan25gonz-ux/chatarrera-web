@@ -52,11 +52,6 @@
           <option value="Plástico de lavadora">Plástico de lavadora</option>
           <option value="Plástico de caja">Plástico de caja</option>
           <option value="Carrocería">Carrocería</option>
-          <option value="RCB">RCB</option>
-          <option value="RCA">RCA</option>
-          <option value="RA">RA</option>
-          <option value="TARJETA mala">TARJETA mala</option>
-          <option value="TARJETA buena">TARJETA buena</option>
         </select>
         <input type="number" id="pesoMaterial" placeholder="Peso (kg)" />
         <button id="btnAgregarExtra" type="button">➕ Agregar material</button>
@@ -72,27 +67,6 @@
         <h2>💲 Precios de materiales</h2>
         <div id="preciosUsuario">Cargando precios...</div>
       </div>
-
-      <!-- 🧾 Historial de compras con filtro -->
-      <div class="card">
-        <h2>🧾 Historial de compras</h2>
-        <div>
-          <label>Desde: <input type="date" id="fechaInicio"></label>
-          <label>Hasta: <input type="date" id="fechaFin"></label>
-          <button onclick="filtrarCompras()">Filtrar</button>
-          <button onclick="mostrarCompras()">Ver Todo</button>
-        </div>
-        <table id="tablaCompras">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Material</th>
-              <th>Peso (kg)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
     </div>
   </div>
 
@@ -101,11 +75,9 @@
     function toggleMenu() {
       document.getElementById("sidebar").classList.toggle("open");
     }
-
     document.addEventListener("click", function(e) {
       const sidebar = document.getElementById("sidebar");
       const toggle = document.querySelector(".menu-toggle");
-
       if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
         sidebar.classList.remove("open");
       }
