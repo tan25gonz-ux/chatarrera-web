@@ -192,4 +192,25 @@ tr:nth-child(even) {
   input, select {
     font-size: 12px;
   }
+  /* ----- Solo imprimir factura ----- */
+@media print {
+  body * {
+    visibility: hidden;   /* Oculta todo */
+  }
+
+  .factura, .factura * {
+    visibility: visible;  /* Solo muestra la factura */
+  }
+
+  .factura {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 58mm;
+  }
+
+  button {
+    display: none !important; /* Quita botones */
+  }
+
 }
