@@ -23,46 +23,59 @@
   </div>
 
   <div class="container">
-    <!-- Filtro de fechas -->
+    <!-- Tabla de inventario -->
     <div class="card">
-      <h2>📆 Filtrar por rango de fechas</h2>
-      <input type="date" id="fechaDesde" />
-      <input type="date" id="fechaHasta" />
-      <button id="btnFiltrar">Filtrar</button>
-      <button id="btnTodo">Ver Todo</button>
-    </div>
-
-    <!-- Tabla historial -->
-    <div class="card">
-      <h2>📋 Historial</h2>
-      <table id="tablaHistorial">
+      <h2>📦 Inventario actual</h2>
+      <table id="tablaInventario">
         <thead>
           <tr>
-            <th>Fecha</th>
             <th>Material</th>
-            <th>Peso</th>
+            <th>Cantidad (kg)</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
 
+    <!-- Tabla de compras -->
+    <div class="card">
+      <h2>🧾 Historial de compras</h2>
+      <table id="tablaCompras">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Material</th>
+            <th>Peso (kg)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Filtro por rango de fechas -->
+    <div class="card">
+      <h2>📆 Filtrar por rango de fechas</h2>
+      <label>Desde: <input type="date" id="fechaInicio"></label>
+      <label>Hasta: <input type="date" id="fechaFin"></label>
+      <button onclick="filtrarPorRango()">Filtrar</button>
+      <button onclick="mostrarTodo()">Ver Todo</button>
+    </div>
+
     <!-- Gráfico -->
     <div class="card">
-      <h2>📊 Gráfico</h2>
-      <canvas id="grafico"></canvas>
+      <h2>📊 Gráfico de compras por material</h2>
+      <canvas id="graficoCompras"></canvas>
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="inventario.js"></script>
 
+  <!-- Script menú -->
   <script>
     function toggleMenu() {
       document.getElementById("sidebar").classList.toggle("open");
     }
-
     document.addEventListener("click", function(e) {
       const sidebar = document.getElementById("sidebar");
       const toggle = document.querySelector(".menu-toggle");
