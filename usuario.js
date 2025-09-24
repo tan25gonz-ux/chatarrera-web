@@ -196,8 +196,6 @@ async function registrarPesaje() {
         <hr>
         <p><strong>Total: ₡${totalGeneral}</strong></p>
         <hr>
-        <p style="text-align:center"><strong>¡Gracias por su compra!</strong></p>
-        <p style="text-align:center">🐼</p>
         <p style="text-align:center"><strong>¡Gracias por elegirnos!</strong></p>
         <p style="text-align:center">^^^^^^</p>
       </div>
