@@ -34,7 +34,8 @@ function cargarMovimientos(uid) {
         fecha: d.fecha?.toDate() || new Date(),
         material: d.material,
         cantidad: d.cantidad,
-        tipo: d.tipo
+        tipo: d.tipo,
+        detalle: d.detalle || (d.tipo === "entrada" ? "entrada directa" : "salida directa")
       });
     });
     renderTabla(movimientos);
@@ -50,11 +51,20 @@ function renderTabla(data) {
   data.forEach(d => {
     const tr = document.createElement("tr");
     tr.style.backgroundColor = d.tipo === "entrada" ? "rgba(144, 238, 144, 0.3)" : "rgba(255, 99, 71, 0.3)";
+
+    // Iconos según detalle
+    let icono = "📦";
+    if (d.detalle?.toLowerCase().includes("desarme")) icono = "🛠";
+    else if (d.detalle?.toLowerCase().includes("venta")) icono = "💸";
+    else if (d.detalle?.toLowerCase().includes("entrada")) icono = "📥";
+    else if (d.detalle?.toLowerCase().includes("salida")) icono = "📤";
+
     tr.innerHTML = `
       <td>${d.fecha.toLocaleString("es-CR")}</td>
       <td>${d.material}</td>
       <td>${d.cantidad}</td>
       <td>${d.tipo === "entrada" ? "⬆️ Entrada" : "⬇️ Salida"}</td>
+      <td>${icono} ${d.detalle}</td>
     `;
     tabla.appendChild(tr);
   });
@@ -116,9 +126,7 @@ function renderInventarioAcumulado(inventario) {
   const tabla = document.querySelector("#tablaInventarioAcumulado tbody");
   tabla.innerHTML = "";
 
-  // Ordenar de mayor a menor
   const ordenados = Object.entries(inventario).sort((a, b) => b[1] - a[1]);
-
   if (ordenados.length === 0) return;
 
   const max = ordenados[0][1];
@@ -126,8 +134,6 @@ function renderInventarioAcumulado(inventario) {
 
   ordenados.forEach(([material, cantidad]) => {
     let ratio = (cantidad - min) / (max - min || 1);
-
-    // Verde -> Rojo
     const r = Math.round(255 - (200 * ratio));
     const g = Math.round(50 + (200 * ratio));
     const b = 50;
@@ -149,16 +155,12 @@ function aplicarFiltros() {
   const desde = document.getElementById("filtroDesde").value;
   const hasta = document.getElementById("filtroHasta").value;
   const tipo = document.getElementById("filtroTipo").value;
+  const detalle = document.getElementById("filtroDetalle").value;
 
-  if (desde) {
-    filtrados = filtrados.filter(d => d.fecha >= new Date(desde));
-  }
-  if (hasta) {
-    filtrados = filtrados.filter(d => d.fecha <= new Date(hasta + "T23:59:59"));
-  }
-  if (tipo) {
-    filtrados = filtrados.filter(d => d.tipo === tipo);
-  }
+  if (desde) filtrados = filtrados.filter(d => d.fecha >= new Date(desde));
+  if (hasta) filtrados = filtrados.filter(d => d.fecha <= new Date(hasta + "T23:59:59"));
+  if (tipo) filtrados = filtrados.filter(d => d.tipo === tipo);
+  if (detalle) filtrados = filtrados.filter(d => d.detalle?.toLowerCase().includes(detalle.toLowerCase()));
 
   renderTabla(filtrados);
   renderGrafico(filtrados);
@@ -166,9 +168,9 @@ function aplicarFiltros() {
 
 // ---- Exportar a CSV ----
 function exportarCSV() {
-  let csv = "Fecha,Material,Cantidad (kg),Tipo\n";
+  let csv = "Fecha,Material,Cantidad (kg),Tipo,Detalle\n";
   movimientos.forEach(d => {
-    csv += `${d.fecha.toLocaleString("es-CR")},${d.material},${d.cantidad},${d.tipo}\n`;
+    csv += `${d.fecha.toLocaleString("es-CR")},${d.material},${d.cantidad},${d.tipo},${d.detalle}\n`;
   });
 
   const blob = new Blob([csv], { type: "text/csv" });
