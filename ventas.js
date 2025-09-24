@@ -29,7 +29,23 @@ async function registrarVenta() {
   }
 
   try {
-    // Guardar en colección ventas
+    // 📌 Consultar inventario actual
+    const ref = doc(db, "inventarios", uid);
+    const snap = await getDoc(ref);
+    const datos = snap.exists() ? (snap.data().materiales || {}) : {};
+
+    // ⚡ Si no existe el material en inventario, se considera 0
+    const stockActual = Number(datos[material] || 0);
+
+    // 📌 Validar stock
+    if (stockActual <= 0) {
+      return alert(`❌ No hay stock disponible de ${material}.`);
+    }
+    if (peso > stockActual) {
+      return alert(`❌ Stock insuficiente de ${material}. Disponible: ${stockActual} kg`);
+    }
+
+    // 📌 Guardar en colección ventas
     await addDoc(collection(db, "ventas"), {
       usuario: auth?.currentUser?.email || "desconocido",
       uid,
@@ -39,10 +55,10 @@ async function registrarVenta() {
       fecha: serverTimestamp()
     });
 
-    // Actualizar inventario (restar)
+    // 📌 Actualizar inventario (restar)
     await actualizarInventario(uid, material, peso);
 
-    // Guardar en movimientos de inventario
+    // 📌 Guardar en movimientos de inventario
     await addDoc(collection(db, "inventario_movimientos"), {
       uid,
       material,
