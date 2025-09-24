@@ -1,84 +1,57 @@
 import { auth, db } from "./firebase.js";
 import { 
-  collection, addDoc, serverTimestamp, doc, getDoc, setDoc 
+  collection, addDoc, serverTimestamp, doc, getDoc, setDoc, onSnapshot 
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btnRegistrar")?.addEventListener("click", registrarVenta);
-  document.getElementById("btnAgregarExtra")?.addEventListener("click", agregarMaterial);
-  document.getElementById("btnCerrar")?.addEventListener("click", cerrarSesion);
+  document.getElementById("btnVender")?.addEventListener("click", registrarVenta);
 
   onAuthStateChanged(auth, (user) => {
-    if (user) console.log("Usuario conectado:", user.uid);
+    if (user) {
+      console.log("Usuario conectado:", user.uid);
+      cargarVentas(user.uid); // 🔥 cargar ventas en la tabla
+    }
   });
 });
-
-// ---- Agregar material extra ----
-function agregarMaterial() {
-  const mat = document.getElementById("materialSelect")?.value || "";
-  const peso = parseFloat(document.getElementById("pesoMaterial")?.value) || 0;
-  if (!mat || peso <= 0) return alert("Seleccione un material y un peso válido");
-
-  const lista = document.getElementById("listaExtras");
-  if (!lista) return;
-
-  const p = document.createElement("p");
-  p.textContent = `${peso} kg de ${mat}`;
-  p.dataset.material = mat;
-  p.dataset.peso = String(peso);
-
-  const b = document.createElement("button");
-  b.textContent = "❌"; b.type = "button"; b.onclick = () => p.remove();
-  p.appendChild(b);
-  lista.appendChild(p);
-
-  document.getElementById("materialSelect").value = "";
-  document.getElementById("pesoMaterial").value = "";
-}
 
 // ---- Registrar venta ----
 async function registrarVenta() {
   const uid = auth?.currentUser?.uid;
   if (!uid) return alert("No hay usuario logueado");
 
-  const numeroContenedor = document.getElementById("contenedor")?.value || "";
-  if (!numeroContenedor) return alert("Ingrese un número de contenedor");
+  const material = document.getElementById("materialVenta")?.value;
+  const peso = parseFloat(document.getElementById("pesoVenta")?.value) || 0;
+  const contenedor = document.getElementById("contenedorVenta")?.value || "";
 
-  // Materiales
-  const materiales = [];
-  document.querySelectorAll("#listaExtras p").forEach(p => {
-    materiales.push({ material: p.dataset.material, peso: parseFloat(p.dataset.peso) });
-  });
-
-  if (materiales.length === 0) return alert("Agregue al menos un material");
+  if (!material || peso <= 0 || !contenedor) {
+    return alert("⚠️ Complete todos los campos antes de registrar");
+  }
 
   try {
-    // Guardar venta en colección
+    // Guardar en colección ventas
     await addDoc(collection(db, "ventas"), {
       usuario: auth?.currentUser?.email || "desconocido",
-      contenedor: numeroContenedor,
-      materiales,
+      uid,
+      material,
+      peso,
+      contenedor,
       fecha: serverTimestamp()
     });
 
-    // Actualizar inventario (descontar)
-    await actualizarInventario(materiales);
+    // Actualizar inventario (restar)
+    await actualizarInventario(uid, material, peso);
 
-    // 🔥 Guardar historial de movimientos (salida)
-    for (let m of materiales) {
-      if (m.material && m.peso > 0) {
-        await addDoc(collection(db, "inventario_movimientos"), {
-          uid,
-          material: m.material,
-          cantidad: m.peso,
-          tipo: "salida", // 👈 movimiento de salida
-          fecha: serverTimestamp()
-        });
-      }
-    }
+    // Guardar en movimientos de inventario
+    await addDoc(collection(db, "inventario_movimientos"), {
+      uid,
+      material,
+      cantidad: peso,
+      tipo: "salida",
+      fecha: serverTimestamp()
+    });
 
-    alert("✅ Venta registrada con historial en inventario");
+    alert("✅ Venta registrada correctamente");
     limpiarFormulario();
   } catch (e) {
     console.error(e);
@@ -87,31 +60,45 @@ async function registrarVenta() {
 }
 
 // ---- Actualizar inventario (restar) ----
-async function actualizarInventario(materiales) {
-  const uid = auth?.currentUser?.uid || "desconocido";
+async function actualizarInventario(uid, material, peso) {
   const ref = doc(db, "inventarios", uid);
   const snap = await getDoc(ref);
   let datos = snap.exists() ? (snap.data().materiales || {}) : {};
 
-  materiales.forEach(m => { 
-    datos[m.material] = (datos[m.material] || 0) - m.peso; 
-    if (datos[m.material] < 0) datos[m.material] = 0; // evitar negativos
-  });
+  datos[material] = (datos[material] || 0) - peso;
+  if (datos[material] < 0) datos[material] = 0; // evitar negativos
 
   await setDoc(ref, { materiales: datos, actualizado: serverTimestamp() }, { merge: true });
 }
 
-// ---- Util ----
-function limpiarFormulario() {
-  const lista = document.getElementById("listaExtras");
-  if (lista) lista.innerHTML = "";
+// ---- Cargar ventas en la tabla ----
+function cargarVentas(uid) {
+  const tabla = document.querySelector("#tablaVentas tbody");
+  if (!tabla) return;
 
-  document.getElementById("materialSelect").value = "";
-  document.getElementById("pesoMaterial").value = "";
-  document.getElementById("contenedor").value = "";
+  const q = collection(db, "ventas");
+  onSnapshot(q, (snap) => {
+    tabla.innerHTML = "";
+    snap.forEach(docu => {
+      const d = docu.data();
+      if (d.uid === uid) {
+        const fecha = d.fecha?.toDate().toLocaleString("es-CR") || "-";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${fecha}</td>
+          <td>${d.material}</td>
+          <td>${d.peso}</td>
+          <td>${d.contenedor}</td>
+        `;
+        tabla.appendChild(tr);
+      }
+    });
+  });
 }
 
-function cerrarSesion() {
-  sessionStorage.clear();
-  window.location.href = "index.html";
+// ---- Limpiar formulario ----
+function limpiarFormulario() {
+  document.getElementById("pesoVenta").value = "";
+  document.getElementById("contenedorVenta").value = "";
+  document.getElementById("materialVenta").value = "Hierro";
 }
