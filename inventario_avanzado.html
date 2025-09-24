@@ -8,35 +8,39 @@
 </head>
 <body>
   <div class="container">
-    <h1>📦 Inventario Avanzado</h1>
-        <!-- Sidebar -->
-  <div id="sidebar" class="sidebar">
-    <button onclick="window.location.href='usuario.html'">Inicio</button>
-    <button onclick="window.location.href='inventario_avanzado.html'">📊 Ver Inventario</button>
-    <button onclick="window.location.href='ventas.html'">🛒 Registrar Contenedor</button>
-    <button onclick="window.location.href='contabilidad.html'">💵 Ver Contabilidad</button>
-    <button onclick="window.location.href='precios.html'">💲 Editar Precios</button>
-    <button onclick="window.location.href='factura.html'">🧾 Configurar Factura</button>
-    <button id="btnCerrar" type="button">🚪 Cerrar Sesión</button>
-  </div>
+    <h1>📊 Inventario Avanzado</h1>
 
-    <!-- Filtros -->
-    <h2>🔍 Filtros</h2>
-    <label>Desde: <input type="date" id="filtroDesde"></label>
-    <label>Hasta: <input type="date" id="filtroHasta"></label>
-    <label>
-      Tipo:
+    <!-- 🔎 Filtros -->
+    <h2>🔎 Filtros</h2>
+    <div class="card">
+      <label>Desde:</label>
+      <input type="date" id="filtroDesde">
+
+      <label>Hasta:</label>
+      <input type="date" id="filtroHasta">
+
+      <label>Tipo:</label>
       <select id="filtroTipo">
         <option value="">Todos</option>
-        <option value="entrada">Entrada</option>
-        <option value="salida">Salida</option>
+        <option value="entrada">Entradas</option>
+        <option value="salida">Salidas</option>
       </select>
-    </label>
-    <button id="btnFiltrar">Aplicar Filtros</button>
-    <button id="btnExportar">📤 Exportar a CSV</button>
 
-    <!-- Tabla historial -->
-    <h2>📝 Historial Detallado</h2>
+      <label>Detalle:</label>
+      <select id="filtroDetalle">
+        <option value="">Todos</option>
+        <option value="venta">Ventas</option>
+        <option value="desarme">Desarmes</option>
+        <option value="entrada directa">Entradas directas</option>
+        <option value="salida directa">Salidas directas</option>
+      </select>
+
+      <button id="btnFiltrar" type="button">Aplicar Filtros</button>
+      <button id="btnExportar" type="button">📤 Exportar CSV</button>
+    </div>
+
+    <!-- 📜 Historial detallado -->
+    <h2>📜 Historial Detallado</h2>
     <table id="tablaMovimientosAvanzado">
       <thead>
         <tr>
@@ -44,28 +48,29 @@
           <th>Material</th>
           <th>Cantidad (kg)</th>
           <th>Tipo</th>
+          <th>Detalle</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
 
-    <!-- Gráfica avanzada -->
-    <h2>📊 Comparación de Materiales</h2>
-    <canvas id="graficoInventarioAvanzado" width="400" height="200"></canvas>
+    <!-- 📈 Gráfico -->
+    <h2>📈 Comparativa</h2>
+    <canvas id="graficoInventarioAvanzado"></canvas>
 
-    <!-- Inventario acumulado -->
+    <!-- 📦 Inventario acumulado -->
     <h2>📦 Inventario Acumulado</h2>
     <table id="tablaInventarioAcumulado">
       <thead>
         <tr>
           <th>Material</th>
-          <th>Cantidad Actual (kg)</th>
+          <th>Cantidad (kg)</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
 
-    <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
+    <button onclick="window.location.href='inventario.html'">⬅️ Volver</button>
   </div>
 
   <script type="module" src="inventario_avanzado.js"></script>
