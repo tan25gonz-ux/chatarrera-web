@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>📊 Inventario Avanzado</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>📦 Inventario Avanzado</h1>
+
+    <!-- Filtros -->
+    <h2>🔍 Filtros</h2>
+    <label>Desde: <input type="date" id="filtroDesde"></label>
+    <label>Hasta: <input type="date" id="filtroHasta"></label>
+    <label>Material: <input type="text" id="filtroMaterial" placeholder="Ej: Hierro"></label>
+    <label>
+      Tipo:
+      <select id="filtroTipo">
+        <option value="">Todos</option>
+        <option value="entrada">Entrada</option>
+        <option value="salida">Salida</option>
+      </select>
+    </label>
+    <button id="btnFiltrar">Aplicar Filtros</button>
+    <button id="btnExportar">📤 Exportar a CSV</button>
+
+    <!-- Tabla historial -->
+    <h2>📝 Historial Detallado</h2>
+    <table id="tablaMovimientosAvanzado">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Material</th>
+          <th>Cantidad (kg)</th>
+          <th>Tipo</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!-- Gráfica avanzada -->
+    <h2>📊 Comparación de Materiales</h2>
+    <canvas id="graficoInventarioAvanzado" width="400" height="200"></canvas>
+
+    <button onclick="window.location.href='inventario.html'">⬅️ Volver</button>
+  </div>
+
+  <script type="module" src="inventario_avanzado.js"></script>
+</body>
+</html>
