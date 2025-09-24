@@ -158,43 +158,49 @@ tr:nth-child(even) {
   background: #f2f2f2;
 }
 
-/* ----- Factura (formato térmico 58mm) ----- */
+
 .factura {
   width: 58mm;
   padding: 5px;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 12px;
+  font-size: 14px;         /
+  font-weight: bold;      
   background: #fff;
 }
 
 .factura h2, .factura h3 {
-  font-size: 14px;
+  font-size: 16px;        
   margin: 4px 0;
   text-align: center;
+  font-weight: bold;     
 }
 
 .factura p {
   margin: 2px 0;
   text-align: center;
+  font-weight: bold;   
 }
 
 .factura table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 14px;       
   margin-top: 5px;
+  font-weight: bold;       
 }
 
 .factura th, .factura td {
   text-align: left;
-  padding: 2px 0;
+  padding: 4px 0;
   border-bottom: 1px dashed #000;
+  font-weight: bold;      
 }
 
 .factura h3 {
   border-top: 1px solid #000;
   padding-top: 4px;
   text-align: right;
+  font-weight: bold;      
 }
 
 .footer {
@@ -205,10 +211,9 @@ tr:nth-child(even) {
   padding-top: 5px;
 }
 
-/* ----- Solo imprimir factura (58mm) ----- */
 @media print {
   @page {
-    size: 58mm auto; /* ancho fijo, alto dinámico */
+    size: 58mm auto; 
     margin: 0;
   }
 
