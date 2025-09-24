@@ -23,8 +23,13 @@
       </select>
     </label>
     <button id="btnFiltrar">Aplicar Filtros</button>
+    <button id="btnVerTodo">👁️ Ver Todo</button>
 
-    <!-- Tabla historial -->
+    <!-- Gráfica -->
+    <h2>📊 Comparación de Materiales</h2>
+    <canvas id="graficoInventario" width="400" height="200"></canvas>
+
+    <!-- Historial -->
     <h2>📝 Historial de Movimientos</h2>
     <table id="tablaMovimientos">
       <thead>
@@ -37,10 +42,6 @@
       </thead>
       <tbody></tbody>
     </table>
-
-    <!-- Gráfica -->
-    <h2>📊 Comparación de Materiales</h2>
-    <canvas id="graficoInventario" width="400" height="200"></canvas>
 
     <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
     <button onclick="window.location.href='inventario_avanzado.html'">📊 Inventario Avanzado</button>
