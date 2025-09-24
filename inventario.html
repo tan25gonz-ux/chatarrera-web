@@ -1,73 +1,50 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Inventario - Chatarrera</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>📊 Inventario</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <!-- Navbar -->
-  <div class="navbar">
-    <span class="menu-toggle" onclick="toggleMenu()">☰</span>
-    <h1>Inventario</h1>
+  <div class="container">
+    <h1>📦 Inventario</h1>
+
+    <!-- Filtros -->
+    <h2>🔍 Filtros</h2>
+    <label>Desde: <input type="date" id="filtroDesde"></label>
+    <label>Hasta: <input type="date" id="filtroHasta"></label>
+    <label>
+      Tipo:
+      <select id="filtroTipo">
+        <option value="">Todos</option>
+        <option value="entrada">Entrada</option>
+        <option value="salida">Salida</option>
+      </select>
+    </label>
+    <button id="btnFiltrar">Aplicar Filtros</button>
+
+    <!-- Tabla historial -->
+    <h2>📝 Historial de Movimientos</h2>
+    <table id="tablaMovimientos">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Material</th>
+          <th>Cantidad (kg)</th>
+          <th>Tipo</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!-- Gráfica -->
+    <h2>📊 Comparación de Materiales</h2>
+    <canvas id="graficoInventario" width="400" height="200"></canvas>
+
+    <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
+    <button onclick="window.location.href='inventario_avanzado.html'">📊 Inventario Avanzado</button>
   </div>
-
-  <!-- Sidebar -->
-  <div id="sidebar" class="sidebar">
-    <button onclick="window.location.href='inventario.html'">📊 Ver Inventario</button>
-    <button onclick="window.location.href='ventas.html'">🛒 Registrar Contenedor</button>
-    <button onclick="window.location.href='contabilidad.html'">💵 Ver Contabilidad</button>
-    <button onclick="window.location.href='precios.html'">💲 Editar Precios</button>
-    <button onclick="window.location.href='factura.html'">🧾 Configurar Factura</button>
-    <button id="btnCerrar" type="button">🚪 Cerrar Sesión</button>
-  </div>
-
-  <div class="container" style="text-align: center;">
-    <div class="col" style="max-width: 800px; margin: auto;">
-      <!-- Inventario -->
-      <div class="card">
-        <h2>📦 Inventario de Materiales</h2>
-        <table id="tablaInventario">
-          <thead>
-            <tr>
-              <th>Material</th>
-              <th>Cantidad (kg)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <!-- Compras (historial de pesajes) -->
-      <div class="card">
-        <h2>📝 Historial de Pesajes</h2>
-        <table id="tablaCompras">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Material</th>
-              <th>Peso (kg)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Script menú -->
-  <script>
-    function toggleMenu() {
-      document.getElementById("sidebar").classList.toggle("open");
-    }
-    document.addEventListener("click", function (e) {
-      const sidebar = document.getElementById("sidebar");
-      const toggle = document.querySelector(".menu-toggle");
-      if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
-        sidebar.classList.remove("open");
-      }
-    });
-  </script>
 
   <script type="module" src="inventario.js"></script>
 </body>
