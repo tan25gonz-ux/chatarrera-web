@@ -4,8 +4,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
+let desarmes = []; // guardamos todos para filtrar
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnDesarmar")?.addEventListener("click", procesarDesarme);
+  document.getElementById("btnFiltrar")?.addEventListener("click", aplicarFiltros);
+  document.getElementById("btnVerTodo")?.addEventListener("click", () => renderTabla(desarmes));
 
   onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -33,38 +37,49 @@ async function procesarDesarme() {
   }
 
   try {
-    // 📌 Leer inventario actual
     const ref = doc(db, "inventarios", uid);
     const snap = await getDoc(ref);
     let datos = snap.exists() ? (snap.data().materiales || {}) : {};
 
     const stockOrigen = Number(datos[origen] || 0);
-
-    // 📌 Validar stock suficiente
     if (cantidad > stockOrigen) {
       return alert(`❌ Stock insuficiente de ${origen}. Disponible: ${stockOrigen} kg`);
     }
 
-    // 📌 Restar del origen y sumar al destino
     datos[origen] = stockOrigen - cantidad;
     datos[destino] = (datos[destino] || 0) + cantidad;
 
-    // 📌 Guardar inventario actualizado
     await setDoc(ref, { materiales: datos, actualizado: serverTimestamp() }, { merge: true });
 
-    // 📌 Guardar en colección "desarmes"
     await addDoc(collection(db, "desarmes"), {
       uid,
       origen,
       destino,
       cantidad,
+      detalle: `${cantidad} kg de ${origen} → ${destino}`,
+      fecha: serverTimestamp()
+    });
+
+    await addDoc(collection(db, "inventario_movimientos"), {
+      uid,
+      material: origen,
+      cantidad,
+      tipo: "salida",
+      detalle: "desarme",
+      fecha: serverTimestamp()
+    });
+    await addDoc(collection(db, "inventario_movimientos"), {
+      uid,
+      material: destino,
+      cantidad,
+      tipo: "entrada",
+      detalle: "desarme",
       fecha: serverTimestamp()
     });
 
     document.getElementById("resultado").innerHTML = `
       <p>✅ Se desarmaron ${cantidad} kg de ${origen} en ${destino}.</p>
     `;
-
     document.getElementById("cantidadDesarme").value = "";
   } catch (e) {
     console.error(e);
@@ -72,7 +87,7 @@ async function procesarDesarme() {
   }
 }
 
-// ---- Cargar historial de desarmes ----
+// ---- Historial en tiempo real ----
 function cargarHistorial(uid) {
   const q = query(
     collection(db, "desarmes"),
@@ -83,18 +98,47 @@ function cargarHistorial(uid) {
   const tabla = document.querySelector("#tablaDesarmes tbody");
 
   onSnapshot(q, (snap) => {
-    tabla.innerHTML = "";
+    desarmes = [];
     snap.forEach(docu => {
       const d = docu.data();
-      const fecha = d.fecha?.toDate().toLocaleString("es-CR") || "-";
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${fecha}</td>
-        <td>${d.origen}</td>
-        <td>${d.destino}</td>
-        <td>${d.cantidad}</td>
-      `;
-      tabla.appendChild(tr);
+      desarmes.push({
+        fecha: d.fecha?.toDate() || new Date(),
+        origen: d.origen,
+        destino: d.destino,
+        cantidad: d.cantidad,
+        detalle: d.detalle || `${d.cantidad} kg de ${d.origen} → ${d.destino}`
+      });
     });
+    renderTabla(desarmes);
   });
+}
+
+// ---- Render tabla ----
+function renderTabla(data) {
+  const tabla = document.querySelector("#tablaDesarmes tbody");
+  tabla.innerHTML = "";
+
+  data.forEach(d => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${d.fecha.toLocaleString("es-CR")}</td>
+      <td>${d.origen}</td>
+      <td>${d.destino}</td>
+      <td>${d.cantidad}</td>
+      <td>${d.detalle}</td>
+    `;
+    tabla.appendChild(tr);
+  });
+}
+
+// ---- Aplicar filtros ----
+function aplicarFiltros() {
+  let filtrados = [...desarmes];
+  const desde = document.getElementById("filtroDesde").value;
+  const hasta = document.getElementById("filtroHasta").value;
+
+  if (desde) filtrados = filtrados.filter(d => d.fecha >= new Date(desde));
+  if (hasta) filtrados = filtrados.filter(d => d.fecha <= new Date(hasta + "T23:59:59"));
+
+  renderTabla(filtrados);
 }
