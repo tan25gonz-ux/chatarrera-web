@@ -48,6 +48,19 @@
 
     <div id="resultado"></div>
 
+    <!-- 🔎 Filtros -->
+    <h2>🔎 Filtros</h2>
+    <div class="card">
+      <label>Desde:</label>
+      <input type="date" id="filtroDesde">
+
+      <label>Hasta:</label>
+      <input type="date" id="filtroHasta">
+
+      <button id="btnFiltrar" type="button">Aplicar Filtros</button>
+      <button id="btnVerTodo" type="button">Ver Todo</button>
+    </div>
+
     <h2>📜 Historial de Desarmes</h2>
     <table id="tablaDesarmes">
       <thead>
@@ -56,6 +69,7 @@
           <th>Origen</th>
           <th>Destino</th>
           <th>Cantidad (kg)</th>
+          <th>Detalle</th>
         </tr>
       </thead>
       <tbody></tbody>
