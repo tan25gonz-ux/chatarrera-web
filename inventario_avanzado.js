@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase.js";
 import { 
-  collection, query, where, orderBy, onSnapshot, doc, getDoc 
+  collection, query, where, orderBy, onSnapshot 
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
@@ -45,13 +45,31 @@ function cargarMovimientos(uid) {
 function renderTabla(data) {
   const tabla = document.querySelector("#tablaMovimientosAvanzado tbody");
   tabla.innerHTML = "";
-  data.forEach(d => {
+
+  // Guardar acumulados por material
+  const acumulados = {};
+
+  // ⚠️ Importante: ordenar de más viejo a más nuevo para acumular correctamente
+  const ordenados = [...data].sort((a, b) => a.fecha - b.fecha);
+
+  ordenados.forEach(d => {
+    if (!acumulados[d.material]) acumulados[d.material] = 0;
+
+    if (d.tipo === "entrada") {
+      acumulados[d.material] += d.cantidad;
+    } else {
+      acumulados[d.material] -= d.cantidad;
+      if (acumulados[d.material] < 0) acumulados[d.material] = 0; // evitar negativos
+    }
+
     const tr = document.createElement("tr");
+    tr.style.backgroundColor = d.tipo === "entrada" ? "rgba(144, 238, 144, 0.3)" : "rgba(255, 99, 71, 0.3)";
     tr.innerHTML = `
       <td>${d.fecha.toLocaleString("es-CR")}</td>
       <td>${d.material}</td>
       <td>${d.cantidad}</td>
       <td>${d.tipo === "entrada" ? "⬆️ Entrada" : "⬇️ Salida"}</td>
+      <td>${acumulados[d.material]}</td>
     `;
     tabla.appendChild(tr);
   });
@@ -108,7 +126,6 @@ function aplicarFiltros() {
 
   const desde = document.getElementById("filtroDesde").value;
   const hasta = document.getElementById("filtroHasta").value;
-  const material = document.getElementById("filtroMaterial").value.toLowerCase();
   const tipo = document.getElementById("filtroTipo").value;
 
   if (desde) {
@@ -116,9 +133,6 @@ function aplicarFiltros() {
   }
   if (hasta) {
     filtrados = filtrados.filter(d => d.fecha <= new Date(hasta + "T23:59:59"));
-  }
-  if (material) {
-    filtrados = filtrados.filter(d => d.material.toLowerCase().includes(material));
   }
   if (tipo) {
     filtrados = filtrados.filter(d => d.tipo === tipo);
@@ -130,9 +144,19 @@ function aplicarFiltros() {
 
 // ---- Exportar a CSV ----
 function exportarCSV() {
-  let csv = "Fecha,Material,Cantidad (kg),Tipo\n";
-  movimientos.forEach(d => {
-    csv += `${d.fecha.toLocaleString("es-CR")},${d.material},${d.cantidad},${d.tipo}\n`;
+  let csv = "Fecha,Material,Cantidad (kg),Tipo,Inventario acumulado\n";
+  const acumulados = {};
+  const ordenados = [...movimientos].sort((a, b) => a.fecha - b.fecha);
+
+  ordenados.forEach(d => {
+    if (!acumulados[d.material]) acumulados[d.material] = 0;
+    if (d.tipo === "entrada") {
+      acumulados[d.material] += d.cantidad;
+    } else {
+      acumulados[d.material] -= d.cantidad;
+      if (acumulados[d.material] < 0) acumulados[d.material] = 0;
+    }
+    csv += `${d.fecha.toLocaleString("es-CR")},${d.material},${d.cantidad},${d.tipo},${acumulados[d.material]}\n`;
   });
 
   const blob = new Blob([csv], { type: "text/csv" });
