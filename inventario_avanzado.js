@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase.js";
 import { 
-  collection, query, where, orderBy, onSnapshot 
+  collection, query, where, orderBy, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
@@ -41,27 +41,12 @@ function cargarMovimientos(uid) {
   });
 }
 
-// ---- Render tabla ----
+// ---- Render tabla de movimientos ----
 function renderTabla(data) {
   const tabla = document.querySelector("#tablaMovimientosAvanzado tbody");
   tabla.innerHTML = "";
 
-  // Guardar acumulados por material
-  const acumulados = {};
-
-  // ⚠️ Importante: ordenar de más viejo a más nuevo para acumular correctamente
-  const ordenados = [...data].sort((a, b) => a.fecha - b.fecha);
-
-  ordenados.forEach(d => {
-    if (!acumulados[d.material]) acumulados[d.material] = 0;
-
-    if (d.tipo === "entrada") {
-      acumulados[d.material] += d.cantidad;
-    } else {
-      acumulados[d.material] -= d.cantidad;
-      if (acumulados[d.material] < 0) acumulados[d.material] = 0; // evitar negativos
-    }
-
+  data.forEach(d => {
     const tr = document.createElement("tr");
     tr.style.backgroundColor = d.tipo === "entrada" ? "rgba(144, 238, 144, 0.3)" : "rgba(255, 99, 71, 0.3)";
     tr.innerHTML = `
@@ -69,7 +54,6 @@ function renderTabla(data) {
       <td>${d.material}</td>
       <td>${d.cantidad}</td>
       <td>${d.tipo === "entrada" ? "⬆️ Entrada" : "⬇️ Salida"}</td>
-      <td>${acumulados[d.material]}</td>
     `;
     tabla.appendChild(tr);
   });
@@ -106,7 +90,9 @@ function renderGrafico(data) {
   const stockActual = materiales.map(m => inventario[m] || 0);
 
   const ctx = document.getElementById("graficoInventarioAvanzado").getContext("2d");
-  new Chart(ctx, {
+  if (window.chartInventario) window.chartInventario.destroy();
+
+  window.chartInventario = new Chart(ctx, {
     type: "bar",
     data: {
       labels: materiales,
@@ -117,6 +103,40 @@ function renderGrafico(data) {
       ]
     },
     options: { responsive: true, scales: { y: { beginAtZero: true } } }
+  });
+
+  // 🔥 Actualizar también la tabla de inventario acumulado
+  renderInventarioAcumulado(inventario);
+}
+
+// ---- Render tabla inventario acumulado (ordenada + colores) ----
+function renderInventarioAcumulado(inventario) {
+  const tabla = document.querySelector("#tablaInventarioAcumulado tbody");
+  tabla.innerHTML = "";
+
+  // Ordenar de mayor a menor
+  const ordenados = Object.entries(inventario).sort((a, b) => b[1] - a[1]);
+
+  if (ordenados.length === 0) return;
+
+  const max = ordenados[0][1];
+  const min = ordenados[ordenados.length - 1][1];
+
+  ordenados.forEach(([material, cantidad]) => {
+    let ratio = (cantidad - min) / (max - min || 1);
+
+    // Verde -> Rojo
+    const r = Math.round(255 - (200 * ratio));
+    const g = Math.round(50 + (200 * ratio));
+    const b = 50;
+
+    const tr = document.createElement("tr");
+    tr.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
+    tr.innerHTML = `
+      <td>${material}</td>
+      <td>${cantidad}</td>
+    `;
+    tabla.appendChild(tr);
   });
 }
 
@@ -144,19 +164,9 @@ function aplicarFiltros() {
 
 // ---- Exportar a CSV ----
 function exportarCSV() {
-  let csv = "Fecha,Material,Cantidad (kg),Tipo,Inventario acumulado\n";
-  const acumulados = {};
-  const ordenados = [...movimientos].sort((a, b) => a.fecha - b.fecha);
-
-  ordenados.forEach(d => {
-    if (!acumulados[d.material]) acumulados[d.material] = 0;
-    if (d.tipo === "entrada") {
-      acumulados[d.material] += d.cantidad;
-    } else {
-      acumulados[d.material] -= d.cantidad;
-      if (acumulados[d.material] < 0) acumulados[d.material] = 0;
-    }
-    csv += `${d.fecha.toLocaleString("es-CR")},${d.material},${d.cantidad},${d.tipo},${acumulados[d.material]}\n`;
+  let csv = "Fecha,Material,Cantidad (kg),Tipo\n";
+  movimientos.forEach(d => {
+    csv += `${d.fecha.toLocaleString("es-CR")},${d.material},${d.cantidad},${d.tipo}\n`;
   });
 
   const blob = new Blob([csv], { type: "text/csv" });
