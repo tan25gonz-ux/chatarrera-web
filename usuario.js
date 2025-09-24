@@ -161,8 +161,21 @@ async function registrarPesaje() {
       fecha: serverTimestamp()
     });
 
-    // Actualizar inventario
+    // Actualizar inventario total
     await actualizarInventario(materiales);
+
+    // 🔥 Guardar historial de movimientos
+    for (let m of materiales) {
+      if (m.material && m.peso > 0) {
+        await addDoc(collection(db, "inventario_movimientos"), {
+          uid,
+          material: m.material,
+          cantidad: m.peso,
+          tipo: "entrada", // 👈 movimiento de entrada
+          fecha: serverTimestamp()
+        });
+      }
+    }
 
     // Contabilidad (egreso)
     await addDoc(collection(db, "contabilidad", uid, "egresos"), {
