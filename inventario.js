@@ -1,23 +1,27 @@
 import { auth, db } from "./firebase.js";
 import { 
-  collection, query, where, orderBy, onSnapshot, doc, getDoc 
+  collection, query, where, orderBy, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-let movimientos = []; // para filtros
+let movimientos = []; // todos los movimientos
+let chart; // referencia de la gráfica
 
 document.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, (user) => {
     if (user) {
       cargarMovimientos(user.uid);
-      cargarInventarioTotal(user.uid);
     }
   });
 
   document.getElementById("btnFiltrar").addEventListener("click", aplicarFiltros);
+  document.getElementById("btnVerTodo").addEventListener("click", () => {
+    renderTabla(movimientos);
+    renderGrafico(movimientos);
+  });
 });
 
-// ---- Historial de movimientos ----
+// ---- Cargar todos los movimientos ----
 function cargarMovimientos(uid) {
   const q = query(
     collection(db, "inventario_movimientos"),
@@ -37,6 +41,7 @@ function cargarMovimientos(uid) {
       });
     });
     renderTabla(movimientos);
+    renderGrafico(movimientos); // mostrar gráfica con todo al inicio
   });
 }
 
@@ -57,32 +62,51 @@ function renderTabla(data) {
   });
 }
 
-// ---- Cargar totales para gráfica ----
-async function cargarInventarioTotal(uid) {
-  const ref = doc(db, "inventarios", uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
+// ---- Render gráfica dinámica ----
+function renderGrafico(data) {
+  const entradas = {};
+  const salidas = {};
+  const inventario = {};
 
-  const datos = snap.data().materiales || {};
-  const labels = Object.keys(datos);
-  const valores = Object.values(datos);
+  data.forEach(d => {
+    if (!entradas[d.material]) entradas[d.material] = 0;
+    if (!salidas[d.material]) salidas[d.material] = 0;
+    if (!inventario[d.material]) inventario[d.material] = 0;
+
+    if (d.tipo === "entrada") {
+      entradas[d.material] += d.cantidad;
+      inventario[d.material] += d.cantidad;
+    } else {
+      salidas[d.material] += d.cantidad;
+      inventario[d.material] -= d.cantidad;
+    }
+  });
+
+  const materiales = Array.from(new Set([
+    ...Object.keys(entradas),
+    ...Object.keys(salidas),
+    ...Object.keys(inventario)
+  ]));
+
+  const totalEntradas = materiales.map(m => entradas[m] || 0);
+  const totalSalidas = materiales.map(m => salidas[m] || 0);
+  const stockActual = materiales.map(m => inventario[m] || 0);
 
   const ctx = document.getElementById("graficoInventario").getContext("2d");
-  new Chart(ctx, {
+
+  if (chart) chart.destroy(); // limpiar gráfica anterior
+
+  chart = new Chart(ctx, {
     type: "bar",
     data: {
-      labels: labels,
-      datasets: [{
-        label: "Cantidad en Inventario (kg)",
-        data: valores,
-        borderWidth: 1
-      }]
+      labels: materiales,
+      datasets: [
+        { label: "📥 Entradas (kg)", data: totalEntradas, backgroundColor: "rgba(54, 162, 235, 0.6)" },
+        { label: "📤 Salidas (kg)", data: totalSalidas, backgroundColor: "rgba(255, 99, 132, 0.6)" },
+        { label: "📦 Inventario Actual (kg)", data: stockActual, backgroundColor: "rgba(75, 192, 75, 0.6)" }
+      ]
     },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true } }
-    }
+    options: { responsive: true, scales: { y: { beginAtZero: true } } }
   });
 }
 
@@ -105,4 +129,5 @@ function aplicarFiltros() {
   }
 
   renderTabla(filtrados);
+  renderGrafico(filtrados);
 }
