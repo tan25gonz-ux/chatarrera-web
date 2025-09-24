@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase.js";
 import { 
-  collection, query, where, orderBy, onSnapshot
+  collection, query, where, orderBy, onSnapshot, doc 
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
@@ -9,7 +9,8 @@ let movimientos = []; // Guardar todos los movimientos cargados
 document.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      cargarMovimientos(user.uid);
+      cargarMovimientos(user.uid);   // 🔥 Historial de movimientos
+      cargarInventario(user.uid);    // 🔥 Inventario en tiempo real
     }
   });
 
@@ -63,31 +64,25 @@ function renderTabla(data) {
 function renderGrafico(data) {
   const entradas = {};
   const salidas = {};
-  const inventario = {};
 
   data.forEach(d => {
     if (!entradas[d.material]) entradas[d.material] = 0;
     if (!salidas[d.material]) salidas[d.material] = 0;
-    if (!inventario[d.material]) inventario[d.material] = 0;
 
     if (d.tipo === "entrada") {
       entradas[d.material] += d.cantidad;
-      inventario[d.material] += d.cantidad;
     } else {
       salidas[d.material] += d.cantidad;
-      inventario[d.material] -= d.cantidad;
     }
   });
 
   const materiales = Array.from(new Set([
     ...Object.keys(entradas),
-    ...Object.keys(salidas),
-    ...Object.keys(inventario)
+    ...Object.keys(salidas)
   ]));
 
   const totalEntradas = materiales.map(m => entradas[m] || 0);
   const totalSalidas = materiales.map(m => salidas[m] || 0);
-  const stockActual = materiales.map(m => inventario[m] || 0);
 
   const ctx = document.getElementById("graficoInventarioAvanzado").getContext("2d");
   if (window.chartInventario) window.chartInventario.destroy();
@@ -98,15 +93,22 @@ function renderGrafico(data) {
       labels: materiales,
       datasets: [
         { label: "📥 Entradas (kg)", data: totalEntradas, backgroundColor: "rgba(54, 162, 235, 0.6)" },
-        { label: "📤 Salidas (kg)", data: totalSalidas, backgroundColor: "rgba(255, 99, 132, 0.6)" },
-        { label: "📦 Inventario Actual (kg)", data: stockActual, backgroundColor: "rgba(75, 192, 75, 0.6)" }
+        { label: "📤 Salidas (kg)", data: totalSalidas, backgroundColor: "rgba(255, 99, 132, 0.6)" }
       ]
     },
     options: { responsive: true, scales: { y: { beginAtZero: true } } }
   });
+}
 
-  // 🔥 Actualizar también la tabla de inventario acumulado
-  renderInventarioAcumulado(inventario);
+// ---- Cargar inventario real en tiempo real ----
+function cargarInventario(uid) {
+  const ref = doc(db, "inventarios", uid);
+
+  onSnapshot(ref, (snap) => {
+    if (!snap.exists()) return;
+    const inventario = snap.data().materiales || {};
+    renderInventarioAcumulado(inventario);
+  });
 }
 
 // ---- Render tabla inventario acumulado (ordenada + colores) ----
