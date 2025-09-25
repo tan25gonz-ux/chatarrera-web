@@ -163,45 +163,45 @@ tr:nth-child(even) {
   width: 58mm;
   padding: 5px;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 14px;         /
-  font-weight: bold;      
+  font-size: 14px; /* un poquito más grande */
   background: #fff;
+  font-weight: bold; /* 👈 fuerza negrita a todo */
 }
 
 .factura h2, .factura h3 {
-  font-size: 16px;        
+  font-size: 16px;
   margin: 4px 0;
   text-align: center;
-  font-weight: bold;     
+  font-weight: bold; /* redundante pero asegura */
 }
 
 .factura p {
   margin: 2px 0;
   text-align: center;
-  font-weight: bold;   
+  font-weight: bold;
 }
 
 .factura table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;       
+  font-size: 13px;
   margin-top: 5px;
-  font-weight: bold;       
+  font-weight: bold;
 }
 
 .factura th, .factura td {
   text-align: left;
-  padding: 4px 0;
+  padding: 2px 0;
   border-bottom: 1px dashed #000;
-  font-weight: bold;      
+  font-weight: bold;
 }
 
 .factura h3 {
   border-top: 1px solid #000;
   padding-top: 4px;
   text-align: right;
-  font-weight: bold;      
 }
+
 
 .footer {
   margin-top: 10px;
