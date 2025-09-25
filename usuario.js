@@ -238,7 +238,6 @@ async function registrarPesaje() {
   }
 }
 
-}
 
 // ---- Inventario ----
 async function actualizarInventario(materiales) {
