@@ -164,14 +164,14 @@ async function registrarPesaje() {
     // Actualizar inventario total
     await actualizarInventario(materiales);
 
-    // 🔥 Guardar historial de movimientos
+    // Guardar historial de movimientos
     for (let m of materiales) {
       if (m.material && m.peso > 0) {
         await addDoc(collection(db, "inventario_movimientos"), {
           uid,
           material: m.material,
           cantidad: m.peso,
-          tipo: "entrada", // 👈 movimiento de entrada
+          tipo: "entrada",
           fecha: serverTimestamp()
         });
       }
@@ -184,25 +184,25 @@ async function registrarPesaje() {
       fecha: serverTimestamp()
     });
 
-    // Factura estilo recibo
+    // Factura estilo recibo con <strong>
     const fecha = new Date().toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" });
     const hora  = new Date().toLocaleTimeString("es-CR", { timeZone: "America/Costa_Rica" });
 
     let reciboHTML = `
       <div class="recibo">
         <p><strong>${cfg.nombreLocal || "Mi Local"}</strong></p>
-        <p>Hacienda: ${cfg.numHacienda || "N/A"}</p>
-        <p>Tel: ${cfg.telefono1 || "-"} / ${cfg.telefono2 || "-"}</p>
-        <p>Factura #${numeroFactura}</p>
-        <p>Fecha: ${fecha} ${hora}</p>
+        <p><strong>Hacienda: ${cfg.numHacienda || "N/A"}</strong></p>
+        <p><strong>Tel: ${cfg.telefono1 || "-"} / ${cfg.telefono2 || "-"}</strong></p>
+        <p><strong>Factura #${numeroFactura}</strong></p>
+        <p><strong>Fecha: ${fecha} ${hora}</strong></p>
         <hr>
-        <p>Cliente: ${nombre || "N/A"}</p>
-        <p>Cédula: ${cedula || "N/A"}</p>
-        ${placa ? `<p>Placa: ${placa}</p>` : ""}
+        <p><strong>Cliente: ${nombre || "N/A"}</strong></p>
+        <p><strong>Cédula: ${cedula || "N/A"}</strong></p>
+        ${placa ? `<p><strong>Placa: ${placa}</strong></p>` : ""}
         <hr>`;
 
     materialesConTotal.forEach(m => {
-      reciboHTML += `<p>${m.material} x ${m.peso} = ₡${m.total}</p>`;
+      reciboHTML += `<p><strong>${m.material} x ${m.peso} = ₡${m.total}</strong></p>`;
     });
 
     reciboHTML += `
@@ -210,53 +210,34 @@ async function registrarPesaje() {
         <p><strong>Total: ₡${totalGeneral}</strong></p>
         <hr>
         <p style="text-align:center"><strong>¡Gracias por elegirnos!</strong></p>
-        <p style="text-align:center">^^^^^^</p>
+        <p style="text-align:center"><strong>^^^^^^</strong></p>
       </div>
       <button id="btnImprimirFactura">🖨 Imprimir</button>
     `;
 
     document.getElementById("resultado").innerHTML = reciboHTML;
 
-    // imprimir
-   document.getElementById("btnImprimirFactura").addEventListener("click", () => {
-  const ventana = window.open("", "PRINT");
-  ventana.document.write("<html><head><title>Factura</title>");
-  ventana.document.write(`
-    <style>
-      body {
-        font-family: Courier, monospace;
-        font-size: 14px;
-        font-weight: bold;  /* 👈 todo el recibo en negrita */
-      }
-      .recibo {
-        width: 300px;
-        margin: auto;
-      }
-      .factura-total {
-        font-size: 18px;       /* 👈 más grande */
-        font-weight: bold;
-        text-align: center;
-        border-top: 2px solid #000;
-        border-bottom: 2px solid #000;
-        padding: 4px 0;
-        margin: 6px 0;
-      }
-    </style>
-  `);
-  ventana.document.write("</head><body>");
-  ventana.document.write(reciboHTML);
-  ventana.document.write("</body></html>");
-  ventana.document.close();
-  ventana.focus();
-  ventana.print();
-  ventana.close();
-});
+    // Imprimir (ya no dependemos de font-weight, usamos <strong>)
+    document.getElementById("btnImprimirFactura").addEventListener("click", () => {
+      const ventana = window.open("", "PRINT");
+      ventana.document.write("<html><head><title>Factura</title>");
+      ventana.document.write("<style>body{font-family:Courier;font-size:14px}.recibo{width:300px;margin:auto}</style>");
+      ventana.document.write("</head><body>");
+      ventana.document.write(reciboHTML);
+      ventana.document.write("</body></html>");
+      ventana.document.close();
+      ventana.focus();
+      ventana.print();
+      ventana.close();
+    });
 
     limpiarFormulario();
   } catch (e) {
     console.error(e);
     alert("❌ Error al guardar: " + (e?.message || e));
   }
+}
+
 }
 
 // ---- Inventario ----
