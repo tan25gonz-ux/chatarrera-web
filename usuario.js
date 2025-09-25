@@ -218,18 +218,39 @@ async function registrarPesaje() {
     document.getElementById("resultado").innerHTML = reciboHTML;
 
     // imprimir
-    document.getElementById("btnImprimirFactura").addEventListener("click", () => {
-      const ventana = window.open("", "PRINT");
-      ventana.document.write("<html><head><title>Factura</title>");
-      ventana.document.write("<style>body{font-family:Courier;font-size:14px}.recibo{width:300px;margin:auto}</style>");
-      ventana.document.write("</head><body>");
-      ventana.document.write(reciboHTML);
-      ventana.document.write("</body></html>");
-      ventana.document.close();
-      ventana.focus();
-      ventana.print();
-      ventana.close();
-    });
+   document.getElementById("btnImprimirFactura").addEventListener("click", () => {
+  const ventana = window.open("", "PRINT");
+  ventana.document.write("<html><head><title>Factura</title>");
+  ventana.document.write(`
+    <style>
+      body {
+        font-family: Courier, monospace;
+        font-size: 14px;
+        font-weight: bold;  /* 👈 todo el recibo en negrita */
+      }
+      .recibo {
+        width: 300px;
+        margin: auto;
+      }
+      .factura-total {
+        font-size: 18px;       /* 👈 más grande */
+        font-weight: bold;
+        text-align: center;
+        border-top: 2px solid #000;
+        border-bottom: 2px solid #000;
+        padding: 4px 0;
+        margin: 6px 0;
+      }
+    </style>
+  `);
+  ventana.document.write("</head><body>");
+  ventana.document.write(reciboHTML);
+  ventana.document.write("</body></html>");
+  ventana.document.close();
+  ventana.focus();
+  ventana.print();
+  ventana.close();
+});
 
     limpiarFormulario();
   } catch (e) {
