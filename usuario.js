@@ -184,40 +184,42 @@ async function registrarPesaje() {
       fecha: serverTimestamp()
     });
 
-    // Factura estilo recibo con <strong>
+    // Factura estilo recibo
     const fecha = new Date().toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" });
     const hora  = new Date().toLocaleTimeString("es-CR", { timeZone: "America/Costa_Rica" });
 
     let reciboHTML = `
       <div class="recibo">
         <p><strong>${cfg.nombreLocal || "Mi Local"}</strong></p>
-        <p><strong>Hacienda: ${cfg.numHacienda || "N/A"}</strong></p>
-        <p><strong>Tel: ${cfg.telefono1 || "-"} / ${cfg.telefono2 || "-"}</strong></p>
-        <p><strong>Factura #${numeroFactura}</strong></p>
-        <p><strong>Fecha: ${fecha} ${hora}</strong></p>
+        <p>Hacienda: ${cfg.numHacienda || "N/A"}</p>
+        <p>Tel: ${cfg.telefono1 || "-"} / ${cfg.telefono2 || "-"}</p>
+        <p>Factura #${numeroFactura}</p>
+        <p>Fecha: ${fecha} ${hora}</p>
         <hr>
-        <p><strong>Cliente: ${nombre || "N/A"}</strong></p>
-        <p><strong>Cédula: ${cedula || "N/A"}</strong></p>
-        ${placa ? `<p><strong>Placa: ${placa}</strong></p>` : ""}
+        <p>Cliente: ${nombre || "N/A"}</p>
+        <p>Cédula: ${cedula || "N/A"}</p>
+        ${placa ? `<p>Placa: ${placa}</p>` : ""}
         <hr>`;
 
     materialesConTotal.forEach(m => {
-      reciboHTML += `<p><strong>${m.material} x ${m.peso} = ₡${m.total}</strong></p>`;
+      reciboHTML += `<p>${m.material} x ${m.peso} = ₡${m.total}</p>`;
     });
 
     reciboHTML += `
         <hr>
         <p><strong>Total: ₡${totalGeneral}</strong></p>
         <hr>
+        <p style="text-align:center"><strong>¡Gracias por su compra!</strong></p>
+        <p style="text-align:center">🐼</p>
         <p style="text-align:center"><strong>¡Gracias por elegirnos!</strong></p>
-        <p style="text-align:center"><strong>^^^^^^</strong></p>
+        <p style="text-align:center">^^^^^^</p>
       </div>
       <button id="btnImprimirFactura">🖨 Imprimir</button>
     `;
 
     document.getElementById("resultado").innerHTML = reciboHTML;
 
-    // Imprimir (ya no dependemos de font-weight, usamos <strong>)
+    // imprimir
     document.getElementById("btnImprimirFactura").addEventListener("click", () => {
       const ventana = window.open("", "PRINT");
       ventana.document.write("<html><head><title>Factura</title>");
@@ -238,14 +240,19 @@ async function registrarPesaje() {
   }
 }
 
-
 // ---- Inventario ----
 async function actualizarInventario(materiales) {
   const uid = auth?.currentUser?.uid || "desconocido";
   const ref = doc(db, "inventarios", uid);
   const snap = await getDoc(ref);
   let datos = snap.exists() ? (snap.data().materiales || {}) : {};
-  materiales.forEach(m => { datos[m.material] = (datos[m.material] || 0) + m.peso; });
+
+  materiales.forEach(m => {
+    // 📌 Hierro2 se guarda como Hierro
+    let clave = (m.material === "Hierro2") ? "Hierro" : m.material;
+    datos[clave] = (datos[clave] || 0) + m.peso;
+  });
+
   await setDoc(ref, { materiales: datos, actualizado: serverTimestamp() }, { merge: true });
 }
 
