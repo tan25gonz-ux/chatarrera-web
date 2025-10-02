@@ -6,14 +6,12 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Navbar -->
+
   <div class="navbar">
     <span class="menu-toggle" onclick="toggleMenu()">☰</span>
     <h1>Contabilidad</h1>
   </div>
 
-  <!-- Sidebar -->
-    <!-- Sidebar -->
   <div id="sidebar" class="sidebar">
     <button onclick="window.location.href='usuario.html'">Inicio</button>
     <button onclick="window.location.href='inventario_avanzado.html'">📊 Ver Inventario</button>
@@ -25,7 +23,7 @@
   </div>
 
   <div class="container">
-    <!-- Filtros -->
+
     <div class="card filters">
       <h2>📅 Filtros rápidos</h2>
       <button onclick="mostrarTodos()">Todo</button>
@@ -33,7 +31,7 @@
       <button onclick="filtrar('egreso')">Egresos</button>
     </div>
 
-    <!-- Agregar movimiento manual -->
+
     <div class="card">
       <h2>➕ Agregar Movimiento Manual</h2>
       <input type="text" id="descripcion" placeholder="Descripción" />
@@ -45,7 +43,7 @@
       <button onclick="agregarMovimiento()">Guardar Movimiento</button>
     </div>
 
-    <!-- Filtro por rango de fechas -->
+
     <div class="card">
       <h2>📆 Filtrar por rango de fechas</h2>
       <label>Desde: <input type="date" id="filtroFechaInicio" /></label>
@@ -54,13 +52,12 @@
       <button onclick="mostrarTodos()">Ver Todo</button>
     </div>
 
-    <!-- Balance -->
+
     <div class="card balance">
       <h2>💰 Balance</h2>
       <p id="balanceGeneral" class="neutro">Balance: ₡0</p>
     </div>
 
-    <!-- Listados -->
     <div class="card">
       <h2>📈 Ingresos</h2>
       <ul id="listaIngresos"></ul>
@@ -71,7 +68,6 @@
       <ul id="listaEgresos"></ul>
     </div>
 
-    <!-- Gráficos -->
     <div class="card">
       <h2>📊 Gráficos</h2>
       <canvas id="grafico"></canvas>
@@ -80,7 +76,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Importar funciones de contabilidad.js -->
   <script type="module">
     import { agregarMovimiento, mostrarTodos, filtrar, filtrarPorFecha, filtrarPorRango } from "./contabilidad.js";
 
