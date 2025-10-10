@@ -1,6 +1,6 @@
 import { auth, db } from "./firebase.js";
-import { 
-  collection, query, where, orderBy, onSnapshot, doc 
+import {
+  collection, query, where, orderBy, onSnapshot, doc, getDocs
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
@@ -16,6 +16,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btnFiltrar").addEventListener("click", aplicarFiltros);
   document.getElementById("btnExportar").addEventListener("click", exportarCSV);
+  document.getElementById("btnBuscarCedula").addEventListener("click", filtrarPorCedula);
+  document.getElementById("btnImprimirCedula").addEventListener("click", imprimirResultadosCedula);
 });
 
 // ---- Cargar todos los movimientos ----
@@ -52,7 +54,6 @@ function renderTabla(data) {
     const tr = document.createElement("tr");
     tr.style.backgroundColor = d.tipo === "entrada" ? "rgba(144, 238, 144, 0.3)" : "rgba(255, 99, 71, 0.3)";
 
-    // Iconos según detalle
     let icono = "📦";
     if (d.detalle?.toLowerCase().includes("desarme")) icono = "🛠";
     else if (d.detalle?.toLowerCase().includes("venta")) icono = "💸";
@@ -86,10 +87,7 @@ function renderGrafico(data) {
     }
   });
 
-  const materiales = Array.from(new Set([
-    ...Object.keys(entradas),
-    ...Object.keys(salidas)
-  ]));
+  const materiales = Array.from(new Set([...Object.keys(entradas), ...Object.keys(salidas)]));
 
   const totalEntradas = materiales.map(m => entradas[m] || 0);
   const totalSalidas = materiales.map(m => salidas[m] || 0);
@@ -110,7 +108,7 @@ function renderGrafico(data) {
   });
 }
 
-// ---- Cargar inventario real en tiempo real ----
+// ---- Cargar inventario real ----
 function cargarInventario(uid) {
   const ref = doc(db, "inventarios", uid);
 
@@ -121,7 +119,7 @@ function cargarInventario(uid) {
   });
 }
 
-// ---- Render tabla inventario acumulado (ordenada + colores) ----
+// ---- Render tabla inventario acumulado ----
 function renderInventarioAcumulado(inventario) {
   const tabla = document.querySelector("#tablaInventarioAcumulado tbody");
   tabla.innerHTML = "";
@@ -129,21 +127,9 @@ function renderInventarioAcumulado(inventario) {
   const ordenados = Object.entries(inventario).sort((a, b) => b[1] - a[1]);
   if (ordenados.length === 0) return;
 
-  const max = ordenados[0][1];
-  const min = ordenados[ordenados.length - 1][1];
-
   ordenados.forEach(([material, cantidad]) => {
-    let ratio = (cantidad - min) / (max - min || 1);
-    const r = Math.round(255 - (200 * ratio));
-    const g = Math.round(50 + (200 * ratio));
-    const b = 50;
-
     const tr = document.createElement("tr");
-    tr.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.4)`;
-    tr.innerHTML = `
-      <td>${material}</td>
-      <td>${cantidad}</td>
-    `;
+    tr.innerHTML = `<td>${material}</td><td>${cantidad}</td>`;
     tabla.appendChild(tr);
   });
 }
@@ -151,7 +137,6 @@ function renderInventarioAcumulado(inventario) {
 // ---- Filtros ----
 function aplicarFiltros() {
   let filtrados = [...movimientos];
-
   const desde = document.getElementById("filtroDesde").value;
   const hasta = document.getElementById("filtroHasta").value;
   const tipo = document.getElementById("filtroTipo").value;
@@ -166,13 +151,12 @@ function aplicarFiltros() {
   renderGrafico(filtrados);
 }
 
-// ---- Exportar a CSV ----
+// ---- Exportar CSV ----
 function exportarCSV() {
   let csv = "Fecha,Material,Cantidad (kg),Tipo,Detalle\n";
   movimientos.forEach(d => {
     csv += `${d.fecha.toLocaleString("es-CR")},${d.material},${d.cantidad},${d.tipo},${d.detalle}\n`;
   });
-
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -180,4 +164,58 @@ function exportarCSV() {
   a.download = "inventario_movimientos.csv";
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ---- 🔍 Buscar por Cédula (desde pesajes) ----
+async function filtrarPorCedula() {
+  const cedula = document.getElementById("buscarCedula").value.trim();
+  const contenedor = document.getElementById("resultadosCedula");
+  if (!cedula) return contenedor.innerHTML = "<p>⚠️ Ingrese una cédula válida.</p>";
+
+  try {
+    const q = query(collection(db, "pesajes"), where("cedula", "==", cedula), orderBy("fecha", "desc"));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      contenedor.innerHTML = `<p>❌ No hay registros con la cédula <strong>${cedula}</strong>.</p>`;
+      return;
+    }
+
+    let html = "";
+    snap.forEach(doc => {
+      const p = doc.data();
+      const fecha = p.fecha?.toDate().toLocaleString("es-CR") || "Sin fecha";
+      const materiales = (p.materiales || []).map(m => `${m.material} (${m.peso}kg)`).join(", ");
+      const total = p.totalGeneral?.toLocaleString("es-CR", { style: "currency", currency: "CRC" }) || "₡0";
+
+      html += `
+        <div class="tarjeta">
+          <p>🧾 <strong>${p.nombre || "Desconocido"}</strong> (Cédula ${p.cedula || "N/A"})</p>
+          <p>📅 <strong>Fecha:</strong> ${fecha}</p>
+          <p>🪨 <strong>Materiales:</strong> ${materiales}</p>
+          <p>💰 <strong>Total:</strong> ${total}</p>
+        </div>
+        <hr>
+      `;
+    });
+
+    contenedor.innerHTML = html;
+  } catch (e) {
+    console.error("Error al filtrar por cédula:", e);
+    contenedor.innerHTML = `<p>❌ Error al buscar: ${e.message}</p>`;
+  }
+}
+
+// ---- 🖨 Imprimir resultados de cédula ----
+function imprimirResultadosCedula() {
+  const contenido = document.getElementById("resultadosCedula").innerHTML;
+  if (!contenido.trim()) return alert("No hay resultados para imprimir.");
+  const w = window.open("", "PRINT");
+  w.document.write("<html><head><title>Historial por Cédula</title>");
+  w.document.write("<style>body{font-family:Courier;font-size:14px}.tarjeta{margin-bottom:10px}</style>");
+  w.document.write("</head><body>");
+  w.document.write(contenido);
+  w.document.write("</body></html>");
+  w.document.close();
+  w.print();
 }
