@@ -1,27 +1,22 @@
-import { auth, db } from "./firebase.js";
+import { db } from "./firebase.js";
 import {
-  collection, query, where, orderBy, getDocs, Timestamp
+  collection, query, where, getDocs, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btnFiltrarClientes").addEventListener("click", filtrarClientes);
-  document.getElementById("btnExportarClientes").addEventListener("click", exportarCSV);
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) window.currentUID = user.uid;
-  });
+  const btnBuscar = document.getElementById("btnBuscar");
+  if (btnBuscar) btnBuscar.addEventListener("click", buscarClientes);
 });
 
-async function filtrarClientes() {
-  const desde = document.getElementById("filtroDesdeClientes").value;
-  const hasta = document.getElementById("filtroHastaClientes").value;
+async function buscarClientes() {
+  const desde = document.getElementById("filtroDesde")?.value;
+  const hasta = document.getElementById("filtroHasta")?.value;
   const resultadosDiv = document.getElementById("resultadosClientes");
 
   resultadosDiv.innerHTML = "Buscando...";
 
   if (!desde || !hasta) {
-    resultadosDiv.innerHTML = "❌ Seleccione un rango de fechas válido.";
+    resultadosDiv.innerHTML = "❌ Seleccione el rango de fechas.";
     return;
   }
 
@@ -31,15 +26,13 @@ async function filtrarClientes() {
 
     const q = query(
       collection(db, "inventario_movimientos"),
-      where("uid", "==", window.currentUID),
       where("fecha", ">=", fDesde),
-      where("fecha", "<=", fHasta),
-      orderBy("fecha")
+      where("fecha", "<=", fHasta)
     );
 
     const snap = await getDocs(q);
     if (snap.empty) {
-      resultadosDiv.innerHTML = "❌ No hay movimientos en ese rango.";
+      resultadosDiv.innerHTML = "❌ No se encontraron registros en ese rango.";
       return;
     }
 
@@ -47,77 +40,65 @@ async function filtrarClientes() {
     const clientes = {};
     snap.forEach(docu => {
       const d = docu.data();
-      const cedula = d.cedula || "N/A";
       const nombre = d.nombre || "Sin nombre";
+      const cedula = d.cedula || "N/A";
+      const clave = `${nombre}_${cedula}`;
+
+      if (!clientes[clave]) {
+        clientes[clave] = { nombre, cedula, materiales: {}, total: 0, movimientos: 0 };
+      }
+
       const material = d.material || "Desconocido";
       const cantidad = d.cantidad || 0;
 
-      if (!clientes[cedula]) {
-        clientes[cedula] = {
-          nombre,
-          cedula,
-          materiales: {},
-          total: 0,
-          movimientos: 0
-        };
-      }
-
-      clientes[cedula].materiales[material] = (clientes[cedula].materiales[material] || 0) + cantidad;
-      clientes[cedula].total += cantidad;
-      clientes[cedula].movimientos++;
+      clientes[clave].materiales[material] = (clientes[clave].materiales[material] || 0) + cantidad;
+      clientes[clave].total += cantidad;
+      clientes[clave].movimientos += 1;
     });
 
-    // --- Renderizar resultados ---
+    // --- Renderizar con bloques desplegables (cerrados) ---
     let html = `<p><strong>📅 Rango:</strong> ${desde} a ${hasta}</p><hr>`;
-    Object.values(clientes).forEach(cli => {
+
+    for (const key in clientes) {
+      const c = clientes[key];
+      const id = key.replace(/\s+/g, "_");
+
       html += `
-        <div style="margin-bottom:15px;padding:10px;border:1px solid #ccc;border-radius:8px;">
-          <p><strong>👤 ${cli.nombre}</strong> (Cédula: ${cli.cedula})</p>
-          <ul>
-            ${Object.entries(cli.materiales).map(([mat, cant]) => `<li>🪨 ${mat}: ${cant} kg</li>`).join("")}
-          </ul>
-          <p>📦 <strong>Total:</strong> ${cli.total} kg</p>
-          <p>🧾 <strong>Movimientos:</strong> ${cli.movimientos}</p>
+      <div class="cliente-card">
+        <button class="cliente-header" onclick="toggleCliente('${id}', this)">
+          <span>👤 ${c.nombre} (${c.cedula})</span>
+          <span class="arrow">🔽</span>
+        </button>
+        <div id="${id}" class="cliente-detalle">
+          ${Object.entries(c.materiales).map(([mat, cant]) => `
+            <p>🪨 ${mat}: ${cant.toLocaleString("es-CR")} kg</p>
+          `).join("")}
+          <p>📦 <strong>Total:</strong> ${c.total.toLocaleString("es-CR")} kg</p>
+          <p>🧾 Movimientos: ${c.movimientos}</p>
         </div>
+      </div>
       `;
-    });
+    }
 
     resultadosDiv.innerHTML = html;
-
   } catch (e) {
     console.error(e);
-    resultadosDiv.innerHTML = "❌ Error al cargar datos o falta un índice en Firestore.";
+    resultadosDiv.innerHTML = "❌ Error al buscar los datos.";
   }
 }
 
-// ---- 📤 Exportar CSV ----
-function exportarCSV() {
-  const div = document.getElementById("resultadosClientes");
-  if (!div || div.innerText.trim() === "" || div.innerText.includes("Buscando")) {
-    alert("Primero realice una búsqueda.");
-    return;
+// ✅ Función global para abrir/cerrar con flecha animada
+window.toggleCliente = (id, btn) => {
+  const div = document.getElementById(id);
+  if (!div) return;
+
+  const arrow = btn.querySelector(".arrow");
+
+  if (div.style.display === "block") {
+    div.style.display = "none";
+    arrow.textContent = "🔽";
+  } else {
+    div.style.display = "block";
+    arrow.textContent = "🔼";
   }
-
-  let csv = "Nombre,Cédula,Material,Cantidad (kg),Total (kg),Movimientos\n";
-
-  // Extraer datos del DOM
-  const bloques = div.querySelectorAll("div");
-  bloques.forEach(b => {
-    const nombre = b.querySelector("strong")?.innerText.replace("👤 ", "") || "";
-    const texto = b.innerText.split("\n");
-    const cedula = (texto.find(t => t.includes("Cédula")) || "").replace("Cédula:", "").trim();
-    const materiales = texto.filter(t => t.includes("🪨"));
-    materiales.forEach(m => {
-      const [mat, cant] = m.replace("🪨", "").split(":");
-      csv += `${nombre},${cedula},${mat.trim()},${cant.trim()},,,\n`;
-    });
-  });
-
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "clientes_materiales.csv";
-  a.click();
-  URL.revokeObjectURL(url);
-}
+};
