@@ -5,25 +5,21 @@
   <title>👥 Resumen de Clientes</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
   <div class="container">
     <h1>👥 Resumen de Clientes</h1>
 
     <div class="card">
       <label>Desde:</label>
-      <input type="date" id="filtroDesdeClientes">
-
+      <input type="date" id="filtroDesde">
       <label>Hasta:</label>
-      <input type="date" id="filtroHastaClientes">
-
-      <button id="btnFiltrarClientes" type="button">Buscar</button>
-      <button id="btnExportarClientes" type="button">📤 Exportar CSV</button>
+      <input type="date" id="filtroHasta">
+      <button id="btnBuscar" type="button">Buscar</button>
     </div>
 
-    <div id="resultadosClientes" class="card" style="text-align:left;"></div>
+    <div id="resultadosClientes" class="card"></div>
 
-    <button onclick="window.location.href='inventario_avanzado.html'">⬅️ Volver</button>
+    <button onclick="window.location.href='inventario.html'">⬅️ Volver</button>
   </div>
 
   <script type="module" src="clientes.js"></script>
