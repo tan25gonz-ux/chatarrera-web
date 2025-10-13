@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>👥 Resumen de Clientes</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <h1>👥 Resumen de Clientes</h1>
+
+    <div class="card">
+      <label>Desde:</label>
+      <input type="date" id="filtroDesdeClientes">
+
+      <label>Hasta:</label>
+      <input type="date" id="filtroHastaClientes">
+
+      <button id="btnFiltrarClientes" type="button">Buscar</button>
+      <button id="btnExportarClientes" type="button">📤 Exportar CSV</button>
+    </div>
+
+    <div id="resultadosClientes" class="card" style="text-align:left;"></div>
+
+    <button onclick="window.location.href='inventario_avanzado.html'">⬅️ Volver</button>
+  </div>
+
+  <script type="module" src="clientes.js"></script>
+</body>
+</html>
