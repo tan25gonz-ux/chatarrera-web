@@ -81,7 +81,7 @@ function agregarMaterial() {
   document.getElementById("pesoMaterial").value = "";
 }
 
-// ---- Cargar precios (solo lectura) ----
+// ---- Cargar precios ----
 async function cargarPrecios(uid) {
   const div = document.getElementById("preciosUsuario");
   if (!div) return;
@@ -97,6 +97,7 @@ async function cargarPrecios(uid) {
   }
 }
 
+// ---- Registrar Pesaje ----
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo")?.value;
   if (!tipo) return alert("Seleccione un tipo de transporte");
@@ -105,7 +106,6 @@ async function registrarPesaje() {
   const cedula = document.getElementById("cedula")?.value || "";
   const placa  = document.getElementById("placa")?.value || "";
 
-  // Calcular neto
   let neto = 0;
   if (tipo === "camionGrande") {
     const dl = +document.getElementById("delanteraLlena")?.value || 0;
@@ -121,7 +121,6 @@ async function registrarPesaje() {
     neto = +document.getElementById("peso")?.value || 0;
   }
 
-  // Materiales: hierro + extras
   const materiales = [{ material: "Hierro", peso: neto }];
   document.querySelectorAll("#listaExtras p").forEach(p => {
     materiales.push({ material: p.dataset.material, peso: parseFloat(p.dataset.peso) });
@@ -142,7 +141,6 @@ async function registrarPesaje() {
   }));
   const totalGeneral = materialesConTotal.reduce((a,b)=>a+b.total,0);
 
-  // Configuración de factura + consecutivo
   const cfgRef = doc(db, "facturas", uid);
   const cfgSnap = await getDoc(cfgRef);
   const cfg = cfgSnap.exists() ? cfgSnap.data() : {};
@@ -150,73 +148,67 @@ async function registrarPesaje() {
   await setDoc(cfgRef, { contadorFactura: numeroFactura }, { merge: true });
 
   try {
-    // Guardar pesaje
+    const fechaActual = new Date();
+    const fechaISO = fechaActual.toISOString();
+
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo, nombre, cedula, placa,
       materiales: materialesConTotal,
       totalGeneral,
       numeroFactura,
-      fecha: serverTimestamp()
+      fecha: serverTimestamp(),
+      fechaLocal: fechaISO
     });
 
-    // Actualizar inventario total
     await actualizarInventario(materiales);
 
-    // Guardar historial de movimientos
+    // ✅ Guardar movimientos con nombre y cédula
     for (let m of materiales) {
       if (m.material && m.peso > 0) {
         await addDoc(collection(db, "inventario_movimientos"), {
           uid,
-          material: m.material,
+          material: (m.material === "Hierro2") ? "Hierro" : m.material,
           cantidad: m.peso,
           tipo: "entrada",
-          fecha: serverTimestamp()
+          fecha: serverTimestamp(),
+          fechaLocal: fechaISO,
+          nombre: nombre.trim() || "Sin nombre",
+          cedula: cedula || "N/A"
         });
       }
     }
 
-    // Contabilidad (egreso)
     await addDoc(collection(db, "contabilidad", uid, "egresos"), {
       descripcion: `Compra de materiales (${materiales.map(m=>m.material).join(", ")})`,
       monto: totalGeneral,
-      fecha: serverTimestamp()
+      fecha: serverTimestamp(),
+      fechaLocal: fechaISO
     });
 
-    // Factura estilo recibo con <strong>
-    const fecha = new Date().toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" });
-    const hora  = new Date().toLocaleTimeString("es-CR", { timeZone: "America/Costa_Rica" });
+    const fecha = fechaActual.toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" });
+    const hora  = fechaActual.toLocaleTimeString("es-CR", { timeZone: "America/Costa_Rica" });
 
     let reciboHTML = `
       <div class="recibo">
         <p><strong>${cfg.nombreLocal || "Mi Local"}</strong></p>
-        <p><strong>Hacienda: ${cfg.numHacienda || "N/A"}</strong></p>
-        <p><strong>Tel: ${cfg.telefono1 || "-"} / ${cfg.telefono2 || "-"}</strong></p>
         <p><strong>Factura #${numeroFactura}</strong></p>
         <p><strong>Fecha: ${fecha} ${hora}</strong></p>
         <hr>
-        <p><strong>Cliente: ${nombre || "N/A"}</strong></p>
-        <p><strong>Cédula: ${cedula || "N/A"}</strong></p>
-        ${placa ? `<p><strong>Placa: ${placa}</strong></p>` : ""}
-        <hr>`;
-
-    materialesConTotal.forEach(m => {
-      reciboHTML += `<p><strong>${m.material} x ${m.peso} = ₡${m.total}</strong></p>`;
-    });
-
-    reciboHTML += `
+        <p><strong>Cliente:</strong> ${nombre || "N/A"}</p>
+        <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
+        ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
+        <hr>
+        ${materialesConTotal.map(m => `<p><strong>${m.material}</strong>: ${m.peso} kg = ₡${m.total}</p>`).join("")}
         <hr>
         <p><strong>Total: ₡${totalGeneral}</strong></p>
-        <hr>
         <p style="text-align:center"><strong>¡Gracias por elegirnos!</strong></p>
-        <p style="text-align:center"><strong>^^^^^^</strong></p>
       </div>
       <button id="btnImprimirFactura">🖨 Imprimir</button>
     `;
 
     document.getElementById("resultado").innerHTML = reciboHTML;
 
-    // Imprimir (ya no dependemos de font-weight, usamos <strong>)
     document.getElementById("btnImprimirFactura").addEventListener("click", () => {
       const ventana = window.open("", "PRINT");
       ventana.document.write("<html><head><title>Factura</title>");
@@ -245,15 +237,14 @@ async function actualizarInventario(materiales) {
   let datos = snap.exists() ? (snap.data().materiales || {}) : {};
 
   materiales.forEach(m => {
-    // 📌 Hierro2 se guarda como Hierro
-    let clave = (m.material === "Hierro2") ? "Hierro" : m.material;
+    const clave = (m.material === "Hierro2") ? "Hierro" : m.material;
     datos[clave] = (datos[clave] || 0) + m.peso;
   });
 
   await setDoc(ref, { materiales: datos, actualizado: serverTimestamp() }, { merge: true });
 }
 
-// ---- Util ----
+// ---- Limpiar formulario ----
 function limpiarFormulario() {
   ["nombre","cedula","placa","delanteraLlena","traseraLlena","delanteraVacia","traseraVacia","lleno","vacio","peso"]
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
@@ -267,6 +258,7 @@ function limpiarFormulario() {
   document.getElementById("campos").innerHTML = "";
 }
 
+// ---- Cerrar sesión ----
 function cerrarSesion() {
   sessionStorage.clear();
   window.location.href = "index.html";
