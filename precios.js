@@ -1,38 +1,59 @@
 import { auth, db } from "./firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-import { doc, getDoc, setDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import {
+  doc, setDoc, getDoc
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-// Cargar precios actuales
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    const docRef = doc(db, "precios", user.uid);
-    const snap = await getDoc(docRef);
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btnGuardarPrecios")?.addEventListener("click", guardarPrecios);
+  cargarPrecios();
+});
 
-    if (snap.exists()) {
-      const data = snap.data().materiales;
-      for (const mat in data) {
-        const input = document.getElementById("precio-" + mat);
-        if (input) input.value = data[mat];
-      }
-    }
+// ---- Normalizador (para evitar errores de nombres) ----
+function normalizarNombre(nombre) {
+  return nombre.replace(/\s+/g, " ").trim();
+}
+
+// ---- Guardar precios ----
+async function guardarPrecios() {
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return alert("⚠️ Debe iniciar sesión.");
+
+  const campos = document.querySelectorAll("#precios input[type='number']");
+  const materiales = {};
+
+  campos.forEach(c => {
+    const nombre = c.id.replace("precio-", "");
+    const normalizado = normalizarNombre(nombre);
+    const valor = parseFloat(c.value) || 0;
+    materiales[normalizado] = valor;
+  });
+
+  try {
+    await setDoc(doc(db, "precios", uid), { materiales }, { merge: true });
+    alert("✅ Precios guardados correctamente.");
+  } catch (e) {
+    console.error(e);
+    alert("❌ Error al guardar precios.");
   }
-});
+}
 
-// Guardar precios modificados
-document.getElementById("btnGuardarPrecios").addEventListener("click", async () => {
-  const user = auth.currentUser;
-  if (!user) return alert("No hay usuario logueado");
+// ---- Cargar precios existentes ----
+async function cargarPrecios() {
+  const uid = auth?.currentUser?.uid;
+  if (!uid) return;
 
-  const precios = {};
-  document.querySelectorAll("#precios input").forEach(input => {
-    const mat = input.id.replace("precio-", "");
-    precios[mat] = parseFloat(input.value) || 0;
-  });
+  try {
+    const ref = doc(db, "precios", uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
 
-  await setDoc(doc(db, "precios", user.uid), {
-    materiales: precios,
-    actualizado: Timestamp.now()
-  });
-
-  alert("✅ Precios actualizados");
-});
+    const mats = snap.data().materiales || {};
+    for (const [k, v] of Object.entries(mats)) {
+      const id = "precio-" + k;
+      const input = document.getElementById(id);
+      if (input) input.value = v;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
