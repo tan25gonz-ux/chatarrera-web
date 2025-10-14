@@ -15,17 +15,21 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ---- UI dinámico según tipo ----
+// ---- Mostrar campos por tipo ----
 function mostrarCampos() {
   const tipo = document.getElementById("tipo")?.value || "";
   const campos = document.getElementById("campos");
   if (!campos) return;
 
+  const comunes = `
+    <label>Nombre: <input type="text" id="nombre"></label>
+    <label>Cédula: <input type="text" id="cedula"></label>
+  `;
+
   const bloques = {
     camionGrande: `
       <h3>Camión Grande (Hierro)</h3>
-      <label>Nombre: <input type="text" id="nombre"></label>
-      <label>Cédula: <input type="text" id="cedula"></label>
+      ${comunes}
       <label>Placa: <input type="text" id="placa"></label>
       <label>Delantera llena (kg): <input type="number" id="delanteraLlena"></label>
       <label>Trasera llena (kg): <input type="number" id="traseraLlena"></label>
@@ -34,23 +38,20 @@ function mostrarCampos() {
     `,
     camionPequeno: `
       <h3>Camión Pequeño (Hierro)</h3>
-      <label>Nombre: <input type="text" id="nombre"></label>
-      <label>Cédula: <input type="text" id="cedula"></label>
+      ${comunes}
       <label>Placa: <input type="text" id="placa"></label>
       <label>Peso lleno (kg): <input type="number" id="lleno"></label>
       <label>Peso vacío (kg): <input type="number" id="vacio"></label>
     `,
     carreta: `
       <h3>Carreta</h3>
-      <label>Nombre: <input type="text" id="nombre"></label>
-      <label>Cédula: <input type="text" id="cedula"></label>
+      ${comunes}
       <label>Peso lleno (kg): <input type="number" id="lleno"></label>
       <label>Peso vacío (kg): <input type="number" id="vacio"></label>
     `,
     mano: `
       <h3>A Mano</h3>
-      <label>Nombre: <input type="text" id="nombre"></label>
-      <label>Cédula: <input type="text" id="cedula"></label>
+      ${comunes}
       <label>Peso directo (kg): <input type="number" id="peso"></label>
     `
   };
@@ -58,9 +59,9 @@ function mostrarCampos() {
   campos.innerHTML = bloques[tipo] || "";
 }
 
-// ---- Agregar material extra ----
+// ---- Agregar materiales extras ----
 function agregarMaterial() {
-  const mat = document.getElementById("materialSelect")?.value || "";
+  const mat = document.getElementById("materialSelect")?.value?.trim();
   const peso = parseFloat(document.getElementById("pesoMaterial")?.value) || 0;
   if (!mat || peso <= 0) return alert("Seleccione un material y un peso válido");
 
@@ -73,7 +74,10 @@ function agregarMaterial() {
   p.dataset.peso = String(peso);
 
   const b = document.createElement("button");
-  b.textContent = "❌"; b.type = "button"; b.onclick = () => p.remove();
+  b.textContent = "❌";
+  b.type = "button";
+  b.onclick = () => p.remove();
+
   p.appendChild(b);
   lista.appendChild(p);
 
@@ -90,7 +94,9 @@ async function cargarPrecios(uid) {
     const snap = await getDoc(ref);
     if (!snap.exists()) { div.textContent = "❌ No hay precios configurados."; return; }
     const mats = snap.data().materiales || {};
-    div.innerHTML = Object.entries(mats).map(([k,v]) => `<p><strong>${k}:</strong> ₡${v}</p>`).join("");
+    div.innerHTML = Object.entries(mats)
+      .map(([k,v]) => `<p><strong>${k}:</strong> ₡${v.toLocaleString("es-CR")}</p>`)
+      .join("");
   } catch (e) {
     console.error(e);
     div.textContent = "Error cargando precios.";
@@ -102,10 +108,11 @@ async function registrarPesaje() {
   const tipo = document.getElementById("tipo")?.value;
   if (!tipo) return alert("Seleccione un tipo de transporte");
 
-  const nombre = document.getElementById("nombre")?.value || "";
-  const cedula = document.getElementById("cedula")?.value || "";
-  const placa  = document.getElementById("placa")?.value || "";
+  const nombre = document.getElementById("nombre")?.value.trim() || "Sin nombre";
+  const cedula = document.getElementById("cedula")?.value.trim() || "";
+  const placa  = document.getElementById("placa")?.value?.trim() || "";
 
+  // ---- Calcular peso neto ----
   let neto = 0;
   if (tipo === "camionGrande") {
     const dl = +document.getElementById("delanteraLlena")?.value || 0;
@@ -121,24 +128,40 @@ async function registrarPesaje() {
     neto = +document.getElementById("peso")?.value || 0;
   }
 
+  // ---- Reunir materiales ----
   const materiales = [{ material: "Hierro", peso: neto }];
   document.querySelectorAll("#listaExtras p").forEach(p => {
-    materiales.push({ material: p.dataset.material, peso: parseFloat(p.dataset.peso) });
+    materiales.push({
+      material: p.dataset.material,
+      peso: parseFloat(p.dataset.peso)
+    });
   });
 
   const uid = auth?.currentUser?.uid;
   if (!uid) return alert("No hay usuario logueado");
 
-  // Precios
+  // ---- Precios ----
   const pRef = doc(db, "precios", uid);
   const pSnap = await getDoc(pRef);
   const precios = pSnap.exists() ? (pSnap.data().materiales || {}) : {};
 
-  const materialesConTotal = materiales.map(m => ({
-    ...m,
-    precioUnit: precios[m.material] || 0,
-    total: (precios[m.material] || 0) * m.peso
-  }));
+  const normalizar = (mat) => mat.replace(/\s+/g, " ").trim();
+
+  const materialesConTotal = materiales.map(m => {
+    const nombreMat = normalizar(m.material);
+    // 🧩 Búsqueda más flexible (ignora mayúsculas y espacios)
+    const precio = Object.entries(precios).find(([k]) =>
+      k.toLowerCase().replace(/\s+/g, "") === nombreMat.toLowerCase().replace(/\s+/g, "")
+    )?.[1] || 0;
+
+    return {
+      material: nombreMat,
+      peso: m.peso,
+      precioUnit: precio,
+      total: precio * m.peso
+    };
+  });
+
   const totalGeneral = materialesConTotal.reduce((a,b)=>a+b.total,0);
 
   const cfgRef = doc(db, "facturas", uid);
@@ -151,6 +174,7 @@ async function registrarPesaje() {
     const fechaActual = new Date();
     const fechaISO = fechaActual.toISOString();
 
+    // 🔹 Guardar pesaje principal
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo, nombre, cedula, placa,
@@ -161,33 +185,37 @@ async function registrarPesaje() {
       fechaLocal: fechaISO
     });
 
-    await actualizarInventario(materiales);
-
-    // ✅ Guardar movimientos con nombre y cédula
-    for (let m of materiales) {
-      if (m.material && m.peso > 0) {
-        await addDoc(collection(db, "inventario_movimientos"), {
-          uid,
-          material: (m.material === "Hierro2") ? "Hierro" : m.material,
-          cantidad: m.peso,
-          tipo: "entrada",
-          fecha: serverTimestamp(),
-          fechaLocal: fechaISO,
-          nombre: nombre.trim() || "Sin nombre",
-          cedula: cedula || "N/A"
-        });
-      }
+    // 🔹 Guardar movimientos
+    for (let m of materialesConTotal) {
+      const mat = normalizar(m.material);
+      await addDoc(collection(db, "inventario_movimientos"), {
+        uid,
+        material: mat,
+        cantidad: m.peso,
+        tipo: "entrada",
+        fecha: serverTimestamp(),
+        fechaLocal: fechaISO,
+        cedula,
+        nombre
+      });
     }
 
+    // 🔹 Actualizar inventario
+    await actualizarInventario(materialesConTotal);
+
+    // 🔹 Contabilidad
     await addDoc(collection(db, "contabilidad", uid, "egresos"), {
-      descripcion: `Compra de materiales (${materiales.map(m=>m.material).join(", ")})`,
+      descripcion: `Compra de materiales (${materialesConTotal.map(m=>m.material).join(", ")})`,
       monto: totalGeneral,
       fecha: serverTimestamp(),
       fechaLocal: fechaISO
     });
 
+    // 🔹 Factura
     const fecha = fechaActual.toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" });
     const hora  = fechaActual.toLocaleTimeString("es-CR", { timeZone: "America/Costa_Rica" });
+
+    const formatoCRC = n => n.toLocaleString("es-CR", { style: "currency", currency: "CRC", minimumFractionDigits: 0 });
 
     let reciboHTML = `
       <div class="recibo">
@@ -195,13 +223,14 @@ async function registrarPesaje() {
         <p><strong>Factura #${numeroFactura}</strong></p>
         <p><strong>Fecha: ${fecha} ${hora}</strong></p>
         <hr>
-        <p><strong>Cliente:</strong> ${nombre || "N/A"}</p>
-        <p><strong>Cédula:</strong> ${cedula || "N/A"}</p>
-        ${placa ? `<p><strong>Placa:</strong> ${placa}</p>` : ""}
+        <p><strong>Cliente: ${nombre}</strong></p>
+        <p><strong>Cédula: ${cedula}</strong></p>
+        ${placa ? `<p><strong>Placa: ${placa}</strong></p>` : ""}
         <hr>
-        ${materialesConTotal.map(m => `<p><strong>${m.material}</strong>: ${m.peso} kg = ₡${m.total}</p>`).join("")}
+        ${materialesConTotal.map(m => `<p><strong>${m.material} x ${m.peso}kg = ${formatoCRC(m.total)}</strong></p>`).join("")}
         <hr>
-        <p><strong>Total: ₡${totalGeneral}</strong></p>
+        <p><strong>Total: ${formatoCRC(totalGeneral)}</strong></p>
+        <hr>
         <p style="text-align:center"><strong>¡Gracias por elegirnos!</strong></p>
       </div>
       <button id="btnImprimirFactura">🖨 Imprimir</button>
@@ -229,16 +258,16 @@ async function registrarPesaje() {
   }
 }
 
-// ---- Inventario ----
+// ---- Actualizar inventario ----
 async function actualizarInventario(materiales) {
-  const uid = auth?.currentUser?.uid || "desconocido";
+  const uid = auth?.currentUser?.uid;
   const ref = doc(db, "inventarios", uid);
   const snap = await getDoc(ref);
   let datos = snap.exists() ? (snap.data().materiales || {}) : {};
 
   materiales.forEach(m => {
-    const clave = (m.material === "Hierro2") ? "Hierro" : m.material;
-    datos[clave] = (datos[clave] || 0) + m.peso;
+    const mat = m.material.trim();
+    datos[mat] = (datos[mat] || 0) + m.peso;
   });
 
   await setDoc(ref, { materiales: datos, actualizado: serverTimestamp() }, { merge: true });
@@ -248,12 +277,8 @@ async function actualizarInventario(materiales) {
 function limpiarFormulario() {
   ["nombre","cedula","placa","delanteraLlena","traseraLlena","delanteraVacia","traseraVacia","lleno","vacio","peso"]
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
-
   const lista = document.getElementById("listaExtras");
   if (lista) lista.innerHTML = "";
-
-  document.getElementById("materialSelect").value = "";
-  document.getElementById("pesoMaterial").value = "";
   document.getElementById("tipo").value = "";
   document.getElementById("campos").innerHTML = "";
 }
