@@ -9,17 +9,15 @@
   <div class="container">
     <h1>👥 Resumen de Clientes</h1>
 
-    <div class="card">
-      <label>Desde:</label>
-      <input type="date" id="filtroDesde">
-      <label>Hasta:</label>
-      <input type="date" id="filtroHasta">
-      <button id="btnBuscar" type="button">Buscar</button>
+    <!-- 🔹 Indicador de trimestre actual -->
+    <div class="card" id="infoTrimestre" style="text-align:center; font-weight:bold;">
+      Cargando trimestre actual...
     </div>
 
-    <div id="resultadosClientes" class="card"></div>
+    <!-- 🔹 Resultados -->
+    <div id="resultadosClientes" class="card" style="margin-top:20px;"></div>
 
-    <button onclick="window.location.href='inventario.html'">⬅️ Volver</button>
+    <button onclick="window.location.href='inventario_avanzado.html'">⬅️ Volver</button>
   </div>
 
   <script type="module" src="clientes.js"></script>
