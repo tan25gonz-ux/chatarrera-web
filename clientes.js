@@ -1,104 +1,103 @@
-import { db } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import {
   collection, query, where, getDocs, Timestamp
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  const btnBuscar = document.getElementById("btnBuscar");
-  if (btnBuscar) btnBuscar.addEventListener("click", buscarClientes);
+  onAuthStateChanged(auth, (user) => {
+    if (user) cargarResumenTrimestral(user.uid);
+  });
 });
 
-async function buscarClientes() {
-  const desde = document.getElementById("filtroDesde")?.value;
-  const hasta = document.getElementById("filtroHasta")?.value;
-  const resultadosDiv = document.getElementById("resultadosClientes");
+// 🔹 Determinar el trimestre actual (enero–marzo, abril–junio, etc.)
+function obtenerTrimestreActual() {
+  const hoy = new Date();
+  const año = hoy.getFullYear();
+  const mes = hoy.getMonth(); // 0 = enero
 
-  resultadosDiv.innerHTML = "Buscando...";
+  let inicio, fin, nombre;
 
-  if (!desde || !hasta) {
-    resultadosDiv.innerHTML = "❌ Seleccione el rango de fechas.";
-    return;
+  if (mes < 3) {
+    // Trimestre 1: enero - marzo
+    inicio = new Date(año, 0, 1);
+    fin = new Date(año, 2, 31, 23, 59, 59);
+    nombre = "Enero - Marzo";
+  } else if (mes < 6) {
+    // Trimestre 2: abril - junio
+    inicio = new Date(año, 3, 1);
+    fin = new Date(año, 5, 30, 23, 59, 59);
+    nombre = "Abril - Junio";
+  } else if (mes < 9) {
+    // Trimestre 3: julio - septiembre
+    inicio = new Date(año, 6, 1);
+    fin = new Date(año, 8, 30, 23, 59, 59);
+    nombre = "Julio - Septiembre";
+  } else {
+    // Trimestre 4: octubre - diciembre
+    inicio = new Date(año, 9, 1);
+    fin = new Date(año, 11, 31, 23, 59, 59);
+    nombre = "Octubre - Diciembre";
   }
 
-  try {
-    const fDesde = Timestamp.fromDate(new Date(desde + "T00:00:00"));
-    const fHasta = Timestamp.fromDate(new Date(hasta + "T23:59:59"));
+  return {
+    desde: Timestamp.fromDate(inicio),
+    hasta: Timestamp.fromDate(fin),
+    texto: `${nombre} ${año}`,
+  };
+}
 
+// 🔹 Cargar resumen de clientes del trimestre actual
+async function cargarResumenTrimestral(uid) {
+  const contenedor = document.getElementById("resultadosClientes");
+  contenedor.innerHTML = "⏳ Cargando resumen trimestral...";
+
+  const trimestre = obtenerTrimestreActual();
+
+  try {
     const q = query(
       collection(db, "inventario_movimientos"),
-      where("fecha", ">=", fDesde),
-      where("fecha", "<=", fHasta)
+      where("uid", "==", uid),
+      where("fecha", ">=", trimestre.desde),
+      where("fecha", "<=", trimestre.hasta)
     );
 
     const snap = await getDocs(q);
     if (snap.empty) {
-      resultadosDiv.innerHTML = "❌ No se encontraron registros en ese rango.";
+      contenedor.innerHTML = `❌ No hay movimientos registrados en ${trimestre.texto}`;
       return;
     }
 
-    // --- Agrupar por cliente ---
+    // Agrupar por cliente
     const clientes = {};
     snap.forEach(docu => {
       const d = docu.data();
       const nombre = d.nombre || "Sin nombre";
       const cedula = d.cedula || "N/A";
-      const clave = `${nombre}_${cedula}`;
+      const key = `${nombre}-${cedula}`;
 
-      if (!clientes[clave]) {
-        clientes[clave] = { nombre, cedula, materiales: {}, total: 0, movimientos: 0 };
-      }
-
-      const material = d.material || "Desconocido";
-      const cantidad = d.cantidad || 0;
-
-      clientes[clave].materiales[material] = (clientes[clave].materiales[material] || 0) + cantidad;
-      clientes[clave].total += cantidad;
-      clientes[clave].movimientos += 1;
+      if (!clientes[key]) clientes[key] = {};
+      if (!clientes[key][d.material]) clientes[key][d.material] = 0;
+      clientes[key][d.material] += d.cantidad || 0;
     });
 
-    // --- Renderizar con bloques desplegables (cerrados) ---
-    let html = `<p><strong>📅 Rango:</strong> ${desde} a ${hasta}</p><hr>`;
-
-    for (const key in clientes) {
-      const c = clientes[key];
-      const id = key.replace(/\s+/g, "_");
-
-      html += `
-      <div class="cliente-card">
-        <button class="cliente-header" onclick="toggleCliente('${id}', this)">
-          <span>👤 ${c.nombre} (${c.cedula})</span>
-          <span class="arrow">🔽</span>
-        </button>
-        <div id="${id}" class="cliente-detalle">
-          ${Object.entries(c.materiales).map(([mat, cant]) => `
-            <p>🪨 ${mat}: ${cant.toLocaleString("es-CR")} kg</p>
-          `).join("")}
-          <p>📦 <strong>Total:</strong> ${c.total.toLocaleString("es-CR")} kg</p>
-          <p>🧾 Movimientos: ${c.movimientos}</p>
-        </div>
-      </div>
-      `;
+    // Mostrar resultados
+    let html = `<h3>📅 Trimestre actual: ${trimestre.texto}</h3>`;
+    for (const cliente in clientes) {
+      const [nombre, cedula] = cliente.split("-");
+      html += `<details><summary>👤 ${nombre} (Cédula: ${cedula})</summary>`;
+      let total = 0;
+      for (const [mat, cant] of Object.entries(clientes[cliente])) {
+        html += `<p>🪨 ${mat}: ${cant.toLocaleString("es-CR")} kg</p>`;
+        total += cant;
+      }
+      html += `<p><strong>📦 Total: ${total.toLocaleString("es-CR")} kg</strong></p></details>`;
     }
 
-    resultadosDiv.innerHTML = html;
+    contenedor.innerHTML = html;
+
   } catch (e) {
-    console.error(e);
-    resultadosDiv.innerHTML = "❌ Error al buscar los datos.";
+    console.error("Error al cargar resumen trimestral:", e);
+    contenedor.innerHTML = "❌ Error al obtener datos de Firebase.";
   }
 }
-
-// ✅ Función global para abrir/cerrar con flecha animada
-window.toggleCliente = (id, btn) => {
-  const div = document.getElementById(id);
-  if (!div) return;
-
-  const arrow = btn.querySelector(".arrow");
-
-  if (div.style.display === "block") {
-    div.style.display = "none";
-    arrow.textContent = "🔽";
-  } else {
-    div.style.display = "block";
-    arrow.textContent = "🔼";
-  }
-};
