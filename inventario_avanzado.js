@@ -10,8 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, (user) => {
     if (user) {
       cargarMovimientos(user.uid);
-      // 🔴 IMPORTANTE: quitamos el listener de inventario global para que no sobre-escriba
-      // cargarInventario(user.uid);  // <-- eliminado
+
     }
   });
 
@@ -21,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnImprimirCedula")?.addEventListener("click", imprimirResultados);
 });
 
-// ---- Cargar movimientos (live) ----
+
 function cargarMovimientos(uid) {
   const q = query(
     collection(db, "inventario_movimientos"),
@@ -48,7 +47,7 @@ function cargarMovimientos(uid) {
       });
     });
 
-    // Estado inicial (sin filtros)
+
     renderTabla(movimientos);
     renderGrafico(movimientos);
     actualizarInventarioFiltrado(movimientos);
@@ -57,7 +56,7 @@ function cargarMovimientos(uid) {
   });
 }
 
-// ---- Render tabla de movimientos ----
+
 function renderTabla(data) {
   const tbody = document.querySelector("#tablaMovimientosAvanzado tbody");
   if (!tbody) return;
@@ -87,7 +86,7 @@ function renderTabla(data) {
   });
 }
 
-// ---- Render gráfico ----
+
 function renderGrafico(data) {
   const entradas = {};
   const salidas = {};
@@ -122,7 +121,6 @@ function renderGrafico(data) {
   });
 }
 
-// ---- 🧮 Inventario acumulado dinámico (SIEMPRE según dataset actual) ----
 function actualizarInventarioFiltrado(data) {
   const resumen = {};
   data.forEach(d => {
@@ -176,7 +174,7 @@ function ponerTotalFiltrado(total) {
   totalDiv.innerHTML = `<strong>📦 Total general filtrado:</strong> ${total.toLocaleString("es-CR")} kg`;
 }
 
-// ---- Filtros (fecha / tipo / detalle) ----
+
 function aplicarFiltros() {
   let filtrados = [...movimientos];
   const desde = document.getElementById("filtroDesde")?.value;
@@ -194,7 +192,7 @@ function aplicarFiltros() {
   actualizarInventarioFiltrado(filtrados);
 }
 
-// ---- Exportar CSV (dataset completo actual en memoria) ----
+
 function exportarCSV() {
   let csv = "Fecha,Material,Cantidad (kg),Tipo,Detalle\n";
   movimientos.forEach(d => {
@@ -209,7 +207,7 @@ function exportarCSV() {
   URL.revokeObjectURL(url);
 }
 
-// ---- 🔍 Buscar por cédula + rango exacto + resumen ----
+
 async function buscarPorCedula() {
   const cedula = document.getElementById("buscarCedula")?.value?.trim();
   const desde = document.getElementById("filtroDesdeCedula")?.value;
@@ -264,7 +262,7 @@ async function buscarPorCedula() {
   }
 }
 
-// ---- 🖨 Imprimir resultados de cédula ----
+
 function imprimirResultados() {
   const contenido = document.getElementById("resultadosCedula")?.innerHTML;
   if (!contenido || contenido.includes("Buscando")) return alert("Primero realice una búsqueda.");
