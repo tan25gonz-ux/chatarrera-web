@@ -6,13 +6,12 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Navbar -->
+
   <div class="navbar">
     <span class="menu-toggle" onclick="toggleMenu()">☰</span>
     <h1>Registro de Pesaje</h1>
   </div>
 
-  <!-- Sidebar -->
   <div id="sidebar" class="sidebar">
     <button onclick="window.location.href='usuario.html'">Inicio</button>
     <button onclick="window.location.href='inventario_avanzado.html'">📊 Ver Inventario</button>
@@ -27,7 +26,7 @@
 
   <div class="container">
   <div class="container" style="text-align: center;">
-    <!-- Columna principal -->
+
     <div class="col">
     <div class="col" style="max-width: 600px; margin: auto;">
       <div class="card">
@@ -42,7 +41,7 @@
 
         <div id="campos"></div>
 
-        <!-- Materiales extra -->
+
         <h3>Materiales extra</h3>
         <div id="listaExtras"></div>
         <select id="materialSelect">
@@ -73,22 +72,19 @@
         <button id="btnRegistrar">Registrar</button>
       </div>
 
-      <!-- 💲 Precios debajo del registro -->
-      <!-- Resultado: factura dentro de card -->
+
       <div class="card" id="resultado"></div>
 
-      <!-- 💲 Precios debajo de la factura -->
       <div class="card">
         <h2>💲 Precios de materiales</h2>
         <div id="preciosUsuario">Cargando precios...</div>
       </div>
 
-      <!-- Resultado: aquí se inserta la factura -->
       <div id="resultado" class="resultado"></div>
     </div>
   </div>
 
-  <!-- Script menú -->
+
   <script>
     function toggleMenu() {
       document.getElementById("sidebar").classList.toggle("open");
