@@ -4,8 +4,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-let movimientos = []; // todos los movimientos
-let chart; // referencia de la gráfica
+let movimientos = [];
+let chart; 
 
 document.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, (user) => {
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ---- Cargar todos los movimientos ----
+
 function cargarMovimientos(uid) {
   const q = query(
     collection(db, "inventario_movimientos"),
@@ -41,11 +41,11 @@ function cargarMovimientos(uid) {
       });
     });
     renderTabla(movimientos);
-    renderGrafico(movimientos); // mostrar gráfica con todo al inicio
+    renderGrafico(movimientos); 
   });
 }
 
-// ---- Render tabla ----
+
 function renderTabla(data) {
   const tabla = document.querySelector("#tablaMovimientos tbody");
   tabla.innerHTML = "";
@@ -62,7 +62,7 @@ function renderTabla(data) {
   });
 }
 
-// ---- Render gráfica dinámica ----
+
 function renderGrafico(data) {
   const entradas = {};
   const salidas = {};
@@ -94,7 +94,7 @@ function renderGrafico(data) {
 
   const ctx = document.getElementById("graficoInventario").getContext("2d");
 
-  if (chart) chart.destroy(); // limpiar gráfica anterior
+  if (chart) chart.destroy(); 
 
   chart = new Chart(ctx, {
     type: "bar",
@@ -110,7 +110,7 @@ function renderGrafico(data) {
   });
 }
 
-// ---- Filtros ----
+
 function aplicarFiltros() {
   let filtrados = [...movimientos];
 
