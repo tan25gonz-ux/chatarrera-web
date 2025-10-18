@@ -10,31 +10,31 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// 🔹 Determinar el trimestre actual (enero–marzo, abril–junio, etc.)
+
 function obtenerTrimestreActual() {
   const hoy = new Date();
   const año = hoy.getFullYear();
-  const mes = hoy.getMonth(); // 0 = enero
+  const mes = hoy.getMonth(); 
 
   let inicio, fin, nombre;
 
   if (mes < 3) {
-    // Trimestre 1: enero - marzo
+
     inicio = new Date(año, 0, 1);
     fin = new Date(año, 2, 31, 23, 59, 59);
     nombre = "Enero - Marzo";
   } else if (mes < 6) {
-    // Trimestre 2: abril - junio
+
     inicio = new Date(año, 3, 1);
     fin = new Date(año, 5, 30, 23, 59, 59);
     nombre = "Abril - Junio";
   } else if (mes < 9) {
-    // Trimestre 3: julio - septiembre
+
     inicio = new Date(año, 6, 1);
     fin = new Date(año, 8, 30, 23, 59, 59);
     nombre = "Julio - Septiembre";
   } else {
-    // Trimestre 4: octubre - diciembre
+
     inicio = new Date(año, 9, 1);
     fin = new Date(año, 11, 31, 23, 59, 59);
     nombre = "Octubre - Diciembre";
@@ -47,7 +47,7 @@ function obtenerTrimestreActual() {
   };
 }
 
-// 🔹 Cargar resumen de clientes del trimestre actual
+
 async function cargarResumenTrimestral(uid) {
   const contenedor = document.getElementById("resultadosClientes");
   contenedor.innerHTML = "⏳ Cargando resumen trimestral...";
@@ -68,7 +68,7 @@ async function cargarResumenTrimestral(uid) {
       return;
     }
 
-    // Agrupar por cliente
+
     const clientes = {};
     snap.forEach(docu => {
       const d = docu.data();
@@ -81,7 +81,7 @@ async function cargarResumenTrimestral(uid) {
       clientes[key][d.material] += d.cantidad || 0;
     });
 
-    // Mostrar resultados
+
     let html = `<h3>📅 Trimestre actual: ${trimestre.texto}</h3>`;
     for (const cliente in clientes) {
       const [nombre, cedula] = cliente.split("-");
@@ -101,3 +101,4 @@ async function cargarResumenTrimestral(uid) {
     contenedor.innerHTML = "❌ Error al obtener datos de Firebase.";
   }
 }
+
