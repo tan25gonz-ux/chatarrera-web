@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ---- Mostrar campos por tipo ----
 function mostrarCampos() {
   const tipo = document.getElementById("tipo")?.value || "";
   const campos = document.getElementById("campos");
@@ -59,7 +58,6 @@ function mostrarCampos() {
   campos.innerHTML = bloques[tipo] || "";
 }
 
-// ---- Agregar materiales extras ----
 function agregarMaterial() {
   const mat = document.getElementById("materialSelect")?.value?.trim();
   const peso = parseFloat(document.getElementById("pesoMaterial")?.value) || 0;
@@ -103,7 +101,7 @@ async function cargarPrecios(uid) {
   }
 }
 
-// ---- Registrar Pesaje ----
+
 async function registrarPesaje() {
   const tipo = document.getElementById("tipo")?.value;
   if (!tipo) return alert("Seleccione un tipo de transporte");
@@ -112,7 +110,7 @@ async function registrarPesaje() {
   const cedula = document.getElementById("cedula")?.value.trim() || "";
   const placa  = document.getElementById("placa")?.value?.trim() || "";
 
-  // ---- Calcular peso neto ----
+
   let neto = 0;
   if (tipo === "camionGrande") {
     const dl = +document.getElementById("delanteraLlena")?.value || 0;
@@ -128,7 +126,7 @@ async function registrarPesaje() {
     neto = +document.getElementById("peso")?.value || 0;
   }
 
-  // ---- Reunir materiales ----
+
   const materiales = [{ material: "Hierro", peso: neto }];
   document.querySelectorAll("#listaExtras p").forEach(p => {
     materiales.push({
@@ -140,7 +138,7 @@ async function registrarPesaje() {
   const uid = auth?.currentUser?.uid;
   if (!uid) return alert("No hay usuario logueado");
 
-  // ---- Precios ----
+
   const pRef = doc(db, "precios", uid);
   const pSnap = await getDoc(pRef);
   const precios = pSnap.exists() ? (pSnap.data().materiales || {}) : {};
@@ -149,7 +147,6 @@ async function registrarPesaje() {
 
   const materialesConTotal = materiales.map(m => {
     const nombreMat = normalizar(m.material);
-    // 🧩 Búsqueda más flexible (ignora mayúsculas y espacios)
     const precio = Object.entries(precios).find(([k]) =>
       k.toLowerCase().replace(/\s+/g, "") === nombreMat.toLowerCase().replace(/\s+/g, "")
     )?.[1] || 0;
@@ -174,7 +171,7 @@ async function registrarPesaje() {
     const fechaActual = new Date();
     const fechaISO = fechaActual.toISOString();
 
-    // 🔹 Guardar pesaje principal
+
     await addDoc(collection(db, "pesajes"), {
       usuario: auth?.currentUser?.email || "desconocido",
       tipo, nombre, cedula, placa,
@@ -185,7 +182,7 @@ async function registrarPesaje() {
       fechaLocal: fechaISO
     });
 
-    // 🔹 Guardar movimientos
+
     for (let m of materialesConTotal) {
       const mat = normalizar(m.material);
       await addDoc(collection(db, "inventario_movimientos"), {
@@ -200,10 +197,10 @@ async function registrarPesaje() {
       });
     }
 
-    // 🔹 Actualizar inventario
+
     await actualizarInventario(materialesConTotal);
 
-    // 🔹 Contabilidad
+
     await addDoc(collection(db, "contabilidad", uid, "egresos"), {
       descripcion: `Compra de materiales (${materialesConTotal.map(m=>m.material).join(", ")})`,
       monto: totalGeneral,
@@ -211,7 +208,7 @@ async function registrarPesaje() {
       fechaLocal: fechaISO
     });
 
-    // 🔹 Factura
+
     const fecha = fechaActual.toLocaleDateString("es-CR", { timeZone: "America/Costa_Rica" });
     const hora  = fechaActual.toLocaleTimeString("es-CR", { timeZone: "America/Costa_Rica" });
 
@@ -258,7 +255,7 @@ async function registrarPesaje() {
   }
 }
 
-// ---- Actualizar inventario ----
+
 async function actualizarInventario(materiales) {
   const uid = auth?.currentUser?.uid;
   const ref = doc(db, "inventarios", uid);
@@ -273,7 +270,6 @@ async function actualizarInventario(materiales) {
   await setDoc(ref, { materiales: datos, actualizado: serverTimestamp() }, { merge: true });
 }
 
-// ---- Limpiar formulario ----
 function limpiarFormulario() {
   ["nombre","cedula","placa","delanteraLlena","traseraLlena","delanteraVacia","traseraVacia","lleno","vacio","peso"]
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
@@ -283,7 +279,7 @@ function limpiarFormulario() {
   document.getElementById("campos").innerHTML = "";
 }
 
-// ---- Cerrar sesión ----
+
 function cerrarSesion() {
   sessionStorage.clear();
   window.location.href = "index.html";
