@@ -16,12 +16,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// 🔹 Limpieza de nombres (evita errores de mayúsculas, tildes o espacios)
 function normalizarNombre(nombre) {
   return nombre.toLowerCase().replace(/\s+/g, "").trim();
 }
 
-// 🔹 Guardar precios
 async function guardarPrecios(uid) {
   const campos = document.querySelectorAll("#precios input[type='number']");
   const materiales = {};
@@ -41,7 +39,6 @@ async function guardarPrecios(uid) {
   }
 }
 
-// 🔹 Cargar precios guardados
 async function cargarPrecios(uid) {
   try {
     const ref = doc(db, "precios", uid);
@@ -55,13 +52,11 @@ async function cargarPrecios(uid) {
     const mats = snap.data().materiales || {};
     console.log("📦 Precios cargados desde Firestore:", mats);
 
-    // Comparar nombres normalizados
     const inputs = document.querySelectorAll("#precios input[type='number']");
     inputs.forEach(input => {
       const id = input.id.replace("precio-", "");
       const normalizadoId = normalizarNombre(id);
 
-      // Buscar coincidencia flexible en los materiales guardados
       const coincidencia = Object.entries(mats).find(([k]) =>
         normalizarNombre(k) === normalizadoId
       );
