@@ -13,7 +13,7 @@ let uid = null;
 let movimientos = [];
 let grafico = null;
 
-// —— Utils de fecha/moneda ——
+
 const fmtCRDateTime = new Intl.DateTimeFormat("es-CR", {
   timeZone: "America/Costa_Rica",
   dateStyle: "short",
@@ -51,7 +51,6 @@ function formatCRC(n) {
   }
 }
 
-// —— Login y carga inicial ——
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     alert("Debes iniciar sesión");
@@ -63,7 +62,6 @@ onAuthStateChanged(auth, async (user) => {
   mostrarTodos();
 });
 
-// —— Guardar movimiento manual ——
 export async function agregarMovimiento() {
   if (!uid) return;
 
@@ -94,7 +92,7 @@ export async function agregarMovimiento() {
   }
 }
 
-// —— Cargar movimientos Firestore ——
+
 async function cargarMovimientos() {
   if (!uid) return;
 
@@ -116,14 +114,14 @@ async function cargarMovimientos() {
   movimientos = lista;
 }
 
-// —— Mostrar todo ——
+
 export function mostrarTodos() {
   renderListas(movimientos);
   mostrarBalance(movimientos);
   actualizarGrafico(movimientos);
 }
 
-// —— Filtrar por tipo ——
+
 export function filtrar(tipo) {
   const filtrados = movimientos.filter((m) => m.tipo === tipo);
   renderListas(filtrados);
@@ -131,7 +129,7 @@ export function filtrar(tipo) {
   actualizarGrafico(filtrados);
 }
 
-// —— Filtrar por fecha exacta (1 día) ——
+
 export function filtrarPorFecha() {
   const fecha = document.getElementById("filtroFecha")?.value;
   if (!fecha) return alert("Seleccione una fecha");
@@ -141,7 +139,7 @@ export function filtrarPorFecha() {
   actualizarGrafico(filtrados);
 }
 
-// —— Filtrar por rango de fechas ——
+
 export function filtrarPorRango() {
   const fechaInicio = document.getElementById("filtroFechaInicio")?.value;
   const fechaFin = document.getElementById("filtroFechaFin")?.value;
@@ -165,7 +163,7 @@ export function filtrarPorRango() {
   actualizarGrafico(filtrados);
 }
 
-// —— Renderizar listas ——
+
 function renderListas(lista) {
   const ingresosUl = document.getElementById("listaIngresos");
   const egresosUl = document.getElementById("listaEgresos");
@@ -187,7 +185,7 @@ function renderListas(lista) {
   });
 }
 
-// —— Balance ——
+
 function mostrarBalance(lista) {
   const el = document.getElementById("balanceGeneral");
   let ingresos = 0, egresos = 0;
@@ -202,7 +200,7 @@ function mostrarBalance(lista) {
   el.className = balance > 0 ? "positivo" : balance < 0 ? "negativo" : "neutro";
 }
 
-// —— Gráfico ——
+
 function actualizarGrafico(lista) {
   const ctx = document.getElementById("grafico").getContext("2d");
   if (grafico) grafico.destroy();
