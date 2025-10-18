@@ -2,7 +2,7 @@ import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { doc, getDoc, setDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-// Cargar configuración existente
+
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     const ref = doc(db, "facturas", user.uid);
@@ -18,7 +18,6 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// Guardar configuración
 document.getElementById("btnGuardarFactura").addEventListener("click", async () => {
   const user = auth.currentUser;
   if (!user) return alert("⚠ No hay usuario logueado");
