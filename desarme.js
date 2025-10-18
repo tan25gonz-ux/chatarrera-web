@@ -4,7 +4,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-let desarmes = []; // guardamos todos para filtrar
+let desarmes = []; 
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnDesarmar")?.addEventListener("click", procesarDesarme);
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ---- Procesar desarme ----
+
 async function procesarDesarme() {
   const uid = auth?.currentUser?.uid;
   if (!uid) return alert("No hay usuario logueado");
@@ -87,7 +87,6 @@ async function procesarDesarme() {
   }
 }
 
-// ---- Historial en tiempo real ----
 function cargarHistorial(uid) {
   const q = query(
     collection(db, "desarmes"),
@@ -113,7 +112,6 @@ function cargarHistorial(uid) {
   });
 }
 
-// ---- Render tabla ----
 function renderTabla(data) {
   const tabla = document.querySelector("#tablaDesarmes tbody");
   tabla.innerHTML = "";
@@ -131,7 +129,6 @@ function renderTabla(data) {
   });
 }
 
-// ---- Aplicar filtros ----
 function aplicarFiltros() {
   let filtrados = [...desarmes];
   const desde = document.getElementById("filtroDesde").value;
