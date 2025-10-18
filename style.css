@@ -1,4 +1,4 @@
-/* ----- Reset general ----- */
+
 body {
   margin: 0;
   padding: 0;
@@ -10,7 +10,7 @@ body {
   line-height: 1.4;
 }
 
-/* ----- Navbar con menú hamburguesa ----- */
+
 .navbar {
   background: #007bff;
   color: #fff;
@@ -31,10 +31,10 @@ body {
   cursor: pointer;
 }
 
-/* ----- Sidebar lateral ----- */
+
 .sidebar {
   height: 100%;
-  width: 0; /* empieza cerrado */
+  width: 0; 
   position: fixed;
   top: 0;
   left: 0;
@@ -50,7 +50,7 @@ body {
 }
 
 .sidebar.open {
-  width: 220px; /* ancho al abrir */
+  width: 220px; 
 }
 
 .sidebar button {
@@ -69,7 +69,7 @@ body {
   background: #0056b3;
 }
 
-/* ----- Contenedor principal ----- */
+
 .container {
   max-width: 1200px;
   margin: 20px;
@@ -81,7 +81,7 @@ h1, h2, h3 {
   margin-bottom: 10px;
 }
 
-/* ----- Botones ----- */
+
 button {
   background: #007bff;
   color: #fff;
@@ -103,7 +103,7 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* ----- Inputs y selects ----- */
+
 input, select {
   padding: 8px;
   margin: 5px 0 10px;
@@ -120,13 +120,13 @@ input:focus, select:focus {
   box-shadow: 0 0 3px rgba(0,123,255,0.5);
 }
 
-/* Feedback error */
+
 input.error {
   border-color: red;
   background: #ffeaea;
 }
 
-/* ----- Tarjetas (cards) ----- */
+
 .card {
   background: #fff;
   border-radius: 10px;
@@ -135,7 +135,7 @@ input.error {
   margin-bottom: 15px;
 }
 
-/* ----- Tablas ----- */
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -163,16 +163,16 @@ tr:nth-child(even) {
   width: 58mm;
   padding: 5px;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 14px; /* un poquito más grande */
+  font-size: 14px; 
   background: #fff;
-  font-weight: bold; /* 👈 fuerza negrita a todo */
+  font-weight: bold;
 }
 
 .factura h2, .factura h3 {
   font-size: 16px;
   margin: 4px 0;
   text-align: center;
-  font-weight: bold; /* redundante pero asegura */
+  font-weight: bold; 
 }
 
 .factura p {
@@ -239,7 +239,7 @@ tr:nth-child(even) {
   }
 }
 
-/* ----- Filtros contabilidad ----- */
+
 .filters {
   margin-bottom: 15px;
 }
@@ -248,7 +248,7 @@ tr:nth-child(even) {
   margin-right: 10px;
 }
 
-/* ----- Responsive mejoras ----- */
+
 @media (max-width: 768px) {
   h1 {
     font-size: 20px;
@@ -263,7 +263,7 @@ tr:nth-child(even) {
   input, select {
     font-size: 12px;
   }
-  /* ----- Balance dinámico ----- */
+
 #balanceGeneral {
   font-size: 18px;
   font-weight: bold;
