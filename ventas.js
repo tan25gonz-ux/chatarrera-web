@@ -10,12 +10,12 @@ document.addEventListener("DOMContentLoaded", () => {
   onAuthStateChanged(auth, (user) => {
     if (user) {
       console.log("Usuario conectado:", user.uid);
-      cargarVentas(user.uid); // 🔥 cargar ventas en la tabla
+      cargarVentas(user.uid); 
     }
   });
 });
 
-// ---- Registrar venta ----
+
 async function registrarVenta() {
   const uid = auth?.currentUser?.uid;
   if (!uid) return alert("No hay usuario logueado");
@@ -29,15 +29,15 @@ async function registrarVenta() {
   }
 
   try {
-    // 📌 Consultar inventario actual
+
     const ref = doc(db, "inventarios", uid);
     const snap = await getDoc(ref);
     const datos = snap.exists() ? (snap.data().materiales || {}) : {};
 
-    // ⚡ Si no existe el material en inventario, se considera 0
+
     const stockActual = Number(datos[material] || 0);
 
-    // 📌 Validar stock
+
     if (stockActual <= 0) {
       return alert(`❌ No hay stock disponible de ${material}.`);
     }
@@ -45,7 +45,6 @@ async function registrarVenta() {
       return alert(`❌ Stock insuficiente de ${material}. Disponible: ${stockActual} kg`);
     }
 
-    // 📌 Guardar en colección ventas
     await addDoc(collection(db, "ventas"), {
       usuario: auth?.currentUser?.email || "desconocido",
       uid,
@@ -55,10 +54,10 @@ async function registrarVenta() {
       fecha: serverTimestamp()
     });
 
-    // 📌 Actualizar inventario (restar)
+
     await actualizarInventario(uid, material, peso);
 
-    // 📌 Guardar en movimientos de inventario
+
     await addDoc(collection(db, "inventario_movimientos"), {
       uid,
       material,
@@ -75,19 +74,19 @@ async function registrarVenta() {
   }
 }
 
-// ---- Actualizar inventario (restar) ----
+
 async function actualizarInventario(uid, material, peso) {
   const ref = doc(db, "inventarios", uid);
   const snap = await getDoc(ref);
   let datos = snap.exists() ? (snap.data().materiales || {}) : {};
 
   datos[material] = (datos[material] || 0) - peso;
-  if (datos[material] < 0) datos[material] = 0; // evitar negativos
+  if (datos[material] < 0) datos[material] = 0; 
 
   await setDoc(ref, { materiales: datos, actualizado: serverTimestamp() }, { merge: true });
 }
 
-// ---- Cargar ventas en la tabla ----
+
 function cargarVentas(uid) {
   const tabla = document.querySelector("#tablaVentas tbody");
   if (!tabla) return;
@@ -112,7 +111,7 @@ function cargarVentas(uid) {
   });
 }
 
-// ---- Limpiar formulario ----
+
 function limpiarFormulario() {
   document.getElementById("pesoVenta").value = "";
   document.getElementById("contenedorVenta").value = "";
