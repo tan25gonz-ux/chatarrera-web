@@ -1,6 +1,4 @@
-/* ===== ESTILO GLOBAL - VERDE RECICLAJE ===== */
 
-/* ----- Reset general ----- */
 body {
   margin: 0;
   padding: 0;
@@ -290,7 +288,6 @@ tr:hover {
   border: 1px solid #d6d8db;
 }
 
-/* ----- Clientes (acordeones) ----- */
 .cliente-card {
   border: 1px solid #ccff33;
   border-radius: 10px;
@@ -344,7 +341,6 @@ tr:hover {
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* ----- Animación ♻️ ----- */
 .recycle {
   position: fixed;
   top: 50%;
