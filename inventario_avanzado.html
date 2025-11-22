@@ -10,7 +10,7 @@
   <div class="container">
     <h1>📊 Inventario Avanzado</h1>
 
-  
+    <!-- 🔎 FILTROS -->
     <h2>🔎 Filtros</h2>
     <div class="card">
       <label>Desde:</label>
@@ -39,34 +39,47 @@
       <button id="btnExportar" type="button">📤 Exportar CSV</button>
     </div>
 
+    <!-- 🧾 BUSCAR POR CEDULA -->
     <h2>🧾 Buscar por Cédula</h2>
     <div class="card">
       <input type="text" id="buscarCedula" placeholder="Ingrese número de cédula">
+
+      <label>Desde:</label>
+      <input type="date" id="filtroDesdeCedula">
+
+      <label>Hasta:</label>
+      <input type="date" id="filtroHastaCedula">
+
       <button id="btnBuscarCedula">Buscar</button>
       <button id="btnImprimirCedula">🖨 Imprimir</button>
+
       <div id="resultadosCedula">Ingrese una cédula para ver los registros...</div>
     </div>
 
+    <!-- 📜 HISTORIAL DETALLADO (ACCORDION) -->
+    <div class="accordion">
+      <button class="accordion-btn">📜 Historial Detallado ⬇️</button>
+      <div class="accordion-content">
+        <table id="tablaMovimientosAvanzado">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Material</th>
+              <th>Cantidad (kg)</th>
+              <th>Tipo</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
 
-    <h2>📜 Historial Detallado</h2>
-    <table id="tablaMovimientosAvanzado">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Material</th>
-          <th>Cantidad (kg)</th>
-          <th>Tipo</th>
-          <th>Detalle</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-
+    <!-- 📈 GRÁFICO -->
     <h2>📈 Comparativa</h2>
     <canvas id="graficoInventarioAvanzado"></canvas>
 
-
+    <!-- 📦 INVENTARIO ACUMULADO -->
     <h2>📦 Inventario Acumulado</h2>
     <table id="tablaInventarioAcumulado">
       <thead>
@@ -79,6 +92,7 @@
     </table>
 
     <button onclick="window.location.href='usuario.html'">⬅️ Volver</button>
+
   </div>
 
   <script type="module" src="inventario_avanzado.js"></script>
