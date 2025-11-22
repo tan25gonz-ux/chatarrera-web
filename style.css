@@ -416,3 +416,40 @@ select {
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
 }
+/* ACCORDION */
+.accordion {
+  margin-top: 20px;
+}
+
+.accordion-btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  background: #1e8022;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.3s;
+}
+
+.accordion-btn:hover {
+  background: #16661a;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+  background: #ffffff;
+  border-radius: 8px;
+  margin-top: 5px;
+  padding: 0 15px;
+}
+
+.accordion-content.open {
+  padding: 15px;
+  border: 1px solid #ccc;
+}
